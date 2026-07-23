@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Potiboo
 
-## Getting Started
+Klasik Türk **İsim Şehir** oyununun çok cihazlı, gerçek zamanlı web versiyonu.
 
-First, run the development server:
+## Stack
+
+- Next.js (App Router) + TypeScript
+- Tailwind CSS
+- Supabase (Postgres + Realtime + Anonymous Auth)
+
+## Kurulum
 
 ```bash
+cp .env.example .env.local
+# Supabase URL ve anahtarlarını doldur
+
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Açık [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Supabase (Auth + Profil + Oda)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Dashboard → **Authentication → Providers → Anonymous** → Enable
+2. SQL Editor’da sırayla çalıştır:
+   - `supabase/migrations/001_profiles.sql`
+   - `supabase/migrations/002_game_tables.sql` (tümünü kopyala-yapıştır)
+3. `.env.local` içine project URL, anon key ve service role key yaz
 
-## Learn More
+Anahtarlar yokken uygulama **yerel moda** düşer: profil yalnızca `localStorage`’da saklanır.
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ürün spesifikasyonu: [`potiboo-spec.md`](./potiboo-spec.md).

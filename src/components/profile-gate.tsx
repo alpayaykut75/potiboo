@@ -175,6 +175,7 @@ export function ProfileChip() {
               <ProfileSetup
                 title="Profilini düzenle"
                 submitLabel="Kaydet"
+                showBrand={false}
                 initial={{
                   displayName: profile.displayName,
                   avatarKey: profile.avatarKey,

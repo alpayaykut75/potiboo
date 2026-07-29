@@ -16,6 +16,7 @@ import {
   ensureRoundPlayerRows,
   fetchRoundAnswers,
   fetchRoundPlayers,
+  fetchUsedLetters,
   markFinished,
   saveAnswers,
   applyScores,
@@ -41,6 +42,11 @@ import type {
   RoundPlayerRow,
 } from "@/lib/rounds/types";
 import { clsx } from "@/lib/utils";
+import { playSfx, unlockSfx } from "@/lib/sfx";
+import {
+  pushRecentLetter,
+  readRecentLetters,
+} from "@/lib/game/recent-letters";
 
 export function GameClient({
   roomId,
@@ -70,14 +76,36 @@ export function GameClient({
   const [voteSecLeft, setVoteSecLeft] = useState<number | null>(null);
   const [categorySecLeft, setCategorySecLeft] = useState<number | null>(null);
   const [finishBanner, setFinishBanner] = useState<string | null>(null);
+  const [usedLetters, setUsedLetters] = useState<string[]>(
+    initialRoom.used_letters ?? [],
+  );
   const finalizing = useRef(false);
   const resolving = useRef(false);
   const prevFinishedRef = useRef<Set<string>>(new Set());
   const draftsRef = useRef(drafts);
   draftsRef.current = drafts;
   const roundIdRef = useRef<string | null>(null);
+  const lastCountdownSfx = useRef<number | null>(null);
+  const urgencyArmed = useRef(true);
+  const lastUrgentTick = useRef<number | null>(null);
+  const letterLockKey = useRef<string | null>(null);
+  const timeUpPlayed = useRef(false);
+  const confettiPlayed = useRef(false);
 
   const settings = room.settings as RoomSettings;
+
+  // Mobil: ses için ilk dokunuşta AudioContext aç
+  useEffect(() => {
+    const unlock = () => {
+      void unlockSfx();
+    };
+    window.addEventListener("pointerdown", unlock, { once: true });
+    window.addEventListener("keydown", unlock, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
   const isStopper = round?.stopper_id === profile.userId;
   const isHost = room.host_id === profile.userId;
   const stopperName =
@@ -103,13 +131,17 @@ export function GameClient({
       ?.objections_used ?? 0;
 
   const refresh = useCallback(async () => {
-    const [nextRoom, nextPlayers] = await Promise.all([
+    const [nextRoom, nextPlayers, letters] = await Promise.all([
       fetchRoom(roomId),
       fetchRoomPlayers(roomId),
+      fetchUsedLetters(roomId).catch(() => [] as string[]),
     ]);
     if (!nextRoom) return;
     setRoom(nextRoom);
     setPlayers(nextPlayers);
+    setUsedLetters(
+      letters.length > 0 ? letters : (nextRoom.used_letters ?? []),
+    );
 
     if (nextRoom.status === "finished") return;
 
@@ -173,6 +205,23 @@ export function GameClient({
     );
   }, [refresh]);
 
+  // Free / uzun oturum: realtime koparsa periyodik yenile + sekmeye dönüş
+  useEffect(() => {
+    if (room.status === "finished") return;
+    const id = window.setInterval(() => {
+      void refresh();
+    }, 5000);
+    return () => window.clearInterval(id);
+  }, [refresh, room.status]);
+
+  useEffect(() => {
+    const onVis = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, [refresh]);
+
   useEffect(() => {
     const supabase = createClient();
     const channel = supabase
@@ -224,16 +273,20 @@ export function GameClient({
     };
   }, [roomId, refresh]);
 
-  // Harf çarkı — kullanılan harfler hariç
+  // Harf çarkı — oda + son oyunlar (yumuşak kaçınma)
   useEffect(() => {
     if (!round || (round.phase !== "waiting" && round.phase !== "spinning")) {
       return;
     }
+    const recent = readRecentLetters();
+    let n = 0;
     const id = window.setInterval(() => {
-      setSpinLetter(pickSpinLetter(room.used_letters));
+      setSpinLetter(pickSpinLetter(usedLetters, recent));
+      n += 1;
+      if (n % 2 === 0) playSfx("spinTick");
     }, 80);
     return () => window.clearInterval(id);
-  }, [round?.phase, round?.id, room.used_letters]);
+  }, [round?.phase, round?.id, usedLetters]);
 
   // Geri sayım
   useEffect(() => {
@@ -295,14 +348,77 @@ export function GameClient({
     refresh,
   ]);
 
-  // Scoring flush
+  // SFX: harf kilitlendi (herkes duyar)
+  useEffect(() => {
+    if (!round || round.phase !== "countdown" || !round.letter) return;
+    const key = `${round.id}:${round.letter}`;
+    if (letterLockKey.current === key) return;
+    letterLockKey.current = key;
+    lastCountdownSfx.current = null;
+    playSfx("letterLock");
+  }, [round?.id, round?.phase, round?.letter]);
+
+  // SFX: 3-2-1 / Başla!
+  useEffect(() => {
+    if (countdown == null) return;
+    if (lastCountdownSfx.current === countdown) return;
+    lastCountdownSfx.current = countdown;
+    if (countdown > 0) playSfx("countdownTick");
+    else playSfx("countdownGo");
+  }, [countdown]);
+
+  // SFX: son 10 sn
+  useEffect(() => {
+    if (secondsLeft == null || round?.phase !== "writing") {
+      urgencyArmed.current = true;
+      lastUrgentTick.current = null;
+      timeUpPlayed.current = false;
+      return;
+    }
+    if (secondsLeft === 10 && urgencyArmed.current) {
+      urgencyArmed.current = false;
+      playSfx("urgency");
+    }
+    if (secondsLeft <= 10 && secondsLeft >= 1) {
+      if (lastUrgentTick.current !== secondsLeft) {
+        lastUrgentTick.current = secondsLeft;
+        if (secondsLeft < 10) playSfx("urgentTick");
+      }
+    }
+    if (secondsLeft === 0 && !timeUpPlayed.current) {
+      timeUpPlayed.current = true;
+      playSfx("timeUp");
+    }
+  }, [secondsLeft, round?.phase]);
+
+  // SFX: podyum / konfeti
+  useEffect(() => {
+    if (room.status !== "finished") {
+      confettiPlayed.current = false;
+      return;
+    }
+    if (confettiPlayed.current) return;
+    confettiPlayed.current = true;
+    void unlockSfx().then(() => playSfx("confetti"));
+  }, [room.status]);
+
+  // Scoring: herkes cevap yazar; puanı yalnız kurucu hesaplar (erken/yanlış skor yarışı olmasın)
   useEffect(() => {
     if (!round || round.phase !== "scoring") return;
     let cancelled = false;
     (async () => {
       try {
         await saveAnswers(round.id, draftsRef.current);
-        await new Promise((r) => setTimeout(r, 500));
+        if (room.host_id !== profile.userId) return;
+
+        // Diğer oyuncuların cevaplarının gelmesini bekle
+        for (let i = 0; i < 8; i++) {
+          if (cancelled) return;
+          await new Promise((r) => setTimeout(r, 400));
+          const ans = await fetchRoundAnswers(round.id);
+          const who = new Set(ans.map((a) => a.profile_id));
+          if (who.size >= players.length) break;
+        }
         if (cancelled) return;
         await applyScores(round.id, room, players);
         if (!cancelled) await refresh();
@@ -431,8 +547,10 @@ export function GameClient({
   async function onDur() {
     setError(null);
     setBusy(true);
+    void unlockSfx().then(() => playSfx("tap"));
     try {
       await stopLetter(round!.id, spinLetter, roomId);
+      pushRecentLetter(spinLetter);
       await refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "DUR başarısız");

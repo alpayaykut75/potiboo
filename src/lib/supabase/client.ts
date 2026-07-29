@@ -4,7 +4,7 @@ import { isSupabaseConfigured } from "./config";
 export function createClient() {
   if (!isSupabaseConfigured()) {
     throw new Error(
-      "Supabase yapılandırılmamış. .env.local dosyasını doldur.",
+      "Sunucu bağlantısı hazır değil. Sayfayı yenile veya biraz sonra dene.",
     );
   }
 

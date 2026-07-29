@@ -10,9 +10,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Potiboo — İsim Şehir",
+  title: "Potiboo — Parti oyunları",
   description:
-    "Klasik İsim Şehir oyununun çok cihazlı, gerçek zamanlı web versiyonu.",
+    "İsim Şehir ve daha fazlası. Karekod veya PIN ile katıl; hesap yok, indirme yok.",
   applicationName: "Potiboo",
 };
 

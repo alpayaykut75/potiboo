@@ -1,44 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { GAME } from "@/lib/constants";
+import Link from "next/link";
 import { ProfileChip, ProfileGate, useProfile } from "@/components/profile-gate";
 import { Logo } from "@/components/logo";
-import { createRoom, joinRoomByPin } from "@/lib/rooms/api";
-import { normalizePin } from "@/lib/rooms/pin";
+import { GAMES } from "@/lib/games/catalog";
+import { clsx } from "@/lib/utils";
 
 function HomeContent() {
-  const router = useRouter();
   useProfile();
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function onCreate() {
-    setError(null);
-    startTransition(async () => {
-      try {
-        const room = await createRoom();
-        router.push(`/room/${room.id}`);
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Oda oluşturulamadı");
-      }
-    });
-  }
-
-  function onJoin(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    startTransition(async () => {
-      try {
-        const room = await joinRoomByPin(pin);
-        router.push(`/room/${room.id}`);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Katılınamadı");
-      }
-    });
-  }
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -47,74 +16,111 @@ function HomeContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 py-4">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
         <Logo size="lg" />
         <ProfileChip />
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-5 px-5 pb-6">
-        <div className="text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
-            İsim Şehir
-          </span>
-          <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight text-text sm:text-4xl">
-            Arkadaşlarınla{" "}
-            <span className="text-accent">aynı anda</span> oyna.
-          </h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-text-muted sm:text-base">
-            Karekod veya PIN ile katıl. Hesap yok, indirme yok.
-          </p>
+      <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-8 lg:px-8">
+        {/*
+          Mobil: başlık → video → oyunlar
+          Desktop: sol oyunlar, sağ video — sayfaya yayılır
+        */}
+        <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
+          <div className="flex flex-col gap-6">
+            <div className="text-center lg:text-left">
+              <h1 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl lg:text-5xl">
+                Oyununu <span className="text-accent">seç</span>
+              </h1>
+              <p className="mt-2 text-sm text-text-muted sm:text-base">
+                Oyuna gir, PIN veya karekod ile arkadaşlarını çağır.
+              </p>
+            </div>
+
+            {/* Video — mobilde üstte */}
+            <div className="relative overflow-hidden rounded-3xl border border-accent/20 shadow-[0_0_40px_-12px_rgba(61,157,196,0.45)] lg:hidden">
+              <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-bg/50 via-transparent to-bg/20" />
+              <video
+                className="aspect-[16/10] w-full object-cover motion-reduce:hidden"
+                src="/potiboo_video.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="Potiboo oyun önizlemesi"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {GAMES.map((game) => {
+                const live = game.status === "live";
+                const inner = (
+                  <>
+                    <div className="flex items-start justify-between gap-2">
+                      <h2 className="text-lg font-bold text-text">
+                        {game.title}
+                      </h2>
+                      <span
+                        className={clsx(
+                          "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                          live
+                            ? "bg-accent/20 text-accent"
+                            : "bg-white/5 text-text-dim",
+                        )}
+                      >
+                        {live ? "Oyna" : "Yakında"}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-text-muted">{game.blurb}</p>
+                    <p className="mt-3 text-xs text-text-dim">
+                      {game.players} oyuncu
+                    </p>
+                  </>
+                );
+
+                if (!live) {
+                  return (
+                    <div
+                      key={game.id}
+                      className="rounded-3xl border border-border/60 bg-bg-card/40 p-5 opacity-55"
+                      aria-disabled
+                    >
+                      {inner}
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={game.id}
+                    href={`/play/${game.slug}`}
+                    className="rounded-3xl border border-accent/30 bg-bg-card p-5 transition hover:border-accent hover:bg-accent/5 sm:col-span-2 lg:col-span-1"
+                    style={{ boxShadow: `0 0 40px -18px ${game.accent}` }}
+                  >
+                    {inner}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Desktop video */}
+          <div className="relative hidden min-h-[28rem] overflow-hidden rounded-[2rem] border border-accent/25 shadow-[0_0_60px_-16px_rgba(61,157,196,0.55)] lg:block xl:min-h-[32rem]">
+            <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-br from-bg/30 via-transparent to-accent/10" />
+            <video
+              className="absolute inset-0 h-full w-full object-cover motion-reduce:hidden"
+              src="/potiboo_video.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label="Potiboo oyun önizlemesi"
+            />
+          </div>
         </div>
-
-        {/* Yeni Oyun — üstte, turkuaz */}
-        <button
-          type="button"
-          className="btn btn-primary w-full min-h-14 text-lg"
-          disabled={pending}
-          onClick={onCreate}
-        >
-          {pending ? "Oluşturuluyor…" : "Yeni Oyun"}
-        </button>
-
-        {/* Oyuna katıl — ayrı kart */}
-        <form
-          onSubmit={onJoin}
-          className="card flex w-full flex-col gap-3 border-accent/25 p-5"
-        >
-          <h2 className="text-center text-lg font-bold text-text">
-            Oyuna katıl
-          </h2>
-          <p className="text-center text-sm text-text-muted">
-            Ekrandaki PIN&apos;i gir
-          </p>
-          <input
-            value={pin}
-            onChange={(e) => setPin(normalizePin(e.target.value).slice(0, 4))}
-            placeholder="PIN"
-            autoComplete="off"
-            inputMode="text"
-            className="w-full rounded-2xl border-2 border-border-strong bg-bg-elevated px-4 py-4 text-center font-mono text-2xl font-bold tracking-[0.35em] text-text outline-none focus:border-accent"
-          />
-          <button
-            type="submit"
-            className="btn w-full border-2 border-accent bg-transparent text-accent hover:bg-accent/15"
-            disabled={pending || pin.length < 4}
-          >
-            {pending ? "Katılıyor…" : "Katıl"}
-          </button>
-        </form>
-
-        {error && (
-          <p role="alert" className="text-center text-sm text-danger">
-            {error}
-          </p>
-        )}
       </main>
-
-      <footer className="relative z-10 px-5 py-4 text-center text-xs text-text-dim">
-        {GAME.minPlayers}–{GAME.maxPlayers} oyuncu
-      </footer>
     </div>
   );
 }

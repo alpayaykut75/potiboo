@@ -1,6 +1,6 @@
 /** Game defaults from product spec */
 export const GAME = {
-  minPlayers: 3,
+  minPlayers: 2,
   maxPlayers: 8,
   defaultRounds: 5,
   defaultDurationSec: 60,

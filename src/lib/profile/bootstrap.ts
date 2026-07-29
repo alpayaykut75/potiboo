@@ -105,11 +105,19 @@ export async function bootstrapProfile(): Promise<{
         userId,
       };
       writeLocalProfile(profile);
-      void supabase.from("profiles").upsert({
-        id: userId,
-        display_name: profile.displayName,
-        avatar_key: profile.avatarKey,
-      });
+      const { error: upsertErr } = await withTimeout(
+        supabase.from("profiles").upsert({
+          id: userId,
+          display_name: profile.displayName,
+          avatar_key: profile.avatarKey,
+        }),
+        8000,
+        "profiles.upsert",
+      );
+      if (upsertErr) {
+        console.warn("Profil senkronu:", upsertErr.message);
+        return { profile, mode: "local" };
+      }
       return { profile, mode: "supabase" };
     }
 
@@ -118,6 +126,65 @@ export async function bootstrapProfile(): Promise<{
     console.warn("bootstrapProfile düştü, yerel moda geçiliyor:", e);
     return { profile: local, mode: "local" };
   }
+}
+
+/**
+ * Oda oluşturma / katılma öncesi: auth oturumu + profiles satırını garanti et.
+ * rooms.host_id → profiles(id) FK için zorunlu.
+ */
+export async function ensureRemoteProfile(): Promise<string> {
+  if (!isSupabaseConfigured()) {
+    throw new Error("Sunucu bağlantısı hazır değil. Sayfayı yenile.");
+  }
+
+  const supabase = createClient();
+  const sessionResult = await withTimeout(
+    supabase.auth.getSession(),
+    8000,
+    "getSession",
+  );
+  let userId = sessionResult.data.session?.user?.id;
+
+  if (!userId) {
+    const anon = await withTimeout(
+      supabase.auth.signInAnonymously(),
+      10000,
+      "signInAnonymously",
+    );
+    if (anon.error || !anon.data.user) {
+      throw new Error("Oturum açılamadı. Sayfayı yenile.");
+    }
+    userId = anon.data.user.id;
+  }
+
+  const local = readLocalProfile();
+  const displayName =
+    local?.displayName?.trim() && local.displayName.trim().length >= 2
+      ? local.displayName.trim()
+      : "Oyuncu";
+  const avatarKey =
+    local?.avatarKey && isAvatarId(local.avatarKey) ? local.avatarKey : "panda";
+
+  const { error } = await withTimeout(
+    supabase.from("profiles").upsert({
+      id: userId,
+      display_name: displayName,
+      avatar_key: avatarKey,
+    }),
+    8000,
+    "profiles.upsert",
+  );
+
+  if (error) {
+    throw new Error(
+      error.message.includes("row-level security")
+        ? "Profil sunucuya yazılamadı. Sayfayı yenile."
+        : error.message,
+    );
+  }
+
+  writeLocalProfile({ userId, displayName, avatarKey });
+  return userId;
 }
 
 export async function saveProfile(input: {
@@ -175,7 +242,11 @@ export async function saveProfile(input: {
     );
 
     if (error) {
-      console.warn("Profil sunucuya yazılamadı:", error.message);
+      throw new Error(
+        error.message.includes("row-level security")
+          ? "Profil kaydedilemedi. Sayfayı yenile."
+          : error.message,
+      );
     }
 
     const profile: PlayerProfile = {

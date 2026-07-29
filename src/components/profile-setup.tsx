@@ -5,6 +5,7 @@ import { AVATARS } from "@/lib/avatars";
 import { saveProfile } from "@/lib/profile/bootstrap";
 import type { PlayerProfile } from "@/lib/profile/storage";
 import { AvatarImage } from "@/components/avatar-image";
+import { Logo } from "@/components/logo";
 import { clsx } from "@/lib/utils";
 
 export function ProfileSetup({
@@ -13,12 +14,14 @@ export function ProfileSetup({
   initial,
   title = "Avatarını ve ismini seç",
   submitLabel = "Devam",
+  showBrand = true,
 }: {
   onComplete: (profile: PlayerProfile) => void;
   onCancel?: () => void;
   initial?: { displayName: string; avatarKey: string };
   title?: string;
   submitLabel?: string;
+  showBrand?: boolean;
 }) {
   const [avatarKey, setAvatarKey] = useState(
     initial?.avatarKey ?? AVATARS[0].id,
@@ -47,10 +50,20 @@ export function ProfileSetup({
       className="mx-auto flex w-full max-w-sm flex-col px-5 py-8"
     >
       <div className="text-center">
-        <p className="text-sm font-medium tracking-wide text-accent uppercase">
-          Potiboo
-        </p>
-        <h1 className="mt-2 text-2xl font-extrabold text-text">{title}</h1>
+        {showBrand && (
+          <div className="flex justify-center">
+            <Logo size="lg" />
+          </div>
+        )}
+        <h1
+          className={
+            showBrand
+              ? "mt-5 text-2xl font-extrabold text-text"
+              : "text-2xl font-extrabold text-text"
+          }
+        >
+          {title}
+        </h1>
         {!initial && (
           <p className="mt-1 text-sm text-text-muted">
             Bir kez ayarlarsın; sonraki girişlerde hatırlanır.

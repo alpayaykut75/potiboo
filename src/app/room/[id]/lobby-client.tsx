@@ -19,7 +19,16 @@ import type {
 import { AvatarImage } from "@/components/avatar-image";
 import { useProfile } from "@/components/profile-gate";
 import { GameClient } from "./game-client";
+import { XoxGameClient } from "./xox-client";
+import { SynkedGameClient } from "./synked-client";
 import { clsx } from "@/lib/utils";
+import { gameTitle } from "@/lib/games/catalog";
+import { gamePlayerLimits } from "@/lib/games/limits";
+import {
+  defaultWinLength,
+  xoxBoardLabel,
+  type XoxBoardSize,
+} from "@/lib/games/xox";
 
 const DURATION_OPTIONS = [45, 60, 90];
 const ROUND_OPTIONS = [1, 3, 5, 7];
@@ -47,7 +56,13 @@ export function LobbyClient({
   const [shareHint, setShareHint] = useState<string | null>(null);
 
   const isHost = room.host_id === profile.userId;
-  const canStart = players.length >= GAME.minPlayers && players.length <= GAME.maxPlayers;
+  const limits = gamePlayerLimits(room.game_type);
+  const isXox = room.game_type === "xox";
+  const isSynked = room.game_type === "synked";
+  const isIsimSehir = room.game_type === "isim_sehir";
+  const canStart = isSynked
+    ? players.length === 2 || players.length === 4
+    : players.length >= limits.min && players.length <= limits.max;
 
   useEffect(() => {
     QRCode.toDataURL(joinUrl, {
@@ -130,8 +145,8 @@ export function LobbyClient({
   async function onShare() {
     setShareHint(null);
     const data = {
-      title: "Potiboo",
-      text: `Potiboo odasına katıl! PIN: ${room.pin}`,
+      title: gameTitle(room.game_type),
+      text: `${gameTitle(room.game_type)} — PIN: ${room.pin}`,
       url: joinUrl,
     };
     try {
@@ -165,11 +180,29 @@ export function LobbyClient({
   }
 
   const playerLabel = useMemo(
-    () => `${players.length} / ${GAME.maxPlayers} oyuncu`,
-    [players.length],
+    () => `${players.length} / ${limits.max} oyuncu`,
+    [players.length, limits.max],
   );
 
   if (room.status === "playing" || room.status === "finished") {
+    if (isXox) {
+      return (
+        <XoxGameClient
+          roomId={roomId}
+          initialRoom={room}
+          initialPlayers={players}
+        />
+      );
+    }
+    if (isSynked) {
+      return (
+        <SynkedGameClient
+          roomId={roomId}
+          initialRoom={room}
+          initialPlayers={players}
+        />
+      );
+    }
     return (
       <GameClient
         roomId={roomId}
@@ -193,6 +226,9 @@ export function LobbyClient({
       </header>
 
       <section className="card flex flex-col items-center gap-4 p-5">
+        <p className="text-sm font-semibold text-accent">
+          {gameTitle(room.game_type)}
+        </p>
         <p className="text-sm text-text-muted">Oda PIN</p>
         <p className="font-mono text-5xl font-extrabold tracking-[0.35em] text-text">
           {room.pin}
@@ -229,7 +265,76 @@ export function LobbyClient({
         ) : null}
       </section>
 
-      {isHost && (
+      {!isHost && isXox && (
+        <p className="text-center text-sm text-text-muted">
+          {xoxBoardLabel((settings.boardSize ?? 3) as XoxBoardSize)}
+          {" · "}
+          {defaultWinLength((settings.boardSize ?? 3) as XoxBoardSize)} yan yana
+        </p>
+      )}
+
+      {isHost && isXox && (
+        <section className="card space-y-3 p-4">
+          <p className="text-xs font-semibold tracking-wide text-text-dim uppercase">
+            Ayarlar
+          </p>
+          <p className="text-xs text-text-muted">Tahta</p>
+          <div className="flex flex-wrap gap-2">
+            {([3, 5, 0] as const).map((size) => {
+              const selected = (settings.boardSize ?? 3) === size;
+              return (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() =>
+                    patchSettings({
+                      boardSize: size,
+                      winLength: defaultWinLength(size),
+                    })
+                  }
+                  className={clsx(
+                    "min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                    selected
+                      ? "bg-accent text-[#041018]"
+                      : "border border-border bg-bg-elevated text-text-muted",
+                  )}
+                >
+                  {xoxBoardLabel(size)}
+                </button>
+              );
+            })}
+          </div>
+          <p className="text-xs text-text-dim">
+            Kazanma:{" "}
+            {defaultWinLength((settings.boardSize ?? 3) as XoxBoardSize)} yan
+            yana
+            {(settings.boardSize ?? 3) === 0
+              ? " · tahta ihtiyaç oldukça büyür"
+              : ""}
+          </p>
+        </section>
+      )}
+
+      {!isHost && isSynked && (
+        <p className="text-center text-sm text-text-muted">
+          2 kişi klasik · 4 kişi 2v2 (katılım sırasına göre takımlar)
+        </p>
+      )}
+
+      {isHost && isSynked && (
+        <section className="card space-y-2 p-4">
+          <p className="text-xs font-semibold tracking-wide text-text-dim uppercase">
+            Nasıl oynanır
+          </p>
+          <p className="text-sm text-text-muted">
+            Herkes bir tohum kelime yazar; sonra çağrışımla aynı kelimeye
+            ulaşın. 4 kişide katılım sırası: 1–2 bir takım, 3–4 diğer takım —
+            kim önce eşleşirse kazanır.
+          </p>
+        </section>
+      )}
+
+      {isHost && isIsimSehir && (
         <section className="card space-y-3 p-4">
           <p className="text-xs font-semibold tracking-wide text-text-dim uppercase">
             Ayarlar
@@ -390,7 +495,11 @@ export function LobbyClient({
             ? pending
               ? "Başlatılıyor…"
               : "Başlat"
-            : `Başlat (en az ${GAME.minPlayers} oyuncu)`}
+            : isSynked
+              ? players.length === 3
+                ? "Başlat (2 veya 4 oyuncu)"
+                : `Başlat (en az ${limits.min} oyuncu)`
+              : `Başlat (en az ${limits.min} oyuncu)`}
         </button>
       ) : (
         <p className="text-center text-sm text-text-muted">

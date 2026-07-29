@@ -110,53 +110,32 @@ export async function beginSpinning(roundId: string): Promise<void> {
 export async function stopLetter(
   roundId: string,
   letter: string,
-  roomId: string,
+  _roomId: string,
 ): Promise<void> {
-  const userId = await requireUserId();
   const supabase = createClient();
-
-  const { data: round } = await supabase
-    .from("rounds")
-    .select("stopper_id, phase")
-    .eq("id", roundId)
-    .single();
-
-  if (!round) throw new Error("Tur yok");
-  if (round.stopper_id !== userId) throw new Error("Sıra sende değil");
-  if (round.phase !== "waiting" && round.phase !== "spinning") {
-    throw new Error("Harf artık seçilemez");
+  const { error } = await supabase.rpc("stop_letter", {
+    p_round_id: roundId,
+    p_letter: letter,
+  });
+  if (error) {
+    throw new Error(error.message || "Harf seçilemedi");
   }
+}
 
-  const L = letter.toLocaleUpperCase("tr-TR");
-
-  const { data: room } = await supabase
-    .from("rooms")
-    .select("used_letters")
-    .eq("id", roomId)
-    .single();
-
-  const used: string[] = room?.used_letters ?? [];
-  if (used.includes(L)) {
-    throw new Error("Bu harf bu oyunda çıktı. Tekrar DUR’a bas.");
-  }
-
-  const { error } = await supabase
+/** Odadaki kilitli harfler — rounds.letter kaynağı */
+export async function fetchUsedLetters(roomId: string): Promise<string[]> {
+  const supabase = createClient();
+  const { data, error } = await supabase
     .from("rounds")
-    .update({
-      letter: L,
-      phase: "countdown",
-      started_at: new Date().toISOString(),
-      reveal_index: 0,
-    })
-    .eq("id", roundId)
-    .in("phase", ["waiting", "spinning"]);
+    .select("letter")
+    .eq("room_id", roomId)
+    .not("letter", "is", null);
 
   if (error) throw new Error(error.message);
-
-  await supabase
-    .from("rooms")
-    .update({ used_letters: [...used, L] })
-    .eq("id", roomId);
+  return (data ?? [])
+    .map((r) => r.letter)
+    .filter((l): l is string => typeof l === "string" && l.length > 0)
+    .map((l) => l.toLocaleUpperCase("tr-TR"));
 }
 
 export async function beginWriting(roundId: string): Promise<boolean> {
@@ -365,18 +344,6 @@ export async function applyScores(
       },
       { onConflict: "round_id,profile_id" },
     );
-
-    // total_score: önceki turlar + bu tur (yeniden hesap güvenli değil basit ekle)
-    // Daha doğrusu: tüm round_players sum — şimdilik incremental
-    const { data: rp } = await supabase
-      .from("room_players")
-      .select("total_score")
-      .eq("room_id", room.id)
-      .eq("profile_id", p.profileId)
-      .single();
-
-    // Bu tur skorunu eklemeden önce aynı tur için zaten eklenmiş olabilir
-    // Basit yol: tüm bitmiş turların round_score toplamı
   }
 
   // Toplam puanları tur skorlarından yeniden hesapla

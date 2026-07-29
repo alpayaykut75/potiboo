@@ -1,13 +1,11 @@
 import { GAME } from "@/lib/constants";
+import type { GameId } from "@/lib/games/catalog";
+import type { RoomSettings } from "@/lib/games/xox";
+import { defaultSettingsFor } from "@/lib/games/xox";
 
 export type RoomStatus = "lobby" | "playing" | "finished";
 
-export type RoomSettings = {
-  duration: number;
-  roundCount: number;
-  categories: string[];
-  speedBonus: boolean;
-};
+export type { RoomSettings };
 
 export type Room = {
   id: string;
@@ -17,8 +15,8 @@ export type Room = {
   settings: RoomSettings;
   current_round: number;
   created_at: string;
-  /** Bu odada çıkan harfler — tekrar etmez */
   used_letters: string[];
+  game_type: GameId;
 };
 
 export type RoomPlayer = {
@@ -38,11 +36,16 @@ export type RoomPlayerWithProfile = RoomPlayer & {
   } | null;
 };
 
-export function defaultSettings(): RoomSettings {
-  return {
-    duration: GAME.defaultDurationSec,
-    roundCount: GAME.defaultRounds,
-    categories: [...GAME.defaultCategories],
-    speedBonus: GAME.speedBonusEnabledDefault,
-  };
+export function defaultSettings(
+  gameType: GameId = "isim_sehir",
+): RoomSettings {
+  if (gameType === "isim_sehir") {
+    return {
+      duration: GAME.defaultDurationSec,
+      roundCount: GAME.defaultRounds,
+      categories: [...GAME.defaultCategories],
+      speedBonus: GAME.speedBonusEnabledDefault,
+    };
+  }
+  return defaultSettingsFor(gameType);
 }

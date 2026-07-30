@@ -2,13 +2,14 @@ import type { Locale } from "./config";
 import { defaultLocale, isLocale } from "./config";
 import tr from "../../../locales/tr.json";
 import en from "../../../locales/en.json";
+import id from "../../../locales/id.json";
 
-const dictionaries = { tr, en } as const;
+const dictionaries = { tr, en, id } as const;
 
 export type Dictionary = typeof tr;
 
 export function getDictionary(locale: Locale): Dictionary {
-  return dictionaries[locale] ?? dictionaries[defaultLocale];
+  return (dictionaries[locale] ?? dictionaries[defaultLocale]) as Dictionary;
 }
 
 export function resolveLocale(value: string | null | undefined): Locale {

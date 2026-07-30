@@ -16,16 +16,20 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale: raw } = await params;
   const locale = (isLocale(raw) ? raw : "tr") as Locale;
+  const description =
+    locale === "en"
+      ? "Fun, together. Party games with family and friends — join with a PIN or QR"
+      : locale === "id"
+        ? "Fun, together. Game pesta bersama keluarga dan teman — gabung dengan PIN atau QR"
+        : "Fun, together. Aile ve arkadaşlarınla parti oyunları — PIN veya karekod ile katıl";
   return {
     title: `${BRAND.name} — ${BRAND.motto}`,
-    description:
-      locale === "en"
-        ? "Fun, together. Party games with family and friends — join with a PIN or QR"
-        : "Fun, together. Aile ve arkadaşlarınla parti oyunları — PIN veya karekod ile katıl",
+    description,
     alternates: {
       languages: {
         tr: "/tr",
         en: "/en",
+        id: "/id",
       },
     },
   };

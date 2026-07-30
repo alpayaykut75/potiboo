@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LOCALE_COOKIE, type Locale } from "@/lib/i18n/config";
+import { LOCALE_COOKIE, localeLabels, locales, type Locale } from "@/lib/i18n/config";
 import { switchLocalePath } from "@/lib/i18n/paths";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { clsx } from "@/lib/utils";
@@ -29,9 +29,9 @@ export function LocaleToggle({ className }: { className?: string }) {
         className,
       )}
     >
-      {(["tr", "en"] as const).map((code) => {
+      {locales.map((code) => {
         const active = locale === code;
-        const label = code === "tr" ? t("common.langTr") : t("common.langEn");
+        const label = t(`common.${localeLabels[code]}`);
         return (
           <Link
             key={code}
@@ -39,7 +39,7 @@ export function LocaleToggle({ className }: { className?: string }) {
             hrefLang={code}
             onClick={() => persistLocale(code)}
             className={clsx(
-              "rounded-full px-2.5 py-1.5 transition",
+              "rounded-full px-2 py-1.5 transition sm:px-2.5",
               active
                 ? "bg-accent text-[#041018]"
                 : "text-text-muted hover:text-text",

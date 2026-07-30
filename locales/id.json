@@ -1,0 +1,167 @@
+{
+  "common": {
+    "games": "Game",
+    "join": "Gabung",
+    "joining": "Bergabung…",
+    "play": "Main",
+    "soon": "Segera",
+    "copied": "Disalin",
+    "copyFailed": "Gagal menyalin",
+    "copy": "Salin",
+    "host": "Host",
+    "you": "(kamu)",
+    "player": "Pemain",
+    "home": "Beranda",
+    "errorGeneric": "Ada yang salah",
+    "preparing": "Menyiapkan…",
+    "langTr": "TR",
+    "langEn": "EN",
+    "langId": "ID",
+    "langSwitch": "Bahasa"
+  },
+  "room": {
+    "loading": "Memuat lobi…",
+    "notFound": "Ruangan tidak ditemukan.",
+    "loadFailed": "Gagal memuat ruangan",
+    "missing": "Tidak ada ruangan",
+    "joining": "Masuk ke ruangan…",
+    "joinFailed": "Gagal bergabung"
+  },
+  "home": {
+    "titleBefore": "Mau main",
+    "titleAccent": "apa hari ini?",
+    "subtitle": "Buka game, bagikan tautannya — temanmu masuk dengan satu ketukan",
+    "videoLabel": "Pratinjau game Potiboo"
+  },
+  "pin": {
+    "heading": "Punya PIN?",
+    "join": "Gabung",
+    "joining": "Bergabung…",
+    "digitLabel": "Digit PIN {n}",
+    "groupLabel": "PIN ruangan",
+    "notFound": "Tidak ada ruangan terbuka untuk PIN ini",
+    "wrongLength": "PIN harus {n} digit"
+  },
+  "play": {
+    "back": "← Game",
+    "startRoom": "Buat Ruangan",
+    "starting": "Membuat…",
+    "howTo": "Cara main?",
+    "joinTitle": "Gabung game",
+    "joinHint": "Masukkan PIN yang dibagikan temanmu",
+    "notFound": "Game tidak ditemukan",
+    "soonBody": "Game ini segera hadir. Coba Stoppa dulu",
+    "backToGames": "Kembali ke game",
+    "createFailed": "Gagal membuat ruangan"
+  },
+  "lobby": {
+    "closeRoom": "Tutup Ruangan",
+    "leave": "Keluar",
+    "roomPin": "PIN ruangan",
+    "copyPin": "Salin PIN",
+    "shareLink": "Bagikan Tautan",
+    "linkCopied": "Tautan disalin",
+    "shareUnsupported": "Berbagi tidak didukung",
+    "inviteNearby": "Di ruangan",
+    "inviteRemote": "Di tempat lain",
+    "inviteAlready": "Sudah di Potiboo",
+    "pinPrefix": "PIN",
+    "players": "Pemain ({n}/{max})",
+    "emptySeat": "Kursi kosong",
+    "kick": "Keluarkan",
+    "order": "Urutan {n}",
+    "waitingFriends": "Menunggu teman bergabung…",
+    "startGame": "Mulai Game",
+    "starting": "Memulai…",
+    "waitHost": "Menunggu host memulai…",
+    "closeConfirm": "Ruangan akan ditutup dan semua orang keluar. Yakin?",
+    "cancel": "Batal",
+    "settings": "Pengaturan",
+    "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori",
+    "settingsSummaryXox": "Pengaturan · {board}",
+    "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
+    "duration": "Waktu",
+    "seconds": "{n} dtk",
+    "rounds": "Jumlah ronde",
+    "speedBonus": "Bonus kecepatan",
+    "speedBonusHint": "Poin ekstra untuk yang selesai duluan",
+    "categories": "Kategori {n}/{max}",
+    "estimated": "Perkiraan ~{n} mnt",
+    "board": "Papan",
+    "xoxGuestHint": "2 klasik · 4/8 turnamen",
+    "synkedGuestHint": "2 klasik · 4 balapan (tim 1–2 / 3–4)",
+    "howTo": "Cara main",
+    "synkedHowTo": "Di 2p, tulis benih lalu asosiasi sampai cocok. Di 4p, tim mengunci benih dengan STOP, lalu balapan",
+    "tournamentMode": "Turnamen · {n} pemain · 3×3",
+    "tournamentHint": "Dengan 4 atau 8 pemain opsi papan terkunci; pertandingan memakai bracket",
+    "xoxHostHint": "2 pemain: klasik · 4 atau 8: turnamen (3×3)",
+    "lanHint": "Ponsel di Wi‑Fi yang sama: {url}",
+    "localhostHint": "QR mengarah ke localhost — tidak terbuka di ponsel. Tambahkan NEXT_PUBLIC_LAN_HOST",
+    "qrAlt": "Kode QR gabung"
+  },
+  "gameCopy": {
+    "isim_sehir": {
+      "blurb": "Tulis bareng, yang selesai duluan teriak STOP",
+      "meta": "2–8 pemain · ~7 mnt",
+      "howTo": [
+        "Saat huruf muncul, isi semua kategori sekaligus",
+        "Yang selesai duluan teriak STOP, jawaban terbuka",
+        "Jawaban sama 10 poin, unik 20; bisa keberatan"
+      ]
+    },
+    "xox": {
+      "blurb": "Susun tiga, menangkan ronde",
+      "meta": "2–8 pemain · ~2 mnt",
+      "howTo": [
+        "Dengan 2 pemain, bergiliran di papan klasik",
+        "Dengan 4 atau 8, bracket turnamen disusun",
+        "Susun tiga tanda (atau panjang menang papanmu) untuk menang"
+      ]
+    },
+    "synked": {
+      "blurb": "Pikir kata yang sama, cocok dalam 4 ronde",
+      "meta": "2–4 pemain · ~3 mnt",
+      "howTo": [
+        "Di 2p, tulis benih rahasia lalu asosiasi sampai cocok",
+        "Di 4p, tim mengunci benih dengan STOP, lalu balapan",
+        "Tim pertama yang kata-katanya cocok menang"
+      ]
+    },
+    "wordle": {
+      "blurb": "Ikuti petunjuk, temukan kata tersembunyi",
+      "meta": "1–4 pemain · ~4 mnt",
+      "howTo": [
+        "Coba tebak kata tersembunyi",
+        "Hijau tempat benar, kuning huruf benar tapi tempat salah",
+        "Temukan sebelum ronde berakhir"
+      ]
+    },
+    "amiral": {
+      "blurb": "Sembunyikan armadamu, tenggelamkan lawan",
+      "meta": "2 pemain · ~8 mnt",
+      "howTo": [
+        "Sembunyikan kapalmu di papan",
+        "Bergiliran tembak kotak lawan",
+        "Tenggelamkan seluruh armada untuk menang"
+      ]
+    },
+    "tabu": {
+      "blurb": "Jelaskan tanpa kata terlarang",
+      "meta": "4–8 pemain · ~10 mnt",
+      "howTo": [
+        "Jelaskan kata di kartu ke timmu",
+        "Jangan ucapkan kata terlarang",
+        "Raih sebanyak mungkin sebelum waktu habis"
+      ]
+    },
+    "kizma_birader": {
+      "blurb": "Lempar dadu, potong, pulang ke rumah",
+      "meta": "2–4 pemain · ~15 mnt",
+      "howTo": [
+        "Lempar dadu dan gerakkan bidakmu",
+        "Potong rival dan lari ke rumah aman",
+        "Yang pertama bawa semua bidak pulang menang"
+      ]
+    }
+  }
+}

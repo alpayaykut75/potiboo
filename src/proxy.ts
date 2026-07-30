@@ -14,8 +14,10 @@ function preferredLocale(request: NextRequest): Locale {
 
   const header = request.headers.get("accept-language") ?? "";
   const lower = header.toLowerCase();
-  if (lower.includes("tr")) return "tr";
-  if (lower.includes("en")) return "en";
+  // En spesifik dil etiketini önce yakala
+  if (/(^|,)\s*tr\b/.test(lower)) return "tr";
+  if (/(^|,)\s*id\b/.test(lower)) return "id";
+  if (/(^|,)\s*en\b/.test(lower)) return "en";
   return defaultLocale;
 }
 

@@ -3,6 +3,11 @@
 import { createClient } from "@/lib/supabase/client";
 import type { XoxBoardSize, XoxGameRow } from "@/lib/games/xox";
 import { normalizeBoard, normalizeMarks } from "@/lib/games/xox";
+import {
+  parseXoxTournamentBracket,
+  type XoxTournamentPhase,
+  type XoxTournamentRow,
+} from "@/lib/games/xox-tournament";
 
 function mapRow(data: Record<string, unknown>): XoxGameRow {
   const rawSize = data.board_size;
@@ -32,6 +37,29 @@ function mapRow(data: Record<string, unknown>): XoxGameRow {
   };
 }
 
+function mapTournament(data: Record<string, unknown>): XoxTournamentRow {
+  const phaseRaw = data.phase;
+  const phase: XoxTournamentPhase =
+    phaseRaw === "playing" ||
+    phaseRaw === "intermission" ||
+    phaseRaw === "finished" ||
+    phaseRaw === "intro"
+      ? phaseRaw
+      : "intro";
+  return {
+    room_id: String(data.room_id),
+    size: data.size === 8 ? 8 : 4,
+    phase,
+    current_match_key:
+      typeof data.current_match_key === "string"
+        ? data.current_match_key
+        : null,
+    bracket: parseXoxTournamentBracket(data.bracket),
+    champion_id: (data.champion_id as string) ?? null,
+    updated_at: String(data.updated_at ?? ""),
+  };
+}
+
 export async function fetchXoxGame(roomId: string): Promise<XoxGameRow | null> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -42,6 +70,31 @@ export async function fetchXoxGame(roomId: string): Promise<XoxGameRow | null> {
   if (error) throw new Error(error.message);
   if (!data) return null;
   return mapRow(data);
+}
+
+export async function fetchXoxTournament(
+  roomId: string,
+): Promise<XoxTournamentRow | null> {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("xox_tournaments")
+    .select("*")
+    .eq("room_id", roomId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  return mapTournament(data as Record<string, unknown>);
+}
+
+export async function xoxTournamentContinue(
+  roomId: string,
+): Promise<XoxTournamentRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("xox_tournament_continue", {
+    p_room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return mapTournament(data as Record<string, unknown>);
 }
 
 export async function xoxMakeMove(

@@ -1,0 +1,166 @@
+{
+  "common": {
+    "games": "Games",
+    "join": "Join",
+    "joining": "Joining…",
+    "play": "Play",
+    "soon": "Soon",
+    "copied": "Copied",
+    "copyFailed": "Couldn't copy",
+    "copy": "Copy",
+    "host": "Host",
+    "you": "(you)",
+    "player": "Player",
+    "home": "Home",
+    "errorGeneric": "Something went wrong",
+    "preparing": "Getting ready…",
+    "langTr": "TR",
+    "langEn": "EN",
+    "langSwitch": "Language"
+  },
+  "room": {
+    "loading": "Loading lobby…",
+    "notFound": "Room not found.",
+    "loadFailed": "Couldn't load room",
+    "missing": "No room",
+    "joining": "Joining room…",
+    "joinFailed": "Couldn't join"
+  },
+  "home": {
+    "titleBefore": "What are we",
+    "titleAccent": "playing?",
+    "subtitle": "Start a game, share the link — your friends are in with one tap",
+    "videoLabel": "Potiboo game preview"
+  },
+  "pin": {
+    "heading": "Got a PIN?",
+    "join": "Join",
+    "joining": "Joining…",
+    "digitLabel": "PIN digit {n}",
+    "groupLabel": "Room PIN",
+    "notFound": "No open room for this PIN",
+    "wrongLength": "PIN must be {n} digits"
+  },
+  "play": {
+    "back": "← Games",
+    "startRoom": "Start a Room",
+    "starting": "Starting…",
+    "howTo": "How to play?",
+    "joinTitle": "Join a game",
+    "joinHint": "Enter the PIN your friend shared",
+    "notFound": "Game not found",
+    "soonBody": "This game is coming soon. Try Stoppa for now",
+    "backToGames": "Back to games",
+    "createFailed": "Couldn't create room"
+  },
+  "lobby": {
+    "closeRoom": "Close Room",
+    "leave": "Leave",
+    "roomPin": "Room PIN",
+    "copyPin": "Copy PIN",
+    "shareLink": "Share Link",
+    "linkCopied": "Link copied",
+    "shareUnsupported": "Sharing not supported",
+    "inviteNearby": "In the room",
+    "inviteRemote": "Somewhere else",
+    "inviteAlready": "Already on Potiboo",
+    "pinPrefix": "PIN",
+    "players": "Players ({n}/{max})",
+    "emptySeat": "Empty seat",
+    "kick": "Remove",
+    "order": "Seat {n}",
+    "waitingFriends": "Waiting for friends to join…",
+    "startGame": "Start Game",
+    "starting": "Starting…",
+    "waitHost": "Waiting for the host to start…",
+    "closeConfirm": "The room will close and everyone will be dropped. Are you sure?",
+    "cancel": "Cancel",
+    "settings": "Settings",
+    "settingsSummaryIsim": "Settings · {duration}s · {rounds} rounds · {cats} categories",
+    "settingsSummaryXox": "Settings · {board}",
+    "settingsSummaryTournament": "Settings · Tournament · 3×3",
+    "duration": "Timer",
+    "seconds": "{n}s",
+    "rounds": "Rounds",
+    "speedBonus": "Speed bonus",
+    "speedBonusHint": "Bonus points for finishing first",
+    "categories": "Categories {n}/{max}",
+    "estimated": "Estimated ~{n} min",
+    "board": "Board",
+    "xoxGuestHint": "2 classic · 4/8 tournament",
+    "synkedGuestHint": "2 classic · 4 race (1–2 / 3–4 teams)",
+    "howTo": "How to play",
+    "synkedHowTo": "In 2p, write a seed and associate until you match. In 4p, teams lock seeds with STOP, then race",
+    "tournamentMode": "Tournament · {n} players · 3×3",
+    "tournamentHint": "With 4 or 8 players board options are locked; matches use a bracket",
+    "xoxHostHint": "2 players: classic · 4 or 8: tournament (3×3)",
+    "lanHint": "Phone on the same Wi‑Fi: {url}",
+    "localhostHint": "QR points to localhost — won't open on phone. Add NEXT_PUBLIC_LAN_HOST",
+    "qrAlt": "Join QR code"
+  },
+  "gameCopy": {
+    "isim_sehir": {
+      "blurb": "Write together, first one done calls STOP",
+      "meta": "2–8 players · ~7 min",
+      "howTo": [
+        "When the letter lands, fill every category at once",
+        "First done calls STOP and answers open",
+        "Shared answers score 10, unique ones 20; you can object"
+      ]
+    },
+    "xox": {
+      "blurb": "Line up three, take the round",
+      "meta": "2–8 players · ~2 min",
+      "howTo": [
+        "With 2 players, take turns on a classic board",
+        "With 4 or 8, a tournament bracket is set up",
+        "Line up three marks (or your board's win length) to win"
+      ]
+    },
+    "synked": {
+      "blurb": "Think the same word, match within 4 rounds",
+      "meta": "2–4 players · ~3 min",
+      "howTo": [
+        "In 2p, write a private seed and associate until you match",
+        "In 4p, teams lock seeds with STOP, then race",
+        "First team to match the same word wins"
+      ]
+    },
+    "wordle": {
+      "blurb": "Follow the clues, catch the hidden word",
+      "meta": "1–4 players · ~4 min",
+      "howTo": [
+        "Try to guess the hidden word",
+        "Green is right place, yellow is right letter wrong place",
+        "Find it before the round ends"
+      ]
+    },
+    "amiral": {
+      "blurb": "Hide your fleet, sink theirs",
+      "meta": "2 players · ~8 min",
+      "howTo": [
+        "Hide your ships on the board",
+        "Take turns firing at their grid",
+        "Sink the whole fleet to win"
+      ]
+    },
+    "tabu": {
+      "blurb": "Describe it without the banned words",
+      "meta": "4–8 players · ~10 min",
+      "howTo": [
+        "Describe the card word to your team",
+        "Don't say the banned words",
+        "Score as many as you can before time is up"
+      ]
+    },
+    "kizma_birader": {
+      "blurb": "Roll, cut, get home",
+      "meta": "2–4 players · ~15 min",
+      "howTo": [
+        "Roll the dice and move your pieces",
+        "Cut rivals and race to safety",
+        "First to bring all pieces home wins"
+      ]
+    }
+  }
+}

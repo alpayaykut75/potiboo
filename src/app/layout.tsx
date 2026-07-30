@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Poppins } from "next/font/google";
+import { BRAND } from "@/lib/constants";
+import { defaultLocale, isLocale } from "@/lib/i18n/config";
 import "./globals.css";
 
 const poppins = Poppins({
@@ -10,10 +13,10 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "Potiboo — Parti oyunları",
+  title: `${BRAND.name} — ${BRAND.motto}`,
   description:
-    "İsim Şehir ve daha fazlası. Karekod veya PIN ile katıl; hesap yok, indirme yok.",
-  applicationName: "Potiboo",
+    "Fun, together. Aile ve arkadaşlarınla parti oyunları — PIN veya karekod ile katıl",
+  applicationName: BRAND.name,
 };
 
 export const viewport: Viewport = {
@@ -22,13 +25,22 @@ export const viewport: Viewport = {
   themeColor: "#0a0f14",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerLocale = (await headers()).get("x-locale");
+  const lang = headerLocale && isLocale(headerLocale)
+    ? headerLocale
+    : defaultLocale;
+
   return (
-    <html lang="tr" className={`${poppins.variable} h-full antialiased`}>
+    <html
+      lang={lang}
+      className={`${poppins.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

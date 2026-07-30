@@ -1,0 +1,166 @@
+{
+  "common": {
+    "games": "Oyunlar",
+    "join": "Katıl",
+    "joining": "Katılıyor…",
+    "play": "Oyna",
+    "soon": "Yakında",
+    "copied": "Kopyalandı",
+    "copyFailed": "Kopyalanamadı",
+    "copy": "Kopyala",
+    "host": "Kurucu",
+    "you": "(sen)",
+    "player": "Oyuncu",
+    "home": "Ana ekran",
+    "errorGeneric": "Bir şeyler ters gitti",
+    "preparing": "Hazırlanıyor…",
+    "langTr": "TR",
+    "langEn": "EN",
+    "langSwitch": "Dil"
+  },
+  "room": {
+    "loading": "Lobi yükleniyor…",
+    "notFound": "Oda bulunamadı.",
+    "loadFailed": "Oda yüklenemedi",
+    "missing": "Oda yok",
+    "joining": "Odaya katılıyor…",
+    "joinFailed": "Katılım başarısız"
+  },
+  "home": {
+    "titleBefore": "Bugün ne",
+    "titleAccent": "oynuyoruz?",
+    "subtitle": "Oyunu aç, linki paylaş — arkadaşların tek dokunuşla içeride",
+    "videoLabel": "Potiboo oyun önizlemesi"
+  },
+  "pin": {
+    "heading": "PIN'in var mı?",
+    "join": "Katıl",
+    "joining": "Katılıyor…",
+    "digitLabel": "PIN hane {n}",
+    "groupLabel": "Oda PIN",
+    "notFound": "Bu PIN'e ait açık oda yok",
+    "wrongLength": "PIN {n} haneli olmalı"
+  },
+  "play": {
+    "back": "← Oyunlar",
+    "startRoom": "Oyunu Kur",
+    "starting": "Kuruluyor…",
+    "howTo": "Nasıl oynanır?",
+    "joinTitle": "Oyuna katıl",
+    "joinHint": "Arkadaşının paylaştığı PIN'i gir",
+    "notFound": "Oyun bulunamadı",
+    "soonBody": "Bu oyun yakında. Şimdilik Stoppa ile devam edebilirsin",
+    "backToGames": "Oyunlara dön",
+    "createFailed": "Oda oluşturulamadı"
+  },
+  "lobby": {
+    "closeRoom": "Odayı Kapat",
+    "leave": "Ayrıl",
+    "roomPin": "Oda PIN'i",
+    "copyPin": "PIN'i kopyala",
+    "shareLink": "Linki Paylaş",
+    "linkCopied": "Link kopyalandı",
+    "shareUnsupported": "Paylaşım desteklenmiyor",
+    "inviteNearby": "Yanındakiler",
+    "inviteRemote": "Uzaktakiler",
+    "inviteAlready": "Zaten Potiboo'da",
+    "pinPrefix": "PIN",
+    "players": "Oyuncular ({n}/{max})",
+    "emptySeat": "Boş koltuk",
+    "kick": "Çıkar",
+    "order": "Sıra {n}",
+    "waitingFriends": "Arkadaşların katılmayı bekliyor…",
+    "startGame": "Oyunu Başlat",
+    "starting": "Başlatılıyor…",
+    "waitHost": "Kurucu başlatana kadar bekle…",
+    "closeConfirm": "Oda kapanacak ve herkes düşecek. Emin misin?",
+    "cancel": "Vazgeç",
+    "settings": "Ayarlar",
+    "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori",
+    "settingsSummaryXox": "Ayarlar · {board}",
+    "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
+    "duration": "Süre",
+    "seconds": "{n} sn",
+    "rounds": "Tur sayısı",
+    "speedBonus": "Hız bonusu",
+    "speedBonusHint": "Turu ilk bitirene ek puan",
+    "categories": "Kategoriler {n}/{max}",
+    "estimated": "Tahmini süre ~{n} dk",
+    "board": "Tahta",
+    "xoxGuestHint": "2 klasik · 4/8 turnuva",
+    "synkedGuestHint": "2 kişi klasik · 4 kişi yarış (1–2 / 3–4 takım)",
+    "howTo": "Nasıl oynanır",
+    "synkedHowTo": "2 kişide tohum yazıp çağrışımla aynı kelimeye ulaş. 4 kişide takımlar (1–2 vs 3–4) DUR ile tohum kilitler, sonra yarışır",
+    "tournamentMode": "Turnuva modu · {n} oyuncu · 3×3",
+    "tournamentHint": "4 veya 8 kişide tahta seçenekleri kapalı; maçlar eleme ağacıyla oynanır",
+    "xoxHostHint": "2 kişi: klasik · 4 veya 8 kişi: turnuva (3×3)",
+    "lanHint": "Telefon aynı Wi‑Fi'de olsun: {url}",
+    "localhostHint": "Karekod localhost — telefonda açılmaz. NEXT_PUBLIC_LAN_HOST ekle",
+    "qrAlt": "Katılım karekodu"
+  },
+  "gameCopy": {
+    "isim_sehir": {
+      "blurb": "Aynı anda yaz, ilk biten DUR desin",
+      "meta": "2–8 kişi · ~7 dk",
+      "howTo": [
+        "Harf gelince tüm kategorilere aynı anda yaz",
+        "İlk biten DUR desin, cevaplar açılsın",
+        "Aynı cevap 10, tek olan 20 puan; itiraz edebilirsin"
+      ]
+    },
+    "xox": {
+      "blurb": "Üç taşı diz, turu kap",
+      "meta": "2–8 kişi · ~2 dk",
+      "howTo": [
+        "2 kişi klasik tahtada sırayla işaret koy",
+        "4 veya 8 kişide turnuva bracket'i kurulur",
+        "Yan yana üç (veya seçilen boyutta) taşı diz, turu kazan"
+      ]
+    },
+    "synked": {
+      "blurb": "Aynı kelimeyi düşünün, 4 turda tutturun",
+      "meta": "2–4 kişi · ~3 dk",
+      "howTo": [
+        "2 kişide gizli kelime yaz, eşleşene kadar çağrışım yap",
+        "4 kişide takımlar DUR ile tohum seçer, sonra yarışır",
+        "Takımın aynı kelimeye gelirse kazanırsın"
+      ]
+    },
+    "wordle": {
+      "blurb": "İpuçlarını takip et, gizli kelimeyi bul",
+      "meta": "1–4 kişi · ~4 dk",
+      "howTo": [
+        "Gizli kelimeyi tahmin etmeye çalış",
+        "Yeşil doğru yer, sarı yanlış yerde doğru harf",
+        "Tur bitmeden kelimeyi bul"
+      ]
+    },
+    "amiral": {
+      "blurb": "Filonu gizle, rakibini batır",
+      "meta": "2 kişi · ~8 dk",
+      "howTo": [
+        "Gemilerini tahtada gizle",
+        "Sırayla rakibin karesine ateş et",
+        "Tüm filoyu batıran kazanır"
+      ]
+    },
+    "tabu": {
+      "blurb": "Yasaklı kelimelere takılmadan anlat",
+      "meta": "4–8 kişi · ~10 dk",
+      "howTo": [
+        "Takımına karttaki kelimeyi anlat",
+        "Yasaklı kelimeleri söyleme",
+        "Süre dolmadan mümkün olduğunca çok tuttur"
+      ]
+    },
+    "kizma_birader": {
+      "blurb": "Zar at, kes, eve gir",
+      "meta": "2–4 kişi · ~15 dk",
+      "howTo": [
+        "Zar atıp piyonlarını ilerlet",
+        "Rakibi kes, güvenli eve koş",
+        "Tüm piyonlarını eve ilk getiren kazanır"
+      ]
+    }
+  }
+}

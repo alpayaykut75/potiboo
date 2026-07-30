@@ -1,3 +1,9 @@
+/** Marka — motto çevrilmez, i18n dışı */
+export const BRAND = {
+  name: "Potiboo",
+  motto: "Fun, together",
+} as const;
+
 /** Game defaults from product spec */
 export const GAME = {
   minPlayers: 2,
@@ -11,7 +17,7 @@ export const GAME = {
   objectionsPerRound: 2,
   objectionVoteSec: 15,
   /** Kategori ekranında kurucu Devam kilidi */
-  categoryRevealSec: 8,
+  categoryRevealSec: 5,
   /** Varsayılan 5 + en fazla 2 ilave */
   maxExtraCategories: 2,
   uniqueAnswerPoints: 20,
@@ -49,5 +55,5 @@ export const LETTER_POOL = [
   "Z",
 ] as const;
 
-/** PIN alphabet — excludes 0/O, 1/I/l lookalikes */
-export const PIN_CHARS = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ" as const;
+/** Oda PIN uzunluğu (sayısal). ~100 eşzamanlı odaya kadar 4 yeterli; config’ten yükseltilir */
+export const PIN_LENGTH = 4;

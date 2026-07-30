@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { GAME } from "@/lib/constants";
 import { pickSpinLetter } from "@/lib/game/letter-pool";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
@@ -20,6 +21,7 @@ import {
   markFinished,
   saveAnswers,
   applyScores,
+  answersContentFingerprint,
   stopLetter,
   tryFinalizeWriting,
 } from "@/lib/rounds/api";
@@ -58,6 +60,7 @@ export function GameClient({
   initialPlayers: RoomPlayerWithProfile[];
 }) {
   const { profile } = useProfile();
+  const { href } = useLocale();
   const router = useRouter();
   const [room, setRoom] = useState(initialRoom);
   const [players, setPlayers] = useState(initialPlayers);
@@ -91,6 +94,8 @@ export function GameClient({
   const letterLockKey = useRef<string | null>(null);
   const timeUpPlayed = useRef(false);
   const confettiPlayed = useRef(false);
+  const scoredFingerprint = useRef<string | null>(null);
+  const scoringInFlight = useRef(false);
 
   const settings = room.settings as RoomSettings;
 
@@ -402,34 +407,99 @@ export function GameClient({
     void unlockSfx().then(() => playSfx("confetti"));
   }, [room.status]);
 
-  // Scoring: herkes cevap yazar; puanı yalnız kurucu hesaplar (erken/yanlış skor yarışı olmasın)
+  // Scoring: herkes tüm kategorileri flush eder; kurucu bekleyip puanlar
+  // (geç gelen cevaplarda yeniden hesaplar)
   useEffect(() => {
-    if (!round || round.phase !== "scoring") return;
+    if (!round || round.phase !== "scoring") {
+      scoredFingerprint.current = null;
+      return;
+    }
+
     let cancelled = false;
+    const categories = settings.categories;
+    const expected = players.length * categories.length;
+
     (async () => {
       try {
-        await saveAnswers(round.id, draftsRef.current);
-        if (room.host_id !== profile.userId) return;
-
-        // Diğer oyuncuların cevaplarının gelmesini bekle
-        for (let i = 0; i < 8; i++) {
-          if (cancelled) return;
-          await new Promise((r) => setTimeout(r, 400));
-          const ans = await fetchRoundAnswers(round.id);
-          const who = new Set(ans.map((a) => a.profile_id));
-          if (who.size >= players.length) break;
-        }
-        if (cancelled) return;
-        await applyScores(round.id, room, players);
-        if (!cancelled) await refresh();
+        await saveAnswers(round.id, draftsRef.current, categories);
       } catch (e) {
         console.warn("scoring flush:", e);
       }
+
+      if (room.host_id !== profile.userId || cancelled) return;
+
+      // Diğer oyuncuların tüm kategori satırlarının gelmesini bekle
+      for (let i = 0; i < 30; i++) {
+        if (cancelled) return;
+        const ans = await fetchRoundAnswers(round.id);
+        if (ans.length >= expected) break;
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      if (cancelled || scoringInFlight.current) return;
+
+      scoringInFlight.current = true;
+      try {
+        const ans = await fetchRoundAnswers(round.id);
+        const fp = answersContentFingerprint(ans);
+        await applyScores(round.id, room, players);
+        scoredFingerprint.current = fp;
+        if (!cancelled) await refresh();
+      } catch (e) {
+        console.warn("scoring apply:", e);
+      } finally {
+        scoringInFlight.current = false;
+      }
     })();
+
     return () => {
       cancelled = true;
     };
   }, [round?.id, round?.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Geç gelen / güncellenen cevaplar → kurucu yeniden puanlar
+  useEffect(() => {
+    if (!round || round.phase !== "scoring") return;
+    if (room.host_id !== profile.userId) return;
+    if (answers.length === 0) return;
+
+    const fp = answersContentFingerprint(answers);
+    if (fp === scoredFingerprint.current) return;
+
+    const expected = players.length * settings.categories.length;
+    // İlk flush henüz tamamlanmadıysa bekle
+    if (
+      answers.length < expected &&
+      scoredFingerprint.current == null
+    ) {
+      return;
+    }
+
+    const t = window.setTimeout(() => {
+      if (scoringInFlight.current) return;
+      if (fp === scoredFingerprint.current) return;
+      scoringInFlight.current = true;
+      void applyScores(round.id, room, players)
+        .then(async () => {
+          scoredFingerprint.current = fp;
+          await refresh();
+        })
+        .catch((e) => console.warn("scoring rescore:", e))
+        .finally(() => {
+          scoringInFlight.current = false;
+        });
+    }, 500);
+
+    return () => window.clearTimeout(t);
+  }, [
+    answers,
+    round?.id,
+    round?.phase,
+    room,
+    players,
+    profile.userId,
+    settings.categories,
+    refresh,
+  ]);
 
   // Herkes bitince
   useEffect(() => {
@@ -564,7 +634,7 @@ export function GameClient({
     setBusy(true);
     setError(null);
     try {
-      await markFinished(round.id, drafts);
+      await markFinished(round.id, drafts, settings.categories);
       setFinished(true);
       await refresh();
     } catch (e) {
@@ -720,7 +790,7 @@ export function GameClient({
         <button
           type="button"
           className="btn btn-primary relative z-10 mt-auto w-full"
-          onClick={() => router.push("/")}
+          onClick={() => router.push(href("/"))}
         >
           Ana ekrana dön
         </button>

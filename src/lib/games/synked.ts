@@ -1,3 +1,5 @@
+import type { SynkedRaceRow } from "@/lib/games/synked-race";
+
 export type SynkedPhase = "seed" | "guess" | "won";
 export type SynkedMode = "duel" | "teams";
 export type SynkedMatchStatus = "playing" | "finished";
@@ -39,6 +41,7 @@ export type SynkedMatchRow = {
 export type SynkedState = {
   match: SynkedMatchRow | null;
   game: SynkedGameRow | null;
+  race: SynkedRaceRow | null;
 };
 
 export function normalizeSynkedWord(raw: string): string {

@@ -7,7 +7,7 @@ export function gamePlayerLimits(gameType: GameId | string | null | undefined): 
 } {
   switch (gameType) {
     case "xox":
-      return { min: 2, max: 2 };
+      return { min: 2, max: 8 };
     case "synked":
       return { min: 2, max: 4 };
     case "amiral":

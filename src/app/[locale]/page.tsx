@@ -2,12 +2,18 @@
 
 import Link from "next/link";
 import { ProfileChip, ProfileGate, useProfile } from "@/components/profile-gate";
+import { LocaleToggle } from "@/components/i18n/locale-toggle";
+import { useLocale } from "@/components/i18n/locale-provider";
 import { Logo } from "@/components/logo";
-import { GAMES } from "@/lib/games/catalog";
+import { PinJoinForm } from "@/components/pin-join-form";
+import { gamesForHome } from "@/lib/games/catalog";
+import { getGameCopy } from "@/lib/i18n/dictionaries";
 import { clsx } from "@/lib/utils";
 
 function HomeContent() {
   useProfile();
+  const { t, href, dict } = useLocale();
+  const games = gamesForHome();
 
   return (
     <div className="relative flex flex-1 flex-col">
@@ -16,28 +22,35 @@ function HomeContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
-        <Logo size="lg" />
-        <ProfileChip />
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
+        <Logo size="xl" showMotto />
+        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+          <PinJoinForm
+            compact
+            className="relative hidden sm:flex"
+          />
+          <LocaleToggle />
+          <ProfileChip />
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-8 lg:px-8">
-        {/*
-          Mobil: başlık → video → oyunlar
-          Desktop: sol oyunlar, sağ video — sayfaya yayılır
-        */}
+        <div className="mb-4 opacity-80 sm:hidden">
+          <PinJoinForm compact className="relative mx-auto w-fit" />
+        </div>
+
         <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
           <div className="flex flex-col gap-6">
             <div className="text-center lg:text-left">
               <h1 className="text-3xl font-extrabold tracking-tight text-text sm:text-4xl lg:text-5xl">
-                Oyununu <span className="text-accent">seç</span>
+                {t("home.titleBefore")}{" "}
+                <span className="text-accent">{t("home.titleAccent")}</span>
               </h1>
               <p className="mt-2 text-sm text-text-muted sm:text-base">
-                Oyuna gir, PIN veya karekod ile arkadaşlarını çağır.
+                {t("home.subtitle")}
               </p>
             </div>
 
-            {/* Video — mobilde üstte */}
             <div className="relative overflow-hidden rounded-3xl border border-accent/20 shadow-[0_0_40px_-12px_rgba(61,157,196,0.45)] lg:hidden">
               <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-bg/50 via-transparent to-bg/20" />
               <video
@@ -48,13 +61,14 @@ function HomeContent() {
                 loop
                 playsInline
                 preload="metadata"
-                aria-label="Potiboo oyun önizlemesi"
+                aria-label={t("home.videoLabel")}
               />
             </div>
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {GAMES.map((game) => {
+              {games.map((game) => {
                 const live = game.status === "live";
+                const copy = getGameCopy(dict, game.id);
                 const inner = (
                   <>
                     <div className="flex items-start justify-between gap-2">
@@ -69,12 +83,14 @@ function HomeContent() {
                             : "bg-white/5 text-text-dim",
                         )}
                       >
-                        {live ? "Oyna" : "Yakında"}
+                        {live ? t("common.play") : t("common.soon")}
                       </span>
                     </div>
-                    <p className="mt-1 text-sm text-text-muted">{game.blurb}</p>
+                    <p className="mt-1 text-sm text-text-muted">
+                      {copy?.blurb ?? ""}
+                    </p>
                     <p className="mt-3 text-xs text-text-dim">
-                      {game.players} oyuncu
+                      {copy?.meta ?? ""}
                     </p>
                   </>
                 );
@@ -83,7 +99,7 @@ function HomeContent() {
                   return (
                     <div
                       key={game.id}
-                      className="rounded-3xl border border-border/60 bg-bg-card/40 p-5 opacity-55"
+                      className="rounded-3xl border border-border/60 bg-bg-card/40 p-5 opacity-45"
                       aria-disabled
                     >
                       {inner}
@@ -94,7 +110,7 @@ function HomeContent() {
                 return (
                   <Link
                     key={game.id}
-                    href={`/play/${game.slug}`}
+                    href={href(`/play/${game.slug}`)}
                     className="rounded-3xl border border-accent/30 bg-bg-card p-5 transition hover:border-accent hover:bg-accent/5 sm:col-span-2 lg:col-span-1"
                     style={{ boxShadow: `0 0 40px -18px ${game.accent}` }}
                   >
@@ -105,7 +121,6 @@ function HomeContent() {
             </div>
           </div>
 
-          {/* Desktop video */}
           <div className="relative hidden min-h-[28rem] overflow-hidden rounded-[2rem] border border-accent/25 shadow-[0_0_60px_-16px_rgba(61,157,196,0.55)] lg:block xl:min-h-[32rem]">
             <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-br from-bg/30 via-transparent to-accent/10" />
             <video
@@ -116,7 +131,7 @@ function HomeContent() {
               loop
               playsInline
               preload="metadata"
-              aria-label="Potiboo oyun önizlemesi"
+              aria-label={t("home.videoLabel")}
             />
           </div>
         </div>

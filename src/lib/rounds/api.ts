@@ -172,14 +172,20 @@ export async function ensureRoundPlayerRows(
 export async function saveAnswers(
   roundId: string,
   values: Record<string, string>,
+  categories?: readonly string[],
 ): Promise<void> {
   const userId = await requireUserId();
   const supabase = createClient();
-  const rows = Object.entries(values).map(([category, value]) => ({
+  const cats =
+    categories && categories.length > 0
+      ? [...categories]
+      : Object.keys(values);
+
+  const rows = cats.map((category) => ({
     round_id: roundId,
     profile_id: userId,
     category,
-    value: value.trim() || null,
+    value: (values[category] ?? "").trim() || null,
   }));
 
   if (rows.length === 0) return;
@@ -193,8 +199,9 @@ export async function saveAnswers(
 export async function markFinished(
   roundId: string,
   values: Record<string, string>,
+  categories?: readonly string[],
 ): Promise<void> {
-  await saveAnswers(roundId, values);
+  await saveAnswers(roundId, values, categories);
   const userId = await requireUserId();
   const supabase = createClient();
   const now = new Date().toISOString();
@@ -219,8 +226,10 @@ export async function tryFinalizeWriting(params: {
   const { round, room, players, myAnswers } = params;
   if (round.phase !== "writing") return false;
 
-  // Kendi cevaplarını kaydet
-  await saveAnswers(round.id, myAnswers);
+  const settings = room.settings as RoomSettings;
+
+  // Kendi cevaplarını kaydet (tüm kategoriler)
+  await saveAnswers(round.id, myAnswers, settings.categories);
 
   const supabase = createClient();
   const userId = await requireUserId();
@@ -251,7 +260,6 @@ export async function tryFinalizeWriting(params: {
     ),
   );
 
-  const settings = room.settings as RoomSettings;
   const started = round.started_at ? new Date(round.started_at).getTime() : 0;
   const timeUp =
     started > 0 && Date.now() >= started + settings.duration * 1000;
@@ -313,78 +321,33 @@ export async function applyScores(
     }),
   });
 
-  for (const a of result.answers) {
-    const existing = answers.find(
-      (x) => x.profile_id === a.profileId && x.category === a.category,
-    );
-    if (existing) {
-      await supabase
-        .from("answers")
-        .update({ score: a.score })
-        .eq("id", existing.id);
-    } else {
-      await supabase.from("answers").insert({
-        round_id: roundId,
-        profile_id: a.profileId,
-        category: a.category,
-        value: null,
-        score: a.score,
-      });
-    }
-  }
+  const { error } = await supabase.rpc("apply_round_scores", {
+    p_round_id: roundId,
+    p_answer_scores: result.answers.map((a) => ({
+      profile_id: a.profileId,
+      category: a.category,
+      score: a.score,
+    })),
+    p_player_scores: result.players.map((p) => ({
+      profile_id: p.profileId,
+      round_score: p.roundScore,
+      speed_bonus: p.speedBonus,
+      finish_rank: p.finishRank,
+    })),
+  });
 
-  for (const p of result.players) {
-    await supabase.from("round_players").upsert(
-      {
-        round_id: roundId,
-        profile_id: p.profileId,
-        finish_rank: p.finishRank,
-        speed_bonus: p.speedBonus,
-        round_score: p.roundScore,
-      },
-      { onConflict: "round_id,profile_id" },
-    );
-  }
-
-  // Toplam puanları tur skorlarından yeniden hesapla
-  await recalculateTotalScores(room.id, players.map((p) => p.profile_id));
+  if (error) throw new Error(error.message);
 }
 
-async function recalculateTotalScores(
-  roomId: string,
-  playerIds: string[],
-): Promise<void> {
-  const supabase = createClient();
-  const { data: rounds } = await supabase
-    .from("rounds")
-    .select("id")
-    .eq("room_id", roomId)
-    .in("phase", ["scoring", "done"]);
-
-  const roundIds = (rounds ?? []).map((r) => r.id);
-  if (roundIds.length === 0) return;
-
-  const { data: rps } = await supabase
-    .from("round_players")
-    .select("profile_id, round_score")
-    .in("round_id", roundIds);
-
-  const totals = new Map<string, number>();
-  for (const id of playerIds) totals.set(id, 0);
-  for (const row of rps ?? []) {
-    totals.set(
-      row.profile_id,
-      (totals.get(row.profile_id) ?? 0) + (row.round_score ?? 0),
-    );
-  }
-
-  for (const [profileId, total] of totals) {
-    await supabase
-      .from("room_players")
-      .update({ total_score: total })
-      .eq("room_id", roomId)
-      .eq("profile_id", profileId);
-  }
+/** Cevap içeriği parmak izi — sadece değer/iptal değişince yeniden puanla */
+export function answersContentFingerprint(answers: AnswerRow[]): string {
+  return answers
+    .map(
+      (a) =>
+        `${a.profile_id}\t${a.category}\t${a.value ?? ""}\t${a.is_invalidated ? 1 : 0}`,
+    )
+    .sort()
+    .join("|");
 }
 
 export async function advanceToNextRound(

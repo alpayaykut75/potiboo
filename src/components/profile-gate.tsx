@@ -13,6 +13,7 @@ import { bootstrapProfile, saveProfile } from "@/lib/profile/bootstrap";
 import type { PlayerProfile } from "@/lib/profile/storage";
 import { ProfileSetup } from "@/components/profile-setup";
 import { AvatarImage } from "@/components/avatar-image";
+import { useLocale } from "@/components/i18n/locale-provider";
 
 type ProfileContextValue = {
   profile: PlayerProfile;
@@ -34,6 +35,7 @@ export function useProfile(): ProfileContextValue {
 }
 
 export function ProfileGate({ children }: { children: React.ReactNode }) {
+  const { t } = useLocale();
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [ready, setReady] = useState(false);
   const [mode, setMode] = useState<"supabase" | "local">("local");
@@ -94,7 +96,7 @@ export function ProfileGate({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5">
         <div className="h-10 w-10 animate-pulse rounded-full bg-accent/30" />
-        <p className="text-sm text-text-muted">Hazırlanıyor…</p>
+        <p className="text-sm text-text-muted">{t("common.preparing")}</p>
       </div>
     );
   }

@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/client";
 import { ensureRemoteProfile } from "@/lib/profile/bootstrap";
 import { generatePin, normalizePin } from "@/lib/rooms/pin";
+import { PIN_LENGTH } from "@/lib/constants";
 import {
   defaultSettings,
   type Room,
@@ -21,8 +22,8 @@ export async function createRoom(
   const userId = await ensureRemoteProfile();
   const settings = defaultSettings(gameType);
 
-  // PIN çakışması olursa birkaç kez dene
-  for (let attempt = 0; attempt < 8; attempt++) {
+  // PIN çakışması olursa yeniden üret (benzersizlik garantisi)
+  for (let attempt = 0; attempt < 16; attempt++) {
     const pin = generatePin();
     const { data: room, error } = await supabase
       .from("rooms")
@@ -74,8 +75,8 @@ export async function joinRoomByPin(rawPin: string): Promise<Room> {
   const userId = await ensureRemoteProfile();
   const pin = normalizePin(rawPin);
 
-  if (pin.length < 4) {
-    throw new Error("PIN 4 karakter olmalı.");
+  if (pin.length !== PIN_LENGTH) {
+    throw new Error("pin_wrong_length");
   }
 
   const { data: room, error } = await supabase
@@ -85,7 +86,7 @@ export async function joinRoomByPin(rawPin: string): Promise<Room> {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!room) throw new Error("Oda bulunamadı. PIN'i kontrol et.");
+  if (!room) throw new Error("pin_not_found");
 
   if (room.status !== "lobby") {
     // Yeniden bağlanma: zaten üyeyse odaya dön
@@ -187,6 +188,62 @@ export async function fetchRoomPlayers(
   return (data ?? []) as unknown as RoomPlayerWithProfile[];
 }
 
+/** Kurucu: oyuncuyu odadan çıkar */
+export async function kickPlayer(
+  roomId: string,
+  profileId: string,
+): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Oturum yok");
+
+  const room = await fetchRoom(roomId);
+  if (!room) throw new Error("Oda yok");
+  if (room.host_id !== user.id) throw new Error("Sadece kurucu çıkarabilir");
+  if (profileId === user.id) throw new Error("Kendini çıkaramazsın");
+
+  const { error } = await supabase
+    .from("room_players")
+    .delete()
+    .eq("room_id", roomId)
+    .eq("profile_id", profileId);
+  if (error) throw new Error(error.message);
+}
+
+/** Oyuncu: odadan ayrıl */
+export async function leaveRoom(roomId: string): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Oturum yok");
+
+  const { error } = await supabase
+    .from("room_players")
+    .delete()
+    .eq("room_id", roomId)
+    .eq("profile_id", user.id);
+  if (error) throw new Error(error.message);
+}
+
+/** Kurucu: odayı kapat (herkes düşer) */
+export async function closeRoom(roomId: string): Promise<void> {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Oturum yok");
+
+  const room = await fetchRoom(roomId);
+  if (!room) throw new Error("Oda yok");
+  if (room.host_id !== user.id) throw new Error("Sadece kurucu kapatabilir");
+
+  const { error } = await supabase.from("rooms").delete().eq("id", roomId);
+  if (error) throw new Error(error.message);
+}
+
 export async function updateRoomSettings(
   roomId: string,
   settings: RoomSettings,
@@ -217,11 +274,10 @@ export async function startGame(roomId: string): Promise<void> {
   const sorted = [...players].sort((a, b) => a.join_order - b.join_order);
 
   if (room.game_type === "xox") {
-    const xPlayer = sorted[0]?.profile_id;
-    const oPlayer = sorted[1]?.profile_id;
-    if (!xPlayer || !oPlayer) throw new Error("2 oyuncu gerekli");
-
-    const { boardSize, winLength } = resolveXoxBoard(room.settings);
+    const n = sorted.length;
+    if (n !== 2 && n !== 4 && n !== 8) {
+      throw new Error("XOX için 2, 4 veya 8 oyuncu gerekli.");
+    }
 
     const { error } = await supabase
       .from("rooms")
@@ -230,22 +286,37 @@ export async function startGame(roomId: string): Promise<void> {
       .eq("status", "lobby");
     if (error) throw new Error(error.message);
 
-    const { error: xoxErr } = await supabase.from("xox_games").upsert(
-      {
-        room_id: roomId,
-        board: emptyXoxBoard(boardSize),
-        marks: {},
-        board_size: boardSize,
-        win_length: winLength,
-        next_mark: "X",
-        x_player: xPlayer,
-        o_player: oPlayer,
-        status: "playing",
-        winner_id: null,
-      },
-      { onConflict: "room_id" },
-    );
-    if (xoxErr) throw new Error(xoxErr.message);
+    if (n === 2) {
+      const xPlayer = sorted[0]!.profile_id;
+      const oPlayer = sorted[1]!.profile_id;
+      const { boardSize, winLength } = resolveXoxBoard(room.settings);
+
+      const { error: xoxErr } = await supabase.from("xox_games").upsert(
+        {
+          room_id: roomId,
+          board: emptyXoxBoard(boardSize),
+          marks: {},
+          board_size: boardSize,
+          win_length: winLength,
+          next_mark: "X",
+          x_player: xPlayer,
+          o_player: oPlayer,
+          status: "playing",
+          winner_id: null,
+        },
+        { onConflict: "room_id" },
+      );
+      if (xoxErr) throw new Error(xoxErr.message);
+      // Eski turnuva kalıntısı varsa temizle
+      await supabase.from("xox_tournaments").delete().eq("room_id", roomId);
+      return;
+    }
+
+    // 4 / 8 turnuva
+    const { error: tourErr } = await supabase.rpc("xox_tournament_start", {
+      p_room_id: roomId,
+    });
+    if (tourErr) throw new Error(tourErr.message);
     return;
   }
 
@@ -254,8 +325,6 @@ export async function startGame(roomId: string): Promise<void> {
       throw new Error("Synked için 2 veya 4 oyuncu gerekli.");
     }
 
-    const mode = sorted.length === 4 ? "teams" : "duel";
-
     const { error } = await supabase
       .from("rooms")
       .update({ status: "playing", current_round: 1 })
@@ -263,10 +332,40 @@ export async function startGame(roomId: string): Promise<void> {
       .eq("status", "lobby");
     if (error) throw new Error(error.message);
 
+    if (sorted.length === 4) {
+      // 4p yarış — eski klasik/takım satırlarını temizle
+      await supabase.from("synked_games").delete().eq("room_id", roomId);
+      await supabase.from("synked_matches").delete().eq("room_id", roomId);
+
+      const { error: raceErr } = await supabase.from("synked_races").upsert(
+        {
+          room_id: roomId,
+          phase: "spin1",
+          seed1: null,
+          seed2: null,
+          team0_a: sorted[0]!.profile_id,
+          team0_b: sorted[1]!.profile_id,
+          team1_a: sorted[2]!.profile_id,
+          team1_b: sorted[3]!.profile_id,
+          live_t0a: "",
+          live_t0b: "",
+          live_t1a: "",
+          live_t1b: "",
+          winner_team: null,
+        },
+        { onConflict: "room_id" },
+      );
+      if (raceErr) throw new Error(raceErr.message);
+      return;
+    }
+
+    // 2p klasik
+    await supabase.from("synked_races").delete().eq("room_id", roomId);
+
     const { error: matchErr } = await supabase.from("synked_matches").upsert(
       {
         room_id: roomId,
-        mode,
+        mode: "duel",
         status: "playing",
         winner_team: null,
         team0_phase: "seed",
@@ -278,46 +377,21 @@ export async function startGame(roomId: string): Promise<void> {
     );
     if (matchErr) throw new Error(matchErr.message);
 
-    // Eski takım satırlarını temizle (2→4 / 4→2 geçiş)
     await supabase.from("synked_games").delete().eq("room_id", roomId);
 
-    const teams =
-      mode === "duel"
-        ? [
-            {
-              team_id: 0,
-              player_a: sorted[0]!.profile_id,
-              player_b: sorted[1]!.profile_id,
-            },
-          ]
-        : [
-            {
-              team_id: 0,
-              player_a: sorted[0]!.profile_id,
-              player_b: sorted[1]!.profile_id,
-            },
-            {
-              team_id: 1,
-              player_a: sorted[2]!.profile_id,
-              player_b: sorted[3]!.profile_id,
-            },
-          ];
-
-    const { error: synkedErr } = await supabase.from("synked_games").insert(
-      teams.map((t) => ({
-        room_id: roomId,
-        team_id: t.team_id,
-        player_a: t.player_a,
-        player_b: t.player_b,
-        phase: "seed",
-        round: 0,
-        word_a: null,
-        word_b: null,
-        history: [],
-        ready_a: false,
-        ready_b: false,
-      })),
-    );
+    const { error: synkedErr } = await supabase.from("synked_games").insert({
+      room_id: roomId,
+      team_id: 0,
+      player_a: sorted[0]!.profile_id,
+      player_b: sorted[1]!.profile_id,
+      phase: "seed",
+      round: 0,
+      word_a: null,
+      word_b: null,
+      history: [],
+      ready_a: false,
+      ready_b: false,
+    });
     if (synkedErr) throw new Error(synkedErr.message);
     return;
   }

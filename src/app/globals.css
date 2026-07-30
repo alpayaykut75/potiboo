@@ -87,6 +87,21 @@
   }
 }
 
+@keyframes synkedSpinWord {
+  from {
+    opacity: 0.35;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.synked-spin-word {
+  animation: synkedSpinWord 70ms ease-out;
+}
+
 html {
   height: 100%;
 }

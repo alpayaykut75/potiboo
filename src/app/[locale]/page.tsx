@@ -23,14 +23,15 @@ function HomeContent() {
       />
 
       <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-4 lg:px-8">
-        <div className="flex items-center justify-between gap-3">
-          <Logo size="lg" showMotto className="min-w-0 sm:hidden" />
-          <Logo size="xl" showMotto className="hidden min-w-0 sm:inline-flex" />
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <PinJoinForm
-              compact
-              className="relative hidden md:flex"
-            />
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="sm:hidden">
+            <Logo size="lg" showMotto />
+          </div>
+          <div className="hidden sm:block">
+            <Logo size="xl" showMotto />
+          </div>
+          <div className="flex items-center justify-end gap-2">
+            <PinJoinForm compact className="relative hidden md:flex" />
             <LocaleToggle />
             <ProfileChip />
           </div>

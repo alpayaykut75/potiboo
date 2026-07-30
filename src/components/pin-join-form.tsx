@@ -136,7 +136,7 @@ export function PinJoinForm({
     <form
       className={clsx(
         compact
-          ? "relative flex items-center gap-1.5 opacity-70 transition hover:opacity-100"
+          ? "relative flex items-center gap-1.5"
           : "flex flex-col gap-3",
         className,
       )}
@@ -182,7 +182,7 @@ export function PinJoinForm({
             className={clsx(
               "bg-bg-elevated text-center font-mono text-text outline-none focus:border-accent",
               compact
-                ? "h-8 w-7 rounded-md border border-border text-sm font-semibold"
+                ? "h-9 w-8 rounded-lg border border-border-strong bg-bg-card text-sm font-semibold"
                 : "h-14 w-12 rounded-xl border-2 border-border-strong text-2xl font-bold sm:h-16 sm:w-14",
             )}
           />
@@ -196,7 +196,7 @@ export function PinJoinForm({
         className={clsx(
           "btn shrink-0",
           compact
-            ? "rounded-md border border-border bg-transparent px-2.5 py-1.5 text-xs font-semibold text-text-muted hover:border-accent/40 hover:text-accent"
+            ? "rounded-lg border border-border-strong bg-bg-card px-3 py-2 text-xs font-semibold text-text-muted hover:border-accent/50 hover:text-accent"
             : "w-full border-2 border-accent bg-transparent text-accent hover:bg-accent/15",
         )}
         disabled={pending || pin.length < PIN_LENGTH}

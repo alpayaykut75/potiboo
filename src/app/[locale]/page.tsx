@@ -22,23 +22,27 @@ function HomeContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-5 py-4 lg:px-8">
-        <Logo size="xl" showMotto />
-        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-          <PinJoinForm
-            compact
-            className="relative hidden sm:flex"
-          />
-          <LocaleToggle />
-          <ProfileChip />
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-4 lg:px-8">
+        <div className="flex items-center justify-between gap-3">
+          <Logo size="lg" showMotto className="min-w-0 sm:hidden" />
+          <Logo size="xl" showMotto className="hidden min-w-0 sm:inline-flex" />
+          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <PinJoinForm
+              compact
+              className="relative hidden md:flex"
+            />
+            <LocaleToggle />
+            <ProfileChip />
+          </div>
         </div>
+
+        <PinJoinForm
+          compact
+          className="relative flex w-full justify-center md:hidden"
+        />
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-8 lg:px-8">
-        <div className="mb-4 opacity-80 sm:hidden">
-          <PinJoinForm compact className="relative mx-auto w-fit" />
-        </div>
-
         <div className="grid items-start gap-8 lg:grid-cols-2 lg:gap-12 xl:gap-16">
           <div className="flex flex-col gap-6">
             <div className="text-center lg:text-left">

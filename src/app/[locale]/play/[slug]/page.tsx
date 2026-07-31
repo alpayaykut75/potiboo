@@ -21,7 +21,7 @@ function PlayContent() {
   const game = getGameBySlug(params.slug);
   const copy = game ? getGameCopy(dict, game.id) : undefined;
   const [error, setError] = useState<string | null>(null);
-  const [howOpen, setHowOpen] = useState(false);
+  const [howOpen, setHowOpen] = useState(true);
   const [pending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -89,24 +89,22 @@ function PlayContent() {
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-start gap-5 px-5 pt-1 pb-8 sm:max-w-xl">
-        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-start">
-          <Link
-            href={href("/")}
-            className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-xl text-text-muted transition hover:bg-white/5 hover:text-accent"
-            aria-label={t("common.home")}
-          >
-            ←
-          </Link>
-          <div className="text-center">
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
-              {game.title}
-            </h1>
-            <p className="mx-auto mt-2 max-w-sm text-base text-text-muted">
-              {copy?.blurb ?? ""}
-            </p>
-            <p className="mt-2 text-sm text-text-dim">{copy?.meta ?? ""}</p>
-          </div>
-          <span aria-hidden />
+        <Link
+          href={href("/")}
+          className="inline-flex h-9 w-9 items-center justify-center self-start rounded-full text-xl text-text-muted transition hover:bg-white/5 hover:text-accent"
+          aria-label={t("common.back")}
+        >
+          ←
+        </Link>
+
+        <div className="text-center">
+          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
+            {game.title}
+          </h1>
+          <p className="mx-auto mt-2 max-w-sm text-base text-text-muted">
+            {copy?.blurb ?? ""}
+          </p>
+          <p className="mt-2 text-sm text-text-dim">{copy?.meta ?? ""}</p>
         </div>
 
         <button
@@ -131,11 +129,13 @@ function PlayContent() {
             </span>
           </button>
           {howOpen && copy && (
-            <ol className="space-y-2 border-t border-border/60 px-4 py-3 text-sm text-text-muted">
+            <ol className="list-none space-y-2 border-t border-border/60 px-4 py-3 text-sm text-text-muted">
               {copy.howTo.map((step: string, i: number) => (
-                <li key={step} className="flex gap-2">
-                  <span className="font-bold text-accent">{i + 1}.</span>
-                  <span>{step}</span>
+                <li key={step} className="flex gap-2.5">
+                  <span className="w-5 shrink-0 text-right font-bold text-accent">
+                    {i + 1}.
+                  </span>
+                  <span className="min-w-0 flex-1">{step}</span>
                 </li>
               ))}
             </ol>
@@ -149,7 +149,7 @@ function PlayContent() {
           <p className="text-center text-sm text-text-muted">
             {t("play.joinHint")}
           </p>
-          <PinJoinForm showHeading={false} />
+          <PinJoinForm showHeading={false} joinQuiet />
         </div>
 
         {error && (

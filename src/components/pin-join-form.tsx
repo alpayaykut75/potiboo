@@ -21,11 +21,14 @@ export function PinJoinForm({
   compact = false,
   autoFocus = false,
   showHeading = true,
+  /** Katıl butonu yedek/ikincil — PIN kutuları baskın kalsın */
+  joinQuiet = false,
 }: {
   className?: string;
   compact?: boolean;
   autoFocus?: boolean;
   showHeading?: boolean;
+  joinQuiet?: boolean;
 }) {
   const router = useRouter();
   const { t, href } = useLocale();
@@ -197,7 +200,9 @@ export function PinJoinForm({
           "btn shrink-0",
           compact
             ? "rounded-lg border border-border-strong bg-bg-card px-3 py-2 text-xs font-semibold text-text-muted hover:border-accent/50 hover:text-accent"
-            : "w-full border-2 border-accent bg-transparent text-accent hover:bg-accent/15",
+            : joinQuiet
+              ? "mx-auto w-auto min-w-[5.5rem] rounded-xl border border-border bg-transparent px-4 py-2 text-sm font-semibold text-text-muted hover:border-accent/40 hover:text-accent"
+              : "w-full border-2 border-accent bg-transparent text-accent hover:bg-accent/15",
         )}
         disabled={pending || pin.length < PIN_LENGTH}
       >

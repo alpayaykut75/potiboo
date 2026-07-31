@@ -14,10 +14,8 @@
     "home": "Ana ekran",
     "errorGeneric": "Bir şeyler ters gitti",
     "preparing": "Hazırlanıyor…",
-    "langTr": "TR",
-    "langEn": "EN",
-    "langId": "ID",
-    "langSwitch": "Dil"
+    "langSwitch": "Dil",
+    "back": "Geri"
   },
   "room": {
     "loading": "Lobi yükleniyor…",
@@ -43,7 +41,6 @@
     "wrongLength": "PIN {n} haneli olmalı"
   },
   "play": {
-    "back": "← Oyunlar",
     "startRoom": "Oyunu Kur",
     "starting": "Kuruluyor…",
     "howTo": "Nasıl oynanır?",
@@ -65,9 +62,12 @@
     "inviteNearby": "Yanındakiler",
     "inviteRemote": "Uzaktakiler",
     "inviteAlready": "Zaten Potiboo'da",
+    "showQr": "Karekodu göster",
+    "hideQr": "Karekodu gizle",
     "pinPrefix": "PIN",
     "players": "Oyuncular ({n}/{max})",
     "emptySeat": "Boş koltuk",
+    "moreSeats": "+{n} yer daha",
     "kick": "Çıkar",
     "order": "Sıra {n}",
     "waitingFriends": "Arkadaşların katılmayı bekliyor…",
@@ -77,7 +77,7 @@
     "closeConfirm": "Oda kapanacak ve herkes düşecek. Emin misin?",
     "cancel": "Vazgeç",
     "settings": "Ayarlar",
-    "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori",
+    "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori · ~{est} dk",
     "settingsSummaryXox": "Ayarlar · {board}",
     "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
     "duration": "Süre",
@@ -86,7 +86,6 @@
     "speedBonus": "Hız bonusu",
     "speedBonusHint": "Turu ilk bitirene ek puan",
     "categories": "Kategoriler {n}/{max}",
-    "estimated": "Tahmini süre ~{n} dk",
     "board": "Tahta",
     "xoxGuestHint": "2 klasik · 4/8 turnuva",
     "synkedGuestHint": "2 kişi klasik · 4 kişi yarış (1–2 / 3–4 takım)",
@@ -102,16 +101,16 @@
   "gameCopy": {
     "isim_sehir": {
       "blurb": "Aynı anda yaz, ilk biten DUR desin",
-      "meta": "2–8 kişi · ~7 dk",
+      "meta": "2–8 kişi",
       "howTo": [
         "Harf gelince tüm kategorilere aynı anda yaz",
         "İlk biten DUR desin, cevaplar açılsın",
-        "Aynı cevap 10, tek olan 20 puan; itiraz edebilirsin"
+        "Aynı cevap 10, tek cevap 20 puan"
       ]
     },
     "xox": {
       "blurb": "Üç taşı diz, turu kap",
-      "meta": "2–8 kişi · ~2 dk",
+      "meta": "2–8 kişi",
       "howTo": [
         "2 kişi klasik tahtada sırayla işaret koy",
         "4 veya 8 kişide turnuva bracket'i kurulur",
@@ -120,7 +119,7 @@
     },
     "synked": {
       "blurb": "Aynı kelimeyi düşünün, 4 turda tutturun",
-      "meta": "2–4 kişi · ~3 dk",
+      "meta": "2–4 kişi",
       "howTo": [
         "2 kişide gizli kelime yaz, eşleşene kadar çağrışım yap",
         "4 kişide takımlar DUR ile tohum seçer, sonra yarışır",
@@ -129,7 +128,7 @@
     },
     "wordle": {
       "blurb": "İpuçlarını takip et, gizli kelimeyi bul",
-      "meta": "1–4 kişi · ~4 dk",
+      "meta": "1–4 kişi",
       "howTo": [
         "Gizli kelimeyi tahmin etmeye çalış",
         "Yeşil doğru yer, sarı yanlış yerde doğru harf",
@@ -138,7 +137,7 @@
     },
     "amiral": {
       "blurb": "Filonu gizle, rakibini batır",
-      "meta": "2 kişi · ~8 dk",
+      "meta": "2 kişi",
       "howTo": [
         "Gemilerini tahtada gizle",
         "Sırayla rakibin karesine ateş et",
@@ -147,7 +146,7 @@
     },
     "tabu": {
       "blurb": "Yasaklı kelimelere takılmadan anlat",
-      "meta": "4–8 kişi · ~10 dk",
+      "meta": "4–8 kişi",
       "howTo": [
         "Takımına karttaki kelimeyi anlat",
         "Yasaklı kelimeleri söyleme",
@@ -156,7 +155,7 @@
     },
     "kizma_birader": {
       "blurb": "Zar at, kes, eve gir",
-      "meta": "2–4 kişi · ~15 dk",
+      "meta": "2–4 kişi",
       "howTo": [
         "Zar atıp piyonlarını ilerlet",
         "Rakibi kes, güvenli eve koş",

@@ -9,13 +9,10 @@ import { switchLocalePath } from "@/lib/i18n/paths";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { clsx } from "@/lib/utils";
 
-const LOCALE_META: Record<
-  Locale,
-  { flag: string; code: string; name: string }
-> = {
-  tr: { flag: "🇹🇷", code: "TR", name: "Türkçe" },
-  en: { flag: "🇬🇧", code: "EN", name: "English" },
-  id: { flag: "🇮🇩", code: "ID", name: "Indonesia" },
+const LOCALE_META: Record<Locale, { code: string; name: string }> = {
+  tr: { code: "TR", name: "Türkçe" },
+  en: { code: "EN", name: "English" },
+  id: { code: "ID", name: "Bahasa Indonesia" },
 };
 
 function persistLocale(locale: Locale) {
@@ -92,7 +89,7 @@ export function LocaleToggle({ className }: { className?: string }) {
         role="listbox"
         aria-label={t("common.langSwitch")}
         style={{ top: menuPos.top, right: menuPos.right }}
-        className="fixed z-[300] min-w-[10.5rem] overflow-hidden rounded-2xl border border-border bg-bg-card py-1 shadow-xl shadow-black/50"
+        className="fixed z-[300] min-w-[11.5rem] overflow-hidden rounded-2xl border border-border bg-bg-card py-1 shadow-xl shadow-black/50"
       >
         {locales.map((code) => {
           const meta = LOCALE_META[code];
@@ -113,9 +110,6 @@ export function LocaleToggle({ className }: { className?: string }) {
                     : "text-text hover:bg-white/5",
                 )}
               >
-                <span className="text-base leading-none" aria-hidden>
-                  {meta.flag}
-                </span>
                 <span className="flex-1">{meta.name}</span>
                 <span className="text-xs font-bold text-text-dim">
                   {meta.code}
@@ -133,17 +127,14 @@ export function LocaleToggle({ className }: { className?: string }) {
       <button
         ref={buttonRef}
         type="button"
-        className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-bg-card/80 pr-3 pl-2.5 text-sm font-semibold text-text transition hover:border-accent/50"
+        className="inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-bg-card/80 px-3 text-sm font-bold text-text transition hover:border-accent/50"
         aria-label={t("common.langSwitch")}
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="text-base leading-none" aria-hidden>
-          {current.flag}
-        </span>
-        <span className="font-bold">{current.code}</span>
+        <span>{current.code}</span>
         <span
           className={clsx(
             "text-xs text-text-dim transition",

@@ -49,10 +49,10 @@ function HomeContent() {
               </p>
             </div>
 
-            <div className="relative overflow-hidden rounded-3xl border border-accent/20 shadow-[0_0_40px_-12px_rgba(61,157,196,0.45)] lg:hidden">
+            <div className="relative h-[180px] max-h-[180px] overflow-hidden rounded-2xl border border-accent/20 shadow-[0_0_40px_-12px_rgba(61,157,196,0.45)] lg:hidden">
               <div className="pointer-events-none absolute inset-0 z-[1] bg-gradient-to-t from-bg/50 via-transparent to-bg/20" />
               <video
-                className="aspect-[16/10] w-full object-cover motion-reduce:hidden"
+                className="h-full w-full object-cover motion-reduce:hidden"
                 src="/potiboo_video.mp4"
                 autoPlay
                 muted

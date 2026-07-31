@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/client";
@@ -63,6 +63,7 @@ export function LobbyClient({
   const [shareHint, setShareHint] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [closeConfirm, setCloseConfirm] = useState(false);
+  const [showQr, setShowQr] = useState(false);
   const prevPlayerIds = useRef<Set<string>>(
     new Set(initialPlayers.map((p) => p.profile_id)),
   );
@@ -173,11 +174,12 @@ export function LobbyClient({
   }, [isIsimSehir, settings.duration, settings.roundCount]);
 
   const settingsSummary = useMemo(() => {
-    if (isIsimSehir) {
+    if (isIsimSehir && estimatedMin != null) {
       return t("lobby.settingsSummaryIsim", {
         duration: settings.duration,
         rounds: settings.roundCount,
         cats: settings.categories.length,
+        est: estimatedMin,
       });
     }
     if (isXox && players.length < 4) {
@@ -187,7 +189,7 @@ export function LobbyClient({
     }
     if (isXox) return t("lobby.settingsSummaryTournament");
     return null;
-  }, [isIsimSehir, isXox, players.length, settings, t]);
+  }, [estimatedMin, isIsimSehir, isXox, players.length, settings, t]);
 
   function patchSettings(patch: Partial<RoomSettings>) {
     if (!isHost) return;
@@ -286,6 +288,8 @@ export function LobbyClient({
   }
 
   const emptySlots = Math.max(0, limits.max - players.length);
+  const visibleEmptySlots = Math.min(3, emptySlots);
+  const hiddenEmptySlots = emptySlots - visibleEmptySlots;
 
   if (room.status === "playing" || room.status === "finished") {
     if (isXox) {
@@ -315,65 +319,102 @@ export function LobbyClient({
     );
   }
 
-  const qrBlock = (
-    <div className="flex justify-end">
-      {qrDataUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={qrDataUrl}
-          alt={t("lobby.qrAlt")}
-          className="h-28 w-28 rounded-xl bg-white p-1.5 sm:h-32 sm:w-32"
-        />
+  const lanHint =
+    joinUrl.includes("192.") || joinUrl.includes("10.") ? (
+      <p className="break-all text-[11px] text-text-dim">
+        {t("lobby.lanHint", { url: joinUrl })}
+      </p>
+    ) : joinUrl.includes("localhost") ? (
+      <p className="text-[11px] text-warning">{t("lobby.localhostHint")}</p>
+    ) : null;
+
+  const nearbyBlock = (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-text-muted">
+        {t("lobby.inviteNearby")}
+      </p>
+      {!showQr ? (
+        <button
+          type="button"
+          className="btn btn-secondary w-full py-2.5 text-sm"
+          onClick={() => setShowQr(true)}
+        >
+          {t("lobby.showQr")}
+        </button>
       ) : (
-        <div className="h-28 w-28 animate-pulse rounded-xl bg-bg-elevated sm:h-32 sm:w-32" />
+        <div className="flex flex-col items-center gap-2">
+          {qrDataUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={qrDataUrl}
+              alt={t("lobby.qrAlt")}
+              className="h-36 w-36 rounded-xl bg-white p-1.5"
+            />
+          ) : (
+            <div className="h-36 w-36 animate-pulse rounded-xl bg-bg-elevated" />
+          )}
+          <button
+            type="button"
+            className="text-xs font-semibold text-text-dim hover:text-accent"
+            onClick={() => setShowQr(false)}
+          >
+            {t("lobby.hideQr")}
+          </button>
+          {lanHint}
+        </div>
       )}
     </div>
   );
 
-  const linkBlock = (
-    <button
-      type="button"
-      className="btn btn-secondary px-4 py-2.5 text-sm"
-      onClick={() => void onShare()}
-    >
-      {t("lobby.shareLink")}
-    </button>
+  const remoteBlock = (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-text-muted">
+        {t("lobby.inviteRemote")}
+      </p>
+      <button
+        type="button"
+        className="btn btn-secondary w-full py-2.5 text-sm"
+        onClick={() => void onShare()}
+      >
+        {t("lobby.shareLink")}
+      </button>
+    </div>
   );
 
-  const pinBlock = (
-    <button
-      type="button"
-      onClick={() => void onCopyPin()}
-      className="font-mono text-base font-bold tracking-[0.16em] text-text-muted transition hover:text-accent"
-      title={t("common.copy")}
-      aria-label={t("lobby.copyPin")}
-    >
-      {t("lobby.pinPrefix")} {formatPinDisplay(room.pin)}
-    </button>
+  const pinInviteBlock = (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-medium text-text-muted">
+        {t("lobby.inviteAlready")}
+      </p>
+      <button
+        type="button"
+        onClick={() => void onCopyPin()}
+        className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-bg-elevated px-3 py-2.5 font-mono text-base font-bold tracking-[0.14em] text-text transition hover:border-accent/40 hover:text-accent"
+        aria-label={t("lobby.copyPin")}
+      >
+        <span>
+          {t("lobby.pinPrefix")} {formatPinDisplay(room.pin)}
+        </span>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="shrink-0 text-text-dim"
+          aria-hidden
+        >
+          <rect x="9" y="9" width="13" height="13" rx="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      </button>
+    </div>
   );
-
-  function inviteRow(label: string, action: ReactNode) {
-    return (
-      <div className="flex items-center justify-between gap-4">
-        <p className="shrink-0 text-sm font-medium text-text-muted">{label}</p>
-        <div className="min-w-0">{action}</div>
-      </div>
-    );
-  }
-
-  const lanHint =
-    joinUrl.includes("192.") || joinUrl.includes("10.") ? (
-      <p className="break-all text-center text-[11px] text-text-dim">
-        {t("lobby.lanHint", { url: joinUrl })}
-      </p>
-    ) : joinUrl.includes("localhost") ? (
-      <p className="text-center text-[11px] text-warning">
-        {t("lobby.localhostHint")}
-      </p>
-    ) : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-6">
+    <div className="flex flex-1 flex-col">
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 pt-6 pb-4">
       <header className="flex items-center justify-between gap-3">
         {isHost ? (
           <button
@@ -398,22 +439,21 @@ export function LobbyClient({
         </span>
       </header>
 
-      <section className="card flex flex-col gap-4 p-5">
-        {/* Mobil: link → karekod → PIN · Masaüstü: karekod → link → PIN */}
-        <div className="flex flex-col gap-4 md:hidden">
-          {inviteRow(t("lobby.inviteRemote"), linkBlock)}
-          {inviteRow(t("lobby.inviteNearby"), qrBlock)}
-          {inviteRow(t("lobby.inviteAlready"), pinBlock)}
+      <section className="card flex flex-col gap-5 p-5">
+        {/* Mobil: uzaktakiler üstte · masaüstü: yanındakiler üstte */}
+        <div className="flex flex-col gap-5 md:hidden">
+          {remoteBlock}
+          {nearbyBlock}
+          {pinInviteBlock}
         </div>
-        <div className="hidden flex-col gap-4 md:flex">
-          {inviteRow(t("lobby.inviteNearby"), qrBlock)}
-          {inviteRow(t("lobby.inviteRemote"), linkBlock)}
-          {inviteRow(t("lobby.inviteAlready"), pinBlock)}
+        <div className="hidden flex-col gap-5 md:flex">
+          {nearbyBlock}
+          {remoteBlock}
+          {pinInviteBlock}
         </div>
         {shareHint && (
           <p className="text-center text-[11px] text-accent">{shareHint}</p>
         )}
-        {lanHint}
       </section>
 
       {!isHost && isXox && (
@@ -610,11 +650,6 @@ export function LobbyClient({
                 </div>
               </div>
 
-              {estimatedMin != null && (
-                <p className="text-xs text-text-dim">
-                  {t("lobby.estimated", { n: estimatedMin })}
-                </p>
-              )}
             </div>
           )}
         </section>
@@ -671,7 +706,7 @@ export function LobbyClient({
               </li>
             );
           })}
-          {Array.from({ length: emptySlots }).map((_, i) => (
+          {Array.from({ length: visibleEmptySlots }).map((_, i) => (
             <li
               key={`empty-${i}`}
               className="flex items-center gap-3 rounded-2xl border border-dashed border-border/70 px-3 py-2.5 opacity-45"
@@ -680,6 +715,11 @@ export function LobbyClient({
               <p className="text-sm text-text-dim">{t("lobby.emptySeat")}</p>
             </li>
           ))}
+          {hiddenEmptySlots > 0 && (
+            <li className="px-1 py-1 text-center text-sm text-text-dim">
+              {t("lobby.moreSeats", { n: hiddenEmptySlots })}
+            </li>
+          )}
         </ul>
       </section>
 
@@ -691,33 +731,38 @@ export function LobbyClient({
           {error}
         </p>
       )}
+      </div>
 
-      {isHost ? (
-        <div className="flex flex-col gap-2">
-          {!canStart && (
-            <p className="text-center text-sm text-text-muted">
-              {t("lobby.waitingFriends")}
+      <div className="sticky bottom-0 z-20 border-t border-border/70 bg-bg/95 px-5 py-3 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-md flex-col gap-2">
+          {isHost ? (
+            <>
+              {!canStart && (
+                <p className="text-center text-sm text-text-muted">
+                  {t("lobby.waitingFriends")}
+                </p>
+              )}
+              <button
+                type="button"
+                className={clsx(
+                  "btn w-full transition",
+                  canStart
+                    ? "btn-primary shadow-[0_12px_28px_-8px_rgba(61,157,196,0.55)]"
+                    : "cursor-not-allowed border border-border bg-bg-elevated text-text-dim opacity-60",
+                )}
+                disabled={!canStart || pending}
+                onClick={onStart}
+              >
+                {pending ? t("lobby.starting") : t("lobby.startGame")}
+              </button>
+            </>
+          ) : (
+            <p className="py-2 text-center text-sm text-text-muted">
+              {t("lobby.waitHost")}
             </p>
           )}
-          <button
-            type="button"
-            className={clsx(
-              "btn w-full transition",
-              canStart
-                ? "btn-primary scale-100 shadow-[0_12px_28px_-8px_rgba(61,157,196,0.55)]"
-                : "cursor-not-allowed border border-border bg-bg-elevated text-text-dim opacity-60",
-            )}
-            disabled={!canStart || pending}
-            onClick={onStart}
-          >
-            {pending ? t("lobby.starting") : t("lobby.startGame")}
-          </button>
         </div>
-      ) : (
-        <p className="text-center text-sm text-text-muted">
-          {t("lobby.waitHost")}
-        </p>
-      )}
+      </div>
 
       {closeConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-5">

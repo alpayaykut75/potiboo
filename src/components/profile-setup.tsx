@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { AVATARS } from "@/lib/avatars";
 import { saveProfile } from "@/lib/profile/bootstrap";
 import type { PlayerProfile } from "@/lib/profile/storage";
@@ -52,7 +53,9 @@ export function ProfileSetup({
       <div className="text-center">
         {showBrand && (
           <div className="flex justify-center">
-            <Logo size="lg" />
+            <Link href="/">
+              <Logo size="lg" showMotto />
+            </Link>
           </div>
         )}
         <h1

@@ -14,10 +14,8 @@
     "home": "Beranda",
     "errorGeneric": "Ada yang salah",
     "preparing": "Menyiapkan…",
-    "langTr": "TR",
-    "langEn": "EN",
-    "langId": "ID",
-    "langSwitch": "Bahasa"
+    "langSwitch": "Bahasa",
+    "back": "Kembali"
   },
   "room": {
     "loading": "Memuat lobi…",
@@ -43,7 +41,6 @@
     "wrongLength": "PIN harus {n} digit"
   },
   "play": {
-    "back": "← Game",
     "startRoom": "Buat Ruangan",
     "starting": "Membuat…",
     "howTo": "Cara main?",
@@ -65,9 +62,12 @@
     "inviteNearby": "Di ruangan",
     "inviteRemote": "Di tempat lain",
     "inviteAlready": "Sudah di Potiboo",
+    "showQr": "Tampilkan kode QR",
+    "hideQr": "Sembunyikan kode QR",
     "pinPrefix": "PIN",
     "players": "Pemain ({n}/{max})",
     "emptySeat": "Kursi kosong",
+    "moreSeats": "+{n} kursi lagi",
     "kick": "Keluarkan",
     "order": "Urutan {n}",
     "waitingFriends": "Menunggu teman bergabung…",
@@ -77,7 +77,7 @@
     "closeConfirm": "Ruangan akan ditutup dan semua orang keluar. Yakin?",
     "cancel": "Batal",
     "settings": "Pengaturan",
-    "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori",
+    "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori · ~{est} mnt",
     "settingsSummaryXox": "Pengaturan · {board}",
     "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
     "duration": "Waktu",
@@ -86,7 +86,6 @@
     "speedBonus": "Bonus kecepatan",
     "speedBonusHint": "Poin ekstra untuk yang selesai duluan",
     "categories": "Kategori {n}/{max}",
-    "estimated": "Perkiraan ~{n} mnt",
     "board": "Papan",
     "xoxGuestHint": "2 klasik · 4/8 turnamen",
     "synkedGuestHint": "2 klasik · 4 balapan (tim 1–2 / 3–4)",
@@ -101,17 +100,17 @@
   },
   "gameCopy": {
     "isim_sehir": {
-      "blurb": "Tulis bareng, yang selesai duluan teriak STOP",
-      "meta": "2–8 pemain · ~7 mnt",
+      "blurb": "Tulis bareng, yang selesai duluan bilang STOP",
+      "meta": "2–8 pemain",
       "howTo": [
-        "Saat huruf muncul, isi semua kategori sekaligus",
-        "Yang selesai duluan teriak STOP, jawaban terbuka",
-        "Jawaban sama 10 poin, unik 20; bisa keberatan"
+        "Saat huruf keluar, isi semua kategori sekaligus",
+        "Yang selesai duluan bilang STOP, jawaban dibuka",
+        "Jawaban sama 10 poin, jawaban unik 20 poin"
       ]
     },
     "xox": {
       "blurb": "Susun tiga, menangkan ronde",
-      "meta": "2–8 pemain · ~2 mnt",
+      "meta": "2–8 pemain",
       "howTo": [
         "Dengan 2 pemain, bergiliran di papan klasik",
         "Dengan 4 atau 8, bracket turnamen disusun",
@@ -120,7 +119,7 @@
     },
     "synked": {
       "blurb": "Pikir kata yang sama, cocok dalam 4 ronde",
-      "meta": "2–4 pemain · ~3 mnt",
+      "meta": "2–4 pemain",
       "howTo": [
         "Di 2p, tulis benih rahasia lalu asosiasi sampai cocok",
         "Di 4p, tim mengunci benih dengan STOP, lalu balapan",
@@ -129,7 +128,7 @@
     },
     "wordle": {
       "blurb": "Ikuti petunjuk, temukan kata tersembunyi",
-      "meta": "1–4 pemain · ~4 mnt",
+      "meta": "1–4 pemain",
       "howTo": [
         "Coba tebak kata tersembunyi",
         "Hijau tempat benar, kuning huruf benar tapi tempat salah",
@@ -138,7 +137,7 @@
     },
     "amiral": {
       "blurb": "Sembunyikan armadamu, tenggelamkan lawan",
-      "meta": "2 pemain · ~8 mnt",
+      "meta": "2 pemain",
       "howTo": [
         "Sembunyikan kapalmu di papan",
         "Bergiliran tembak kotak lawan",
@@ -147,7 +146,7 @@
     },
     "tabu": {
       "blurb": "Jelaskan tanpa kata terlarang",
-      "meta": "4–8 pemain · ~10 mnt",
+      "meta": "4–8 pemain",
       "howTo": [
         "Jelaskan kata di kartu ke timmu",
         "Jangan ucapkan kata terlarang",
@@ -156,7 +155,7 @@
     },
     "kizma_birader": {
       "blurb": "Lempar dadu, potong, pulang ke rumah",
-      "meta": "2–4 pemain · ~15 mnt",
+      "meta": "2–4 pemain",
       "howTo": [
         "Lempar dadu dan gerakkan bidakmu",
         "Potong rival dan lari ke rumah aman",

@@ -49,6 +49,7 @@ export function PinJoinForm({
     if (msg === "pin_wrong_length") {
       return t("pin.wrongLength", { n: PIN_LENGTH });
     }
+    if (msg === "connection_not_ready") return t("errors.connectionNotReady");
     if (msg) return msg;
     return t("common.errorGeneric");
   }

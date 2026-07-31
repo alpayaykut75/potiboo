@@ -53,9 +53,7 @@ export function ProfileGate({ children }: { children: React.ReactNode }) {
       } catch (e) {
         if (cancelled) return;
         console.warn(e);
-        setBootError(
-          e instanceof Error ? e.message : "Bağlantı kurulamadı",
-        );
+        setBootError("boot_failed");
         setProfile(null);
         setMode("local");
       } finally {
@@ -106,7 +104,7 @@ export function ProfileGate({ children }: { children: React.ReactNode }) {
       <div className="flex flex-1 flex-col justify-center">
         {bootError && (
           <p className="mx-auto mb-2 max-w-sm px-5 text-center text-xs text-warning">
-            {bootError} — yine de profil oluşturabilirsin.
+            {t("errors.bootFailed")}
           </p>
         )}
         <ProfileSetup onComplete={setProfile} />
@@ -118,8 +116,7 @@ export function ProfileGate({ children }: { children: React.ReactNode }) {
     <ProfileContext.Provider value={value}>
       {mode === "local" && (
         <div className="shrink-0 bg-warning/15 px-3 py-2 text-center text-xs text-warning">
-          Supabase bağlantısı zayıf — profil bu cihazda; odaya katılım için
-          yeniden dene.
+          {t("errors.weakConnection")}
         </div>
       )}
       {children}

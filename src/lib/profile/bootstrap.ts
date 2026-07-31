@@ -134,7 +134,7 @@ export async function bootstrapProfile(): Promise<{
  */
 export async function ensureRemoteProfile(): Promise<string> {
   if (!isSupabaseConfigured()) {
-    throw new Error("Sunucu bağlantısı hazır değil. Sayfayı yenile.");
+    throw new Error("connection_not_ready");
   }
 
   const supabase = createClient();

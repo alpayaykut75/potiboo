@@ -3,9 +3,7 @@ import { isSupabaseConfigured } from "./config";
 
 export function createClient() {
   if (!isSupabaseConfigured()) {
-    throw new Error(
-      "Sunucu bağlantısı hazır değil. Sayfayı yenile veya biraz sonra dene.",
-    );
+    throw new Error("connection_not_ready");
   }
 
   return createBrowserClient(

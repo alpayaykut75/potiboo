@@ -386,82 +386,95 @@ export function LobbyClient({
         </span>
       </div>
 
-      <section className="card flex flex-col gap-4 p-4">
-        <div className="flex flex-col items-center gap-1.5">
-          {qrDataUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={qrDataUrl}
-              alt={t("lobby.qrAlt")}
-              className="h-[130px] w-[130px] rounded-xl bg-white p-1.5"
-            />
-          ) : (
-            <div className="h-[130px] w-[130px] animate-pulse rounded-xl bg-bg-elevated" />
-          )}
-          <p className="text-[15px] text-text-muted">{t("lobby.captionQr")}</p>
-          {lanHint}
+      <section className="card flex flex-col gap-3 p-4">
+        <div className="text-center">
+          <p className="text-base font-normal text-text">
+            {t("lobby.inviteTitle")}
+          </p>
+          <p className="text-sm text-text-muted">
+            {t("lobby.inviteSubtitle")}
+          </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <p className="min-w-0 flex-1 text-[15px] text-text-muted">
-            {t("lobby.captionLink")}
-          </p>
-          <button
-            type="button"
-            className="btn btn-secondary shrink-0 px-4 py-2.5 text-base"
-            onClick={() => void onShare()}
-          >
-            {t("lobby.shareLink")}
-          </button>
-        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="mx-auto flex w-[130px] shrink-0 flex-col items-center gap-1">
+            {qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={qrDataUrl}
+                alt={t("lobby.qrAlt")}
+                className="h-[130px] w-[130px] min-h-[120px] min-w-[120px] rounded-xl bg-white p-1.5"
+              />
+            ) : (
+              <div className="h-[130px] w-[130px] min-h-[120px] min-w-[120px] animate-pulse rounded-xl bg-bg-elevated" />
+            )}
+            <p className="text-[15px] text-text-muted">{t("lobby.captionQr")}</p>
+          </div>
 
-        <div className="flex items-center justify-center gap-3">
-          <p className="text-[16px] font-semibold tracking-wide text-text-muted">
-            {t("lobby.pinPrefix")}
-          </p>
-          <button
-            type="button"
-            onClick={() => void onCopyPin()}
-            className="inline-flex items-center gap-2 rounded-xl px-1 py-0.5 transition hover:text-accent"
-            aria-label={t("lobby.copyPin")}
-          >
-            <span className="font-mono text-[28px] font-bold leading-none tracking-[0.18em] text-text">
-              {formatPinDisplay(room.pin)}
-            </span>
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              className="shrink-0 text-text-dim"
-              aria-hidden
+          <div className="flex min-w-[10.5rem] flex-1 flex-col items-stretch justify-center gap-3">
+            <button
+              type="button"
+              className="btn btn-secondary w-full px-4 py-2.5 text-base"
+              onClick={() => void onShare()}
             >
-              <rect x="9" y="9" width="13" height="13" rx="2" />
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-            </svg>
-          </button>
+              {t("lobby.shareLink")}
+            </button>
+            <div className="flex items-center justify-center gap-2">
+              <p className="text-[16px] font-semibold tracking-wide text-text-muted">
+                {t("lobby.pinPrefix")}
+              </p>
+              <button
+                type="button"
+                onClick={() => void onCopyPin()}
+                className="inline-flex items-center gap-2 rounded-xl px-1 py-0.5 transition hover:text-accent"
+                aria-label={t("lobby.copyPin")}
+              >
+                <span className="font-mono text-[28px] font-bold leading-none tracking-[0.18em] text-text">
+                  {formatPinDisplay(room.pin)}
+                </span>
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className="shrink-0 text-text-dim"
+                  aria-hidden
+                >
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
+        {lanHint}
         {shareHint && (
           <p className="text-center text-[15px] text-accent">{shareHint}</p>
         )}
       </section>
 
       {!isHost && isXox && (
-        <p className="text-center text-[15px] text-text-muted">
-          {t("lobby.xoxGuestHint")}
+        <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
+          {t("lobby.settings")} · {t("lobby.xoxGuestHint")}
           {players.length <= 2
             ? ` · ${xoxBoardLabel((settings.boardSize ?? 3) as XoxBoardSize)}`
             : " · 3×3"}
-        </p>
+        </section>
       )}
 
       {!isHost && isSynked && (
         <p className="text-center text-[15px] text-text-muted">
           {t("lobby.synkedGuestHint")}
         </p>
+      )}
+
+      {!isHost && isIsimSehir && settingsSummary && (
+        <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
+          {settingsSummary}
+        </section>
       )}
 
       {/* Ayarlar — katlanır */}
@@ -746,7 +759,7 @@ export function LobbyClient({
               </button>
             </>
           ) : (
-            <p className="py-2 text-center text-[16px] text-text-muted">
+            <p className="py-2 text-center text-[16px] leading-snug text-text-muted whitespace-normal">
               {t("lobby.waitHost")}
             </p>
           )}

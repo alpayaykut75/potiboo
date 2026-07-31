@@ -84,7 +84,7 @@
     "closeConfirm": "The room will close and everyone will be dropped. Are you sure?",
     "cancel": "Cancel",
     "settings": "Settings",
-    "settingsSummaryIsim": "Settings · {duration}s · {rounds} rounds · {cats} categories · ~{est} min",
+    "settingsSummaryIsim": "Settings · {duration}s · {rounds} rounds · {cats} categories",
     "settingsSummaryXox": "Settings · {board}",
     "settingsSummaryTournament": "Settings · Tournament · 3×3",
     "duration": "Timer",

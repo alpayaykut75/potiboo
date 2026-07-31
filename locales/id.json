@@ -84,7 +84,7 @@
     "closeConfirm": "Ruangan akan ditutup dan semua orang keluar. Yakin?",
     "cancel": "Batal",
     "settings": "Pengaturan",
-    "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori · ~{est} mnt",
+    "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori",
     "settingsSummaryXox": "Pengaturan · {board}",
     "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
     "duration": "Waktu",

@@ -84,7 +84,7 @@
     "closeConfirm": "Oda kapanacak ve herkes düşecek. Emin misin?",
     "cancel": "Vazgeç",
     "settings": "Ayarlar",
-    "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori · ~{est} dk",
+    "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori",
     "settingsSummaryXox": "Ayarlar · {board}",
     "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
     "duration": "Süre",

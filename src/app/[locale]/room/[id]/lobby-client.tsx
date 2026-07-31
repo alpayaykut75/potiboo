@@ -169,19 +169,12 @@ export function LobbyClient({
 
   const settings = room.settings as RoomSettings;
 
-  const estimatedMin = useMemo(() => {
-    if (!isIsimSehir) return null;
-    const sec = settings.duration * settings.roundCount;
-    return Math.max(1, Math.round(sec / 60));
-  }, [isIsimSehir, settings.duration, settings.roundCount]);
-
   const settingsSummary = useMemo(() => {
-    if (isIsimSehir && estimatedMin != null) {
+    if (isIsimSehir) {
       return t("lobby.settingsSummaryIsim", {
         duration: settings.duration,
         rounds: settings.roundCount,
         cats: settings.categories.length,
-        est: estimatedMin,
       });
     }
     if (isXox && players.length < 4) {
@@ -191,7 +184,7 @@ export function LobbyClient({
     }
     if (isXox) return t("lobby.settingsSummaryTournament");
     return null;
-  }, [estimatedMin, isIsimSehir, isXox, players.length, settings, t]);
+  }, [isIsimSehir, isXox, players.length, settings, t]);
 
   function patchSettings(patch: Partial<RoomSettings>) {
     if (!isHost) return;
@@ -396,7 +389,7 @@ export function LobbyClient({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-start gap-3">
           <div className="mx-auto flex w-[130px] shrink-0 flex-col items-center gap-1">
             {qrDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -411,7 +404,7 @@ export function LobbyClient({
             <p className="text-[15px] text-text-muted">{t("lobby.captionQr")}</p>
           </div>
 
-          <div className="flex min-w-[10.5rem] flex-1 flex-col items-stretch justify-center gap-3">
+          <div className="flex min-w-[10.5rem] flex-1 flex-col items-stretch gap-2.5">
             <button
               type="button"
               className="btn btn-secondary w-full px-4 py-2.5 text-base"
@@ -419,34 +412,32 @@ export function LobbyClient({
             >
               {t("lobby.shareLink")}
             </button>
-            <div className="flex items-center justify-center gap-2">
-              <p className="text-[16px] font-semibold tracking-wide text-text-muted">
+            <button
+              type="button"
+              onClick={() => void onCopyPin()}
+              className="btn btn-secondary inline-flex w-full items-center justify-center gap-2 px-3 py-2.5"
+              aria-label={t("lobby.copyPin")}
+            >
+              <span className="text-[15px] font-semibold tracking-wide text-text-muted">
                 {t("lobby.pinPrefix")}
-              </p>
-              <button
-                type="button"
-                onClick={() => void onCopyPin()}
-                className="inline-flex items-center gap-2 rounded-xl px-1 py-0.5 transition hover:text-accent"
-                aria-label={t("lobby.copyPin")}
+              </span>
+              <span className="font-mono text-[20px] font-bold leading-none tracking-[0.16em] text-text">
+                {formatPinDisplay(room.pin)}
+              </span>
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className="shrink-0 text-text-dim"
+                aria-hidden
               >
-                <span className="font-mono text-[28px] font-bold leading-none tracking-[0.18em] text-text">
-                  {formatPinDisplay(room.pin)}
-                </span>
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className="shrink-0 text-text-dim"
-                  aria-hidden
-                >
-                  <rect x="9" y="9" width="13" height="13" rx="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-              </button>
-            </div>
+                <rect x="9" y="9" width="13" height="13" rx="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -541,39 +532,55 @@ export function LobbyClient({
 
           {settingsOpen && isIsimSehir && (
             <div className="space-y-3 border-t border-border/60 px-4 py-3">
-              <div className="flex flex-wrap gap-2">
-                <label className="flex min-w-[7rem] flex-1 flex-col gap-1 text-xs text-text-muted">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-text-muted">
                   {t("lobby.duration")}
-                  <select
-                    className="rounded-xl border border-border bg-bg-elevated px-3 py-2 text-sm font-semibold text-text"
-                    value={settings.duration}
-                    onChange={(e) =>
-                      patchSettings({ duration: Number(e.target.value) })
-                    }
-                  >
-                    {DURATION_OPTIONS.map((d) => (
-                      <option key={d} value={d}>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {DURATION_OPTIONS.map((d) => {
+                    const selected = settings.duration === d;
+                    return (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => patchSettings({ duration: d })}
+                        className={clsx(
+                          "min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                          selected
+                            ? "bg-accent text-[#041018]"
+                            : "border border-border bg-bg-elevated text-text-muted",
+                        )}
+                      >
                         {t("lobby.seconds", { n: d })}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="flex min-w-[7rem] flex-1 flex-col gap-1 text-xs text-text-muted">
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-text-muted">
                   {t("lobby.rounds")}
-                  <select
-                    className="rounded-xl border border-border bg-bg-elevated px-3 py-2 text-sm font-semibold text-text"
-                    value={settings.roundCount}
-                    onChange={(e) =>
-                      patchSettings({ roundCount: Number(e.target.value) })
-                    }
-                  >
-                    {ROUND_OPTIONS.map((n) => (
-                      <option key={n} value={n}>
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ROUND_OPTIONS.map((n) => {
+                    const selected = settings.roundCount === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => patchSettings({ roundCount: n })}
+                        className={clsx(
+                          "min-w-[3rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                          selected
+                            ? "bg-accent text-[#041018]"
+                            : "border border-border bg-bg-elevated text-text-muted",
+                        )}
+                      >
                         {n}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
               <label className="flex flex-col gap-1">

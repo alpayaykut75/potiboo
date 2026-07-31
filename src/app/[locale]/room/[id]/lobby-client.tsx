@@ -344,13 +344,15 @@ export function LobbyClient({
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="relative z-30 mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 py-2.5">
-        <Link href={href("/")} className="min-w-0">
-          <Logo size="md" />
-        </Link>
-        <div className="flex shrink-0 items-center gap-2">
-          <LocaleToggle />
-          <ProfileChip />
+      <header className="sticky top-0 z-30 border-b border-border/50 bg-bg/95 pt-[var(--safe-top)] backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 py-2.5">
+          <Link href={href("/")} className="min-w-0">
+            <Logo size="md" />
+          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <LocaleToggle />
+            <ProfileChip />
+          </div>
         </div>
       </header>
 
@@ -359,22 +361,48 @@ export function LobbyClient({
         {isHost ? (
           <button
             type="button"
-            className="btn-ghost rounded-xl px-2 py-1 text-base text-text-muted"
+            className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-2 py-1 text-base text-text-muted"
             onClick={() => setCloseConfirm(true)}
           >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="shrink-0"
+              aria-hidden
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
             {t("lobby.closeRoom")}
           </button>
         ) : (
           <button
             type="button"
-            className="btn-ghost rounded-xl px-2 py-1 text-base text-text-muted"
+            className="btn-ghost inline-flex items-center gap-1.5 rounded-xl px-2 py-1 text-base text-text-muted"
             disabled={pending}
             onClick={onLeave}
           >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="shrink-0"
+              aria-hidden
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <path d="M16 17l5-5-5-5" />
+              <path d="M21 12H9" />
+            </svg>
             {t("lobby.leave")}
           </button>
         )}
-        <span className="text-base font-semibold text-accent">
+        <span className="text-base font-semibold text-text">
           {gameTitle(room.game_type)}
         </span>
       </div>
@@ -484,22 +512,24 @@ export function LobbyClient({
           </button>
 
           {settingsOpen && isXox && (
-            <div className="space-y-3 border-t border-border/60 px-4 py-3">
+            <div className="space-y-3 border-t border-border/60 px-4 py-4">
               {players.length >= 4 ? (
                 <>
-                  <p className="rounded-xl bg-accent/15 px-3 py-2.5 text-sm font-bold text-accent">
+                  <p className="rounded-xl bg-accent/15 px-3 py-2.5 text-[16px] font-bold text-accent">
                     {t("lobby.tournamentMode", { n: players.length })}
                   </p>
-                  <p className="text-xs text-text-dim">
+                  <p className="text-[14px] text-text-dim">
                     {t("lobby.tournamentHint")}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-text-muted">
+                  <p className="text-[14px] text-text-muted">
                     {t("lobby.xoxHostHint")}
                   </p>
-                  <p className="text-xs text-text-muted">{t("lobby.board")}</p>
+                  <p className="text-[16px] font-semibold text-text-muted">
+                    {t("lobby.board")}
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {([3, 5, 0] as const).map((size) => {
                       const selected = (settings.boardSize ?? 3) === size;
@@ -514,7 +544,7 @@ export function LobbyClient({
                             })
                           }
                           className={clsx(
-                            "min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                            "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
                             selected
                               ? "bg-accent text-[#041018]"
                               : "border border-border bg-bg-elevated text-text-muted",
@@ -531,9 +561,9 @@ export function LobbyClient({
           )}
 
           {settingsOpen && isIsimSehir && (
-            <div className="space-y-3 border-t border-border/60 px-4 py-3">
+            <div className="space-y-4 border-t border-border/60 px-4 py-4">
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-text-muted">
+                <p className="text-[16px] font-semibold text-text-muted">
                   {t("lobby.duration")}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -545,7 +575,7 @@ export function LobbyClient({
                         type="button"
                         onClick={() => patchSettings({ duration: d })}
                         className={clsx(
-                          "min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                          "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
                           selected
                             ? "bg-accent text-[#041018]"
                             : "border border-border bg-bg-elevated text-text-muted",
@@ -558,7 +588,7 @@ export function LobbyClient({
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-text-muted">
+                <p className="text-[16px] font-semibold text-text-muted">
                   {t("lobby.rounds")}
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -570,7 +600,7 @@ export function LobbyClient({
                         type="button"
                         onClick={() => patchSettings({ roundCount: n })}
                         className={clsx(
-                          "min-w-[3rem] flex-1 rounded-xl px-3 py-2.5 text-sm font-bold transition",
+                          "min-h-11 min-w-[3rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
                           selected
                             ? "bg-accent text-[#041018]"
                             : "border border-border bg-bg-elevated text-text-muted",
@@ -584,7 +614,7 @@ export function LobbyClient({
               </div>
 
               <label className="flex flex-col gap-1">
-                <span className="flex items-center justify-between gap-3 text-sm text-text">
+                <span className="flex min-h-11 items-center justify-between gap-3 text-[16px] text-text">
                   <span>{t("lobby.speedBonus")}</span>
                   <input
                     type="checkbox"
@@ -592,16 +622,16 @@ export function LobbyClient({
                     onChange={(e) =>
                       patchSettings({ speedBonus: e.target.checked })
                     }
-                    className="h-5 w-5 accent-[var(--accent)]"
+                    className="h-6 w-6 accent-[var(--accent)]"
                   />
                 </span>
-                <span className="text-xs text-text-dim">
+                <span className="text-[14px] text-text-dim">
                   {t("lobby.speedBonusHint")}
                 </span>
               </label>
 
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-text-muted">
+                <p className="text-[16px] font-semibold text-text-muted">
                   {t("lobby.categories", {
                     n: settings.categories.length,
                     max: BASE_CATEGORIES.length + GAME.maxExtraCategories,
@@ -611,7 +641,7 @@ export function LobbyClient({
                   {BASE_CATEGORIES.map((cat) => (
                     <span
                       key={cat}
-                      className="rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-[#041018]"
+                      className="inline-flex min-h-11 items-center rounded-full bg-accent px-3.5 py-2 text-[15px] font-semibold text-[#041018]"
                     >
                       {cat}
                     </span>
@@ -649,20 +679,33 @@ export function LobbyClient({
                           });
                         }}
                         className={clsx(
-                          "rounded-full px-3 py-1.5 text-xs font-semibold transition",
+                          "inline-flex min-h-11 items-center rounded-full px-3.5 py-2 text-[15px] font-semibold transition",
                           selected
-                            ? "bg-accent text-[#041018]"
-                            : "border border-border/70 bg-transparent text-text-dim",
-                          atLimit && "opacity-40",
+                            ? "border border-accent/50 bg-accent/70 text-[#041018]"
+                            : "border border-border bg-transparent text-text-muted",
+                          atLimit && "pointer-events-none opacity-35",
                         )}
                       >
-                        {selected ? `× ${cat}` : `+ ${cat}`}
+                        {selected ? (
+                          <>
+                            <span aria-hidden className="mr-1.5">
+                              ×
+                            </span>
+                            {cat}
+                          </>
+                        ) : (
+                          <>
+                            <span aria-hidden className="mr-1.5">
+                              +
+                            </span>
+                            {cat}
+                          </>
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </div>
-
             </div>
           )}
         </section>
@@ -722,9 +765,9 @@ export function LobbyClient({
           {Array.from({ length: visibleEmptySlots }).map((_, i) => (
             <li
               key={`empty-${i}`}
-              className="flex items-center gap-3 rounded-2xl border border-dashed border-border/70 px-3 py-3 opacity-45"
+              className="flex items-center gap-3 rounded-2xl border border-dashed border-border/70 px-3 py-2 opacity-45"
             >
-              <div className="h-10 w-10 rounded-full bg-bg-elevated" />
+              <div className="h-8 w-8 rounded-full bg-bg-elevated" />
               <p className="text-[15px] text-text-dim">{t("lobby.emptySeat")}</p>
             </li>
           ))}
@@ -746,7 +789,7 @@ export function LobbyClient({
       )}
       </div>
 
-      <div className="sticky bottom-0 z-20 border-t border-border/70 bg-bg/95 px-5 py-3 backdrop-blur-md">
+      <div className="sticky bottom-0 z-20 border-t border-border/70 bg-bg/95 px-5 pt-3 pb-[calc(0.75rem+var(--safe-bottom))] backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-md flex-col gap-2">
           {isHost ? (
             <>

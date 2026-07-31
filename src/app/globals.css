@@ -24,6 +24,7 @@
   --radius: 18px;
   --radius-lg: 24px;
 
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 

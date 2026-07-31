@@ -142,7 +142,7 @@ export function ProfileChip() {
       <button
         type="button"
         onClick={() => setEditing(true)}
-        className="inline-flex items-center gap-2 rounded-full border border-border bg-bg-card/80 py-1.5 pr-2 pl-1.5 transition hover:border-accent/50 sm:pr-3"
+        className="inline-flex h-10 items-center gap-2 rounded-full border border-border bg-bg-card/80 pr-2 pl-1.5 transition hover:border-accent/50 sm:pr-3"
         aria-label="Profili düzenle"
       >
         <AvatarImage avatar={profile.avatarKey} size="sm" />

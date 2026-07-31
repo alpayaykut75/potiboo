@@ -73,7 +73,7 @@ function PlayContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 py-4 sm:max-w-xl">
+      <header className="relative z-30 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 py-4 sm:max-w-xl">
         <Logo size="lg" />
         <div className="flex items-center gap-3">
           <LocaleToggle />

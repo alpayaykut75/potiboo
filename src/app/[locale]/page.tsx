@@ -5,7 +5,6 @@ import { ProfileChip, ProfileGate, useProfile } from "@/components/profile-gate"
 import { LocaleToggle } from "@/components/i18n/locale-toggle";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { Logo } from "@/components/logo";
-import { PinJoinForm } from "@/components/pin-join-form";
 import { gamesForHome } from "@/lib/games/catalog";
 import { getGameCopy } from "@/lib/i18n/dictionaries";
 import { clsx } from "@/lib/utils";
@@ -22,25 +21,17 @@ function HomeContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-10 mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-4 lg:px-8">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="sm:hidden">
-            <Logo size="lg" showMotto />
-          </div>
-          <div className="hidden sm:block">
-            <Logo size="xl" showMotto />
-          </div>
-          <div className="flex items-center justify-end gap-2">
-            <PinJoinForm compact className="relative hidden md:flex" />
-            <LocaleToggle />
-            <ProfileChip />
-          </div>
+      <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
+        <div className="sm:hidden">
+          <Logo size="lg" showMotto />
         </div>
-
-        <PinJoinForm
-          compact
-          className="relative flex w-full justify-center md:hidden"
-        />
+        <div className="hidden sm:block">
+          <Logo size="xl" showMotto />
+        </div>
+        <div className="flex shrink-0 items-center gap-2">
+          <LocaleToggle />
+          <ProfileChip />
+        </div>
       </header>
 
       <main className="relative z-10 mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 pb-8 lg:px-8">

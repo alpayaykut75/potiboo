@@ -34,7 +34,7 @@ function PlayContent() {
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-5">
         <p className="text-danger">{t("play.notFound")}</p>
         <Link href={href("/")} className="btn btn-secondary">
-          {t("common.games")}
+          {t("common.home")}
         </Link>
       </div>
     );
@@ -73,30 +73,40 @@ function PlayContent() {
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(61,157,196,0.18),_transparent_55%)]"
       />
 
-      <header className="relative z-30 mx-auto flex w-full max-w-lg items-center justify-between gap-3 px-5 py-4 sm:max-w-xl">
-        <Logo size="lg" />
-        <div className="flex items-center gap-3">
+      <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
+        <Link href={href("/")} className="min-w-0">
+          <div className="sm:hidden">
+            <Logo size="lg" showMotto />
+          </div>
+          <div className="hidden sm:block">
+            <Logo size="xl" showMotto />
+          </div>
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
           <LocaleToggle />
           <ProfileChip />
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-center gap-5 px-5 pb-8 sm:max-w-xl">
-        <Link
-          href={href("/")}
-          className="text-sm font-semibold text-text-muted hover:text-accent"
-        >
-          {t("play.back")}
-        </Link>
-
-        <div className="text-center">
-          <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
-            {game.title}
-          </h1>
-          <p className="mx-auto mt-2 max-w-sm text-base text-text-muted">
-            {copy?.blurb ?? ""}
-          </p>
-          <p className="mt-2 text-sm text-text-dim">{copy?.meta ?? ""}</p>
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col justify-start gap-5 px-5 pt-1 pb-8 sm:max-w-xl">
+        <div className="grid grid-cols-[2.5rem_1fr_2.5rem] items-start">
+          <Link
+            href={href("/")}
+            className="mt-1 inline-flex h-10 w-10 items-center justify-center rounded-full text-xl text-text-muted transition hover:bg-white/5 hover:text-accent"
+            aria-label={t("common.home")}
+          >
+            ←
+          </Link>
+          <div className="text-center">
+            <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-text sm:text-5xl">
+              {game.title}
+            </h1>
+            <p className="mx-auto mt-2 max-w-sm text-base text-text-muted">
+              {copy?.blurb ?? ""}
+            </p>
+            <p className="mt-2 text-sm text-text-dim">{copy?.meta ?? ""}</p>
+          </div>
+          <span aria-hidden />
         </div>
 
         <button

@@ -22,12 +22,14 @@ function HomeContent() {
       />
 
       <header className="relative z-30 mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-4 lg:px-8">
-        <div className="sm:hidden">
-          <Logo size="lg" showMotto />
-        </div>
-        <div className="hidden sm:block">
-          <Logo size="xl" showMotto />
-        </div>
+        <Link href={href("/")} className="min-w-0">
+          <div className="sm:hidden">
+            <Logo size="lg" showMotto />
+          </div>
+          <div className="hidden sm:block">
+            <Logo size="xl" showMotto />
+          </div>
+        </Link>
         <div className="flex shrink-0 items-center gap-2">
           <LocaleToggle />
           <ProfileChip />

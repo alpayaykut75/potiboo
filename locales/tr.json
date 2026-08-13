@@ -87,6 +87,9 @@
     "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori",
     "settingsSummaryXox": "Ayarlar · {board}",
     "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
+    "settingsSummaryOnluk": "Ayarlar · {sec} sn",
+    "moveTime": "Hamle süresi",
+    "onlukMoveHint": "Alışınca 3 sn daha zorlayıcı olur",
     "duration": "Süre",
     "seconds": "{n} sn",
     "rounds": "Tur sayısı",
@@ -160,7 +163,7 @@
       "blurb": "Sırayla say, kural ekle, yanılma",
       "meta": "2 kişi",
       "howTo": [
-        "Sırayla 1'den itibaren doğru sırayı söyle (3 sn)",
+        "Sırayla 1'den itibaren doğru sırayı söyle (süre ayarlanır)",
         "Tur bitince yer değiştir, olsun, atla veya ters çevir",
         "Yanlış veya süre dolunca rakibe puan; ilk 3 kazanan"
       ]

@@ -410,6 +410,12 @@ export async function startGame(roomId: string): Promise<void> {
 
     const playerA = sorted[0]!.profile_id;
     const playerB = sorted[1]!.profile_id;
+    const countSec =
+      room.settings.duration === 3 ||
+      room.settings.duration === 5 ||
+      room.settings.duration === 7
+        ? room.settings.duration
+        : 5;
     const { error: onlukErr } = await supabase.from("onluk_games").upsert(
       {
         room_id: roomId,
@@ -423,7 +429,7 @@ export async function startGame(roomId: string): Promise<void> {
         turn_profile_id: playerA,
         rule_turn_profile_id: playerB,
         rules: [],
-        deadline_at: new Date(Date.now() + 3000).toISOString(),
+        deadline_at: new Date(Date.now() + countSec * 1000).toISOString(),
         last_event: null,
         winner_id: null,
       },

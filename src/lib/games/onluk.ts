@@ -1,10 +1,16 @@
 /** Onluk — 1–10 say, kural biriktir düellosu */
 
-export const ONLUK_COUNT_MS = 3000;
+export const ONLUK_COUNT_OPTIONS = [3, 5, 7] as const;
+export type OnlukCountSec = (typeof ONLUK_COUNT_OPTIONS)[number];
+export const ONLUK_DEFAULT_COUNT_SEC: OnlukCountSec = 5;
 export const ONLUK_RULE_MS = 10000;
 export const ONLUK_WIN_SCORE = 3;
 export const ONLUK_MIN_SEQUENCE = 2;
 export const ONLUK_MAX_TOKEN_LEN = 12;
+
+export function resolveOnlukCountSec(raw: unknown): OnlukCountSec {
+  return raw === 3 || raw === 5 || raw === 7 ? raw : ONLUK_DEFAULT_COUNT_SEC;
+}
 
 export type OnlukPhase = "counting" | "rule" | "match_end";
 

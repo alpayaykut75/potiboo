@@ -87,6 +87,9 @@
     "settingsSummaryIsim": "Settings · {duration}s · {rounds} rounds · {cats} categories",
     "settingsSummaryXox": "Settings · {board}",
     "settingsSummaryTournament": "Settings · Tournament · 3×3",
+    "settingsSummaryOnluk": "Settings · {sec}s",
+    "moveTime": "Move timer",
+    "onlukMoveHint": "Switch to 3s when you're warmed up",
     "duration": "Timer",
     "seconds": "{n}s",
     "rounds": "Rounds",
@@ -160,7 +163,7 @@
       "blurb": "Count in turn, stack rules, don't slip",
       "meta": "2 players",
       "howTo": [
-        "Take turns saying the sequence from 1 (3s each)",
+        "Take turns saying the sequence from 1 (timer is adjustable)",
         "After a clean round, swap, rename, skip, or reverse",
         "Wrong or timeout gives opponent a point; first to 3 wins"
       ]

@@ -87,6 +87,9 @@
     "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori",
     "settingsSummaryXox": "Pengaturan · {board}",
     "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
+    "settingsSummaryOnluk": "Pengaturan · {sec} dtk",
+    "moveTime": "Waktu giliran",
+    "onlukMoveHint": "Pilih 3 dtk kalau sudah terbiasa",
     "duration": "Waktu",
     "seconds": "{n} dtk",
     "rounds": "Jumlah ronde",
@@ -160,7 +163,7 @@
       "blurb": "Hitung bergiliran, tumpuk aturan, jangan salah",
       "meta": "2 pemain",
       "howTo": [
-        "Bergiliran mengucapkan urutan dari 1 (3 dtk)",
+        "Bergiliran mengucapkan urutan dari 1 (waktu bisa diatur)",
         "Setelah ronde bersih: tukar, jadi, lewati, atau balik",
         "Salah atau waktu habis: poin lawan; yang pertama ke 3 menang"
       ]

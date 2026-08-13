@@ -39,6 +39,10 @@ import {
   xoxBoardLabel,
   type XoxBoardSize,
 } from "@/lib/games/xox";
+import {
+  ONLUK_COUNT_OPTIONS,
+  resolveOnlukCountSec,
+} from "@/lib/games/onluk";
 
 const DURATION_OPTIONS = [45, 60, 90];
 const ROUND_OPTIONS = [1, 3, 5, 7];
@@ -187,8 +191,13 @@ export function LobbyClient({
       });
     }
     if (isXox) return t("lobby.settingsSummaryTournament");
+    if (isOnluk) {
+      return t("lobby.settingsSummaryOnluk", {
+        sec: resolveOnlukCountSec(settings.duration),
+      });
+    }
     return null;
-  }, [isIsimSehir, isXox, players.length, settings, t]);
+  }, [isIsimSehir, isOnluk, isXox, players.length, settings, t]);
 
   function patchSettings(patch: Partial<RoomSettings>) {
     if (!isHost) return;
@@ -504,9 +513,9 @@ export function LobbyClient({
         </p>
       )}
 
-      {!isHost && isOnluk && (
+      {!isHost && isOnluk && settingsSummary && (
         <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
-          {t("lobby.settings")} · {t("lobby.onlukGuestHint")}
+          {settingsSummary}
         </section>
       )}
 
@@ -517,7 +526,7 @@ export function LobbyClient({
       )}
 
       {/* Ayarlar — katlanır */}
-      {isHost && (isIsimSehir || isXox) && settingsSummary && (
+      {isHost && (isIsimSehir || isXox || isOnluk) && settingsSummary && (
         <section className="card overflow-hidden">
           <button
             type="button"
@@ -726,6 +735,36 @@ export function LobbyClient({
                   })}
                 </div>
               </div>
+            </div>
+          )}
+
+          {settingsOpen && isOnluk && (
+            <div className="space-y-3 border-t border-border/60 px-4 py-4">
+              <p className="text-[16px] font-semibold text-text-muted">
+                {t("lobby.moveTime")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {ONLUK_COUNT_OPTIONS.map((sec) => {
+                  const selected =
+                    resolveOnlukCountSec(settings.duration) === sec;
+                  return (
+                    <button
+                      key={sec}
+                      type="button"
+                      onClick={() => patchSettings({ duration: sec })}
+                      className={clsx(
+                        "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
+                        selected
+                          ? "bg-accent text-[#041018]"
+                          : "border border-border bg-bg-elevated text-text-muted",
+                      )}
+                    >
+                      {t("lobby.seconds", { n: sec })}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[14px] text-text-dim">{t("lobby.onlukMoveHint")}</p>
             </div>
           )}
         </section>

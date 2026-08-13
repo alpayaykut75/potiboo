@@ -5,6 +5,7 @@ export type IntervalHandCount = (typeof INTERVAL_HAND_OPTIONS)[number];
 export const INTERVAL_DEFAULT_HANDS: IntervalHandCount = 5;
 export const INTERVAL_START_BANK = 100;
 export const INTERVAL_ANTE = 10;
+export const INTERVAL_SPIN_MS = 5000;
 
 export const INTERVAL_COLORS = [
   { id: "cyan", hex: "#3d9dc4" },
@@ -21,11 +22,23 @@ export type IntervalTile = {
   color: IntervalColorId;
 };
 
-export type IntervalPhase = "turn" | "reveal" | "hand_end" | "match_end";
+export type IntervalPhase =
+  | "match_start"
+  | "turn"
+  | "reveal"
+  | "hand_end"
+  | "match_end";
 
 export type IntervalLastEvent =
   | { kind: "pass"; by: string }
   | { kind: "intent"; by: string; amount: number }
+  | {
+      kind: "ante";
+      per: number;
+      from_pot: number;
+      to_pot: number;
+      hand: number;
+    }
   | {
       kind: "hit";
       by: string;
@@ -34,6 +47,8 @@ export type IntervalLastEvent =
       lo: number;
       hi: number;
       payout: number;
+      pot_before: number;
+      pot_after: number;
     }
   | {
       kind: "miss";
@@ -42,6 +57,8 @@ export type IntervalLastEvent =
       drawn: IntervalTile;
       lo: number;
       hi: number;
+      pot_before: number;
+      pot_after: number;
     }
   | { kind: "hand_end"; pot: number; hand: number }
   | { kind: "burn"; pot: number }
@@ -61,6 +78,9 @@ export type IntervalGameRow = {
   hand_total: number;
   intent_amount: number | null;
   seen_tiles: IntervalTile[];
+  public_c1: IntervalTile | null;
+  public_c2: IntervalTile | null;
+  reveal_at: string | null;
   last_event: IntervalLastEvent;
   winner_id: string | null;
   updated_at: string;
@@ -182,6 +202,7 @@ export function applyPlay(args: {
     throw new Error("Geçersiz miktar");
   }
 
+  const pot_before = args.pot;
   const banks = { ...args.banks, [playerId]: bank - stake };
   let pot = args.pot + stake;
 
@@ -201,6 +222,8 @@ export function applyPlay(args: {
         lo,
         hi,
         payout,
+        pot_before,
+        pot_after: pot,
       },
     };
   }
@@ -215,6 +238,8 @@ export function applyPlay(args: {
       drawn,
       lo,
       hi,
+      pot_before,
+      pot_after: pot,
     },
   };
 }
@@ -236,12 +261,31 @@ export function leaders(banks: IntervalBanks, seats: string[]): string[] {
 }
 
 export function parseIntervalPhase(raw: unknown): IntervalPhase {
-  return raw === "reveal" ||
+  return raw === "match_start" ||
+    raw === "reveal" ||
     raw === "hand_end" ||
     raw === "match_end" ||
     raw === "turn"
     ? raw
     : "turn";
+}
+
+/** Ante + dağıtım öncesi: maç başı veya hatalı parse (turn + sıra yok) */
+export function isIntervalPreHand(game: {
+  phase: IntervalPhase;
+  hand_index: number;
+  turn_profile_id: string | null;
+  pot: number;
+  public_c1: IntervalTile | null;
+}): boolean {
+  if (game.phase === "match_start") return true;
+  return (
+    game.hand_index === 0 &&
+    game.turn_profile_id == null &&
+    game.pot === 0 &&
+    game.public_c1 == null &&
+    game.phase === "turn"
+  );
 }
 
 export function parseIntervalTile(raw: unknown): IntervalTile | null {
@@ -300,6 +344,21 @@ export function parseIntervalLastEvent(raw: unknown): IntervalLastEvent {
     return { kind: "intent", by: row.by, amount: row.amount };
   }
   if (
+    row.kind === "ante" &&
+    typeof row.per === "number" &&
+    typeof row.from_pot === "number" &&
+    typeof row.to_pot === "number" &&
+    typeof row.hand === "number"
+  ) {
+    return {
+      kind: "ante",
+      per: row.per,
+      from_pot: row.from_pot,
+      to_pot: row.to_pot,
+      hand: row.hand,
+    };
+  }
+  if (
     (row.kind === "hit" || row.kind === "miss") &&
     typeof row.by === "string"
   ) {
@@ -308,6 +367,8 @@ export function parseIntervalLastEvent(raw: unknown): IntervalLastEvent {
     const stake = Number(row.stake);
     const lo = Number(row.lo);
     const hi = Number(row.hi);
+    const pot_before = Number(row.pot_before ?? 0);
+    const pot_after = Number(row.pot_after ?? 0);
     if (!Number.isFinite(stake) || !Number.isFinite(lo) || !Number.isFinite(hi)) {
       return null;
     }
@@ -322,9 +383,20 @@ export function parseIntervalLastEvent(raw: unknown): IntervalLastEvent {
         lo,
         hi,
         payout,
+        pot_before: Number.isFinite(pot_before) ? pot_before : 0,
+        pot_after: Number.isFinite(pot_after) ? pot_after : 0,
       };
     }
-    return { kind: "miss", by: row.by, stake, drawn, lo, hi };
+    return {
+      kind: "miss",
+      by: row.by,
+      stake,
+      drawn,
+      lo,
+      hi,
+      pot_before: Number.isFinite(pot_before) ? pot_before : 0,
+      pot_after: Number.isFinite(pot_after) ? pot_after : 0,
+    };
   }
   if (
     row.kind === "hand_end" &&

@@ -28,6 +28,9 @@ function mapGame(data: Record<string, unknown>): IntervalGameRow {
     intent_amount:
       typeof data.intent_amount === "number" ? data.intent_amount : null,
     seen_tiles: parseIntervalTiles(data.seen_tiles),
+    public_c1: parseIntervalTile(data.public_c1),
+    public_c2: parseIntervalTile(data.public_c2),
+    reveal_at: data.reveal_at ? String(data.reveal_at) : null,
     last_event: parseIntervalLastEvent(data.last_event),
     winner_id: data.winner_id ? String(data.winner_id) : null,
     updated_at: String(data.updated_at ?? ""),

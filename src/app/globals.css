@@ -103,6 +103,117 @@
   animation: synkedSpinWord 70ms ease-out;
 }
 
+@keyframes intervalPotPulse {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.08);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes intervalPotGlowIn {
+  0% {
+    box-shadow: 0 0 0 0 rgba(62, 207, 142, 0.55);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(62, 207, 142, 0);
+  }
+}
+
+@keyframes intervalPotGlowOut {
+  0% {
+    box-shadow: 0 0 0 0 rgba(232, 93, 93, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(232, 93, 93, 0);
+  }
+}
+
+@keyframes intervalFloatUp {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -28px);
+  }
+}
+
+@keyframes intervalFloatDown {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -18px);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, 14px);
+  }
+}
+
+@keyframes intervalSeatPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(61, 157, 196, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(61, 157, 196, 0);
+  }
+}
+
+@keyframes intervalDrawPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6) translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.interval-pot-pulse {
+  animation: intervalPotPulse 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.interval-pot-in {
+  animation:
+    intervalPotPulse 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    intervalPotGlowOut 0.7s ease-out;
+}
+
+.interval-pot-out {
+  animation:
+    intervalPotPulse 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    intervalPotGlowIn 0.7s ease-out;
+}
+
+.interval-float-up {
+  animation: intervalFloatUp 0.9s ease-out forwards;
+}
+
+.interval-float-down {
+  animation: intervalFloatDown 0.9s ease-out forwards;
+}
+
+.interval-seat-turn {
+  animation: intervalSeatPulse 1.6s ease-out infinite;
+}
+
+.interval-draw-pop {
+  animation: intervalDrawPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 html {
   height: 100%;
 }

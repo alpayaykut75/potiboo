@@ -148,7 +148,12 @@ export function OnlukGameClient({
   );
 
   const msLeft = useMemo(() => {
-    if (!game || game.phase === "match_end" || game.phase === "reveal") {
+    if (
+      !game ||
+      game.phase === "match_end" ||
+      game.phase === "reveal" ||
+      game.phase === "round_end"
+    ) {
       return 0;
     }
     return Math.max(0, Date.parse(game.deadline_at) - now);
@@ -221,7 +226,14 @@ export function OnlukGameClient({
   }
 
   function onAck() {
-    if (!game || game.phase !== "reveal" || iAcked || pending) return;
+    if (
+      !game ||
+      (game.phase !== "reveal" && game.phase !== "round_end") ||
+      iAcked ||
+      pending
+    ) {
+      return;
+    }
     unlockSfx();
     startTransition(async () => {
       try {
@@ -233,6 +245,41 @@ export function OnlukGameClient({
       }
     });
   }
+
+  const missCopy = useMemo(() => {
+    const ev = game?.last_event;
+    if (!ev || (ev.kind !== "wrong" && ev.kind !== "timeout")) return null;
+    const mine = ev.by === me;
+    const who = mine
+      ? t("onluk.youMissed")
+      : t("onluk.theyMissed", { name: nameOf(ev.by) });
+    if (ev.kind === "timeout") {
+      return {
+        title: who,
+        detail: ev.expected
+          ? t("onluk.missTimeoutExpected", { expected: ev.expected })
+          : t("onluk.missTimeout"),
+      };
+    }
+    if (!ev.got) {
+      return {
+        title: who,
+        detail: t("onluk.missWrongNoGot", { expected: ev.expected }),
+      };
+    }
+    return {
+      title: who,
+      detail: mine
+        ? t("onluk.missWrongYou", {
+            expected: ev.expected,
+            got: ev.got,
+          })
+        : t("onluk.missWrongThey", {
+            expected: ev.expected,
+            got: ev.got,
+          }),
+    };
+  }, [game?.last_event, me, nameOf, t]);
 
   if (!game) {
     return (
@@ -365,6 +412,38 @@ export function OnlukGameClient({
               onClick={onAck}
             >
               {t("onluk.gotIt")}
+            </button>
+          )}
+          <p className="text-[14px] text-text-dim">
+            {t("onluk.ackProgress", {
+              n: Number(game.ack_a) + Number(game.ack_b),
+            })}
+          </p>
+        </section>
+      )}
+
+      {game.phase === "round_end" && missCopy && (
+        <section className="card flex flex-col items-center gap-4 p-6 text-center">
+          <p className="text-[18px] font-semibold text-danger">{missCopy.title}</p>
+          <p className="text-[28px] font-extrabold leading-snug text-text sm:text-[32px]">
+            {missCopy.detail}
+          </p>
+          <p className="text-[16px] text-text-muted">
+            {t("onluk.scoreNow", {
+              a: game.score_a,
+              b: game.score_b,
+            })}
+          </p>
+          {iAcked ? (
+            <p className="text-[16px] text-text-muted">{t("onluk.waitAck")}</p>
+          ) : (
+            <button
+              type="button"
+              className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
+              disabled={pending}
+              onClick={onAck}
+            >
+              {t("onluk.nextRound")}
             </button>
           )}
           <p className="text-[14px] text-text-dim">
@@ -588,6 +667,11 @@ export function OnlukGameClient({
                   name: nameOf(game.winner_id ?? game.player_a),
                 })}
           </p>
+          {missCopy && (
+            <p className="text-[20px] font-bold leading-snug text-text-muted">
+              {missCopy.detail}
+            </p>
+          )}
           <p className="text-[18px] text-text-muted">{scoreLine}</p>
           {isHost ? (
             <button

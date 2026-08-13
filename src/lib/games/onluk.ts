@@ -12,7 +12,12 @@ export function resolveOnlukCountSec(raw: unknown): OnlukCountSec {
   return raw === 3 || raw === 5 || raw === 7 ? raw : ONLUK_DEFAULT_COUNT_SEC;
 }
 
-export type OnlukPhase = "counting" | "rule" | "reveal" | "match_end";
+export type OnlukPhase =
+  | "counting"
+  | "rule"
+  | "reveal"
+  | "round_end"
+  | "match_end";
 
 export type OnlukRule =
   | { type: "swap"; i: number; j: number }
@@ -21,8 +26,24 @@ export type OnlukRule =
   | { type: "reverse" };
 
 export type OnlukLastEvent =
-  | { kind: "wrong"; by: string; expected: string; got: string }
-  | { kind: "timeout"; by: string; expected: string }
+  | {
+      kind: "wrong";
+      by: string;
+      expected: string;
+      got: string;
+      scorer?: string;
+      scoreA?: number;
+      scoreB?: number;
+    }
+  | {
+      kind: "timeout";
+      by: string;
+      expected: string;
+      got?: string;
+      scorer?: string;
+      scoreA?: number;
+      scoreB?: number;
+    }
   | {
       kind: "rule";
       by: string;
@@ -161,6 +182,7 @@ export function wordChipsFromSequence(sequence: string[]): string[] {
 export function parseOnlukPhase(raw: unknown): OnlukPhase {
   return raw === "rule" ||
     raw === "reveal" ||
+    raw === "round_end" ||
     raw === "match_end" ||
     raw === "counting"
     ? raw
@@ -206,6 +228,9 @@ export function parseOnlukLastEvent(raw: unknown): OnlukLastEvent {
       by: row.by,
       expected: String(row.expected ?? ""),
       got: String(row.got ?? ""),
+      scorer: typeof row.scorer === "string" ? row.scorer : undefined,
+      scoreA: typeof row.scoreA === "number" ? row.scoreA : undefined,
+      scoreB: typeof row.scoreB === "number" ? row.scoreB : undefined,
     };
   }
   if (row.kind === "timeout" && typeof row.by === "string") {
@@ -213,6 +238,10 @@ export function parseOnlukLastEvent(raw: unknown): OnlukLastEvent {
       kind: "timeout",
       by: row.by,
       expected: String(row.expected ?? ""),
+      got: typeof row.got === "string" ? row.got : undefined,
+      scorer: typeof row.scorer === "string" ? row.scorer : undefined,
+      scoreA: typeof row.scoreA === "number" ? row.scoreA : undefined,
+      scoreB: typeof row.scoreB === "number" ? row.scoreB : undefined,
     };
   }
   if (row.kind === "rule" && typeof row.by === "string") {

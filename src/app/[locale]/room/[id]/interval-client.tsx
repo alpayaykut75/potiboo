@@ -70,17 +70,46 @@ function TileView({
   );
 }
 
-function seatStyle(index: number, total: number): CSSProperties {
-  const n = Math.max(total, 1);
-  const angle = Math.PI / 2 + (index * 2 * Math.PI) / n;
-  // Üst/alt taşmayı azalt — elips biraz daha yatay
-  const rx = 42;
-  const ry = 33;
-  return {
-    left: `${50 + Math.cos(angle) * rx}%`,
-    top: `${50 + Math.sin(angle) * ry}%`,
-    transform: "translate(-50%, -50%)",
-  };
+/** Saat yönü: 0=alt (ben), 1–3 sağ alt→üst, 4=üst, 5–7 sol üst→alt */
+const TABLE_SLOTS = 8;
+
+function slotStyle(slot: number): CSSProperties {
+  const base: CSSProperties = { position: "absolute", zIndex: 10 };
+  switch (slot) {
+    case 0:
+      return { ...base, left: "50%", bottom: "1.5%", transform: "translateX(-50%)" };
+    case 1:
+      return { ...base, right: "1.5%", bottom: "16%" };
+    case 2:
+      return { ...base, right: "1.5%", top: "50%", transform: "translateY(-50%)" };
+    case 3:
+      return { ...base, right: "1.5%", top: "14%" };
+    case 4:
+      return { ...base, left: "50%", top: "1.5%", transform: "translateX(-50%)" };
+    case 5:
+      return { ...base, left: "1.5%", top: "14%" };
+    case 6:
+      return { ...base, left: "1.5%", top: "50%", transform: "translateY(-50%)" };
+    case 7:
+      return { ...base, left: "1.5%", bottom: "16%" };
+    default:
+      return base;
+  }
+}
+
+/** rotated[0]=ben → slot 0; diğerleri eşit aralıklı; boş slotlar null */
+function assignTableSlots(rotatedIds: string[]): (string | null)[] {
+  const slots: (string | null)[] = Array.from({ length: TABLE_SLOTS }, () => null);
+  const n = rotatedIds.length;
+  if (n === 0) return slots;
+  const used = new Set<number>();
+  for (let i = 0; i < n; i++) {
+    let s = Math.floor((i * TABLE_SLOTS) / n) % TABLE_SLOTS;
+    while (used.has(s)) s = (s + 1) % TABLE_SLOTS;
+    used.add(s);
+    slots[s] = rotatedIds[i]!;
+  }
+  return slots;
 }
 
 function randomSpinTile(seed: number): IntervalTile {
@@ -317,12 +346,16 @@ export function IntervalGameClient({
     return leaders(game.banks, game.seats);
   }, [game]);
 
-  const tableSeats = useMemo(() => {
-    if (!game) return [] as string[];
+  /** Herkes kendini altta görür; rakip göreli konumda */
+  const tableSlots = useMemo(() => {
+    if (!game) return Array.from({ length: TABLE_SLOTS }, () => null);
     const seats = game.seats;
     const myIdx = seats.indexOf(me);
-    if (myIdx < 0) return seats;
-    return [...seats.slice(myIdx), ...seats.slice(0, myIdx)];
+    const rotated =
+      myIdx < 0
+        ? seats
+        : [...seats.slice(myIdx), ...seats.slice(0, myIdx)];
+    return assignTableSlots(rotated);
   }, [game, me]);
 
   const revealAtMs = game?.reveal_at ? Date.parse(game.reveal_at) : 0;
@@ -526,19 +559,30 @@ export function IntervalGameClient({
 
       {game.phase !== "match_end" && (
         <section
-          className="relative mx-auto w-full max-w-[22rem] shrink-0 overflow-hidden"
-          style={{ aspectRatio: "1 / 0.92", maxHeight: "min(48vh, 20rem)" }}
+          className="relative mx-auto min-h-0 w-full max-w-lg flex-1"
           aria-label={t("interval.table")}
         >
+          {/* Dikdörtgen keçe masa — sayfanın ortasını doldurur */}
           <div
-            className="absolute inset-[10%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
+            className="absolute inset-1 rounded-[1.75rem] border border-[#2a5a4a]/55 shadow-[inset_0_0_48px_rgba(0,0,0,0.4)]"
             style={{
               background:
-                "radial-gradient(ellipse at center, #1a3d32 0%, #122820 55%, #0c1a16 100%)",
+                "radial-gradient(ellipse at center, #1f4a3c 0%, #16352c 45%, #0e221c 100%)",
             }}
           />
 
-          {tableSeats.map((id, i) => {
+          {tableSlots.map((id, slot) => {
+            if (id == null) {
+              return (
+                <div
+                  key={`empty-${slot}`}
+                  className="flex w-[4.25rem] flex-col items-center opacity-40"
+                  style={slotStyle(slot)}
+                >
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-dashed border-white/25 bg-black/20" />
+                </div>
+              );
+            }
             const turn =
               !preHand &&
               game.phase === "turn" &&
@@ -549,8 +593,8 @@ export function IntervalGameClient({
             return (
               <div
                 key={id}
-                className="absolute z-10 flex w-[4.75rem] flex-col items-center"
-                style={seatStyle(i, tableSeats.length)}
+                className="flex w-[4.5rem] flex-col items-center"
+                style={slotStyle(slot)}
               >
                 <div
                   className={clsx(
@@ -573,19 +617,19 @@ export function IntervalGameClient({
                     {game.banks[id] ?? 0}
                   </span>
                 </div>
-                <p className="mt-1.5 max-w-[4.75rem] truncate text-center text-[11px] font-semibold leading-tight text-text">
+                <p className="mt-1.5 max-w-[4.5rem] truncate text-center text-[11px] font-semibold leading-tight text-text">
                   {mine ? t("interval.youShort") : nameOf(id)}
                 </p>
               </div>
             );
           })}
 
-          <div className="absolute left-1/2 top-1/2 z-20 flex w-[12.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5">
-            <div className="relative flex h-[3.25rem] w-[3.25rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
+          <div className="absolute left-1/2 top-1/2 z-20 flex w-[min(14rem,70%)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+            <div className="relative flex h-[3.5rem] w-[3.5rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
               <p className="text-[8px] font-bold tracking-wider text-accent/80 uppercase">
                 {t("interval.pot")}
               </p>
-              <p className="font-mono text-[20px] font-bold tabular-nums leading-none text-accent">
+              <p className="font-mono text-[22px] font-bold tabular-nums leading-none text-accent">
                 {potDisplay}
               </p>
               {deltaLabel && (
@@ -596,7 +640,7 @@ export function IntervalGameClient({
             </div>
 
             {(showPublicHand || spinning || drawn) && (
-              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-2.5 py-2 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
+              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-2.5 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
                 <div className="flex items-center justify-center gap-1.5">
                   {showPublicHand && (
                     <>

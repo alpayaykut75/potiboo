@@ -178,7 +178,7 @@
     "spinWait": "Açılıyor… {sec}",
     "seen": "Bu elde çıkanlar",
     "handReady": "Hazır",
-    "startFirstHand": "İlk eli başlat",
+    "startFirstHand": "Başlat",
     "matchStartHint": "Bankalar {bank}. Başlatınca herkesten {ante} ortaya gider.",
     "yourCards": "Senin elin",
     "theirCards": "{name} eli",

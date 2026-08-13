@@ -73,8 +73,9 @@ function TileView({
 function seatStyle(index: number, total: number): CSSProperties {
   const n = Math.max(total, 1);
   const angle = Math.PI / 2 + (index * 2 * Math.PI) / n;
-  const rx = 41;
-  const ry = 37;
+  // Ortadaki kart paneline yer: koltuklar biraz dışarı
+  const rx = 44;
+  const ry = 40;
   return {
     left: `${50 + Math.cos(angle) * rx}%`,
     top: `${50 + Math.sin(angle) * ry}%`,
@@ -338,17 +339,19 @@ export function IntervalGameClient({
 
   const preHand = game ? isIntervalPreHand(game) : false;
 
+  /** Sıra metni yok — sadece olay / sonuç / niyet */
   const statusLine = useMemo(() => {
-    if (!game) return "";
+    if (!game || preHand) return "";
     const ev = game.last_event;
 
-    if (preHand) {
-      return t("interval.statusMatchStart");
-    }
     if (game.phase === "reveal" && ev && (ev.kind === "hit" || ev.kind === "miss")) {
       const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
       if (spinning) {
-        return t("interval.statusSpinning", { name: who, n: ev.stake, sec: spinLeft });
+        return t("interval.statusSpinning", {
+          name: who,
+          n: ev.stake,
+          sec: spinLeft,
+        });
       }
       if (ev.kind === "hit") {
         return t("interval.statusHit", { name: who, n: ev.payout });
@@ -365,25 +368,21 @@ export function IntervalGameClient({
         name: nameOf(winners[0] ?? game.winner_id ?? ""),
       });
     }
-    if (ev?.kind === "ante") {
+    if (ev?.kind === "ante" && game.phase === "turn") {
       return t("interval.statusAnte", { n: ev.per, pot: ev.to_pot });
     }
-    if (game.phase === "turn") {
+    if (game.phase === "turn" && game.intent_amount != null) {
       const turnName =
         game.turn_profile_id === me
           ? t("interval.youShort")
           : nameOf(game.turn_profile_id ?? "");
-      if (game.intent_amount != null) {
-        if (myTurn) {
-          return t("interval.statusYourIntent", { n: game.intent_amount });
-        }
-        return t("interval.statusIntent", {
-          name: turnName,
-          n: game.intent_amount,
-        });
+      if (myTurn) {
+        return t("interval.statusYourIntent", { n: game.intent_amount });
       }
-      if (myTurn) return t("interval.statusYourTurn");
-      return t("interval.statusWaiting", { name: turnName });
+      return t("interval.statusIntent", {
+        name: turnName,
+        n: game.intent_amount,
+      });
     }
     return "";
   }, [game, me, myTurn, nameOf, preHand, spinLeft, spinning, t, winners]);
@@ -498,62 +497,41 @@ export function IntervalGameClient({
         </p>
       </header>
 
-      <div
-        className={clsx(
-          "rounded-2xl px-4 py-3 text-center",
-          spinning && "bg-accent/12",
-          revealed && ev?.kind === "hit" && "bg-accent/20",
-          revealed && ev?.kind === "miss" && "bg-danger/15",
-          game.phase === "turn" && !preHand && "bg-bg-elevated",
-          (preHand ||
-            game.phase === "hand_end" ||
-            game.phase === "match_end") &&
-            "bg-bg-elevated",
-        )}
-      >
-        <p
+      {statusLine !== "" && (
+        <div
           className={clsx(
-            "text-[17px] font-bold leading-snug",
-            (preHand || spinning || myTurn || game.intent_amount != null) &&
-              "text-accent",
-            revealed && ev?.kind === "hit" && "text-accent",
-            revealed && ev?.kind === "miss" && "text-danger",
-            !preHand &&
-              !spinning &&
-              !myTurn &&
-              game.intent_amount == null &&
-              !revealed &&
-              "text-text",
+            "rounded-2xl px-4 py-3 text-center",
+            spinning && "bg-accent/12",
+            revealed && ev?.kind === "hit" && "bg-accent/20",
+            revealed && ev?.kind === "miss" && "bg-danger/15",
+            !spinning && !revealed && "bg-bg-elevated",
           )}
         >
-          {statusLine}
-        </p>
-      </div>
-
-      {preHand && (
-        <section className="space-y-3 text-center">
-          <p className="text-[15px] text-text-muted">
-            {t("interval.matchStartHint", { bank: 100, ante: 10 })}
-          </p>
-          <button
-            type="button"
-            disabled={pending}
-            onClick={onContinue}
-            className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
+          <p
+            className={clsx(
+              "text-[17px] font-bold leading-snug",
+              (spinning || game.intent_amount != null) && "text-accent",
+              revealed && ev?.kind === "hit" && "text-accent",
+              revealed && ev?.kind === "miss" && "text-danger",
+              !spinning &&
+                game.intent_amount == null &&
+                !revealed &&
+                "text-text",
+            )}
           >
-            {t("interval.startFirstHand")}
-          </button>
-        </section>
+            {statusLine}
+          </p>
+        </div>
       )}
 
-      {game.phase !== "match_end" && !preHand && (
+      {game.phase !== "match_end" && (
         <section
           className="relative mx-auto w-full max-w-[22rem]"
-          style={{ aspectRatio: "1 / 1.05" }}
+          style={{ aspectRatio: "1 / 1.08" }}
           aria-label={t("interval.table")}
         >
           <div
-            className="absolute inset-[8%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
+            className="absolute inset-[7%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
             style={{
               background:
                 "radial-gradient(ellipse at center, #1a3d32 0%, #122820 55%, #0c1a16 100%)",
@@ -562,7 +540,9 @@ export function IntervalGameClient({
 
           {tableSeats.map((id, i) => {
             const turn =
-              game.phase === "turn" && game.turn_profile_id === id;
+              !preHand &&
+              game.phase === "turn" &&
+              game.turn_profile_id === id;
             const p = players.find((x) => x.profile_id === id);
             const mine = id === me;
             const intending = turn && game.intent_amount != null;
@@ -574,7 +554,7 @@ export function IntervalGameClient({
               >
                 <div
                   className={clsx(
-                    "relative rounded-2xl border bg-bg-card/95 px-2 py-2 backdrop-blur-sm",
+                    "relative rounded-2xl border-2 bg-bg-card/95 px-2 py-2 backdrop-blur-sm",
                     turn && "interval-seat-turn border-accent",
                     !turn && mine && "border-accent/40",
                     !turn && !mine && "border-border/70",
@@ -590,12 +570,7 @@ export function IntervalGameClient({
                     </span>
                   )}
                 </div>
-                <p
-                  className={clsx(
-                    "max-w-[5.5rem] truncate text-center text-[12px] font-semibold",
-                    turn ? "text-accent" : "text-text",
-                  )}
-                >
+                <p className="max-w-[5.5rem] truncate text-center text-[12px] font-semibold text-text">
                   {mine ? t("interval.youShort") : nameOf(id)}
                 </p>
                 <p className="font-mono text-[16px] font-bold tabular-nums text-text">
@@ -605,73 +580,64 @@ export function IntervalGameClient({
             );
           })}
 
-          {/* Orta: sıra eli + pot + çekilen */}
-          <div className="absolute left-1/2 top-1/2 z-20 flex w-[11rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5">
-            {showPublicHand && (
-              <div className="flex flex-col items-center gap-1">
-                <p className="text-[10px] font-bold tracking-wide text-accent/80 uppercase">
-                  {game.turn_profile_id === me
-                    ? t("interval.yourCards")
-                    : t("interval.theirCards", {
-                        name: nameOf(game.turn_profile_id ?? ""),
-                      })}
-                </p>
-                <div className="flex items-center gap-2">
-                  <TileView tile={game.public_c1!} />
-                  <TileView tile={game.public_c2!} />
-                </div>
-                {publicRange && canStake(publicRange.lo, publicRange.hi) ? (
-                  <p className="text-[12px] font-semibold text-text-muted">
-                    {t("interval.range", {
-                      lo: publicRange.lo,
-                      hi: publicRange.hi,
-                    })}
-                  </p>
-                ) : (
-                  <p className="text-[12px] font-semibold text-text-dim">
-                    {t("interval.noRange")}
-                  </p>
-                )}
-              </div>
-            )}
-
-            <div className="relative flex h-[4.75rem] w-[4.75rem] flex-col items-center justify-center rounded-full border-2 border-accent/40 bg-[#0a1612]/95">
-              <p className="text-[10px] font-bold tracking-wider text-accent/80 uppercase">
+          {/* Orta: pot üstte; kartlar yarı saydam panelde */}
+          <div className="absolute left-1/2 top-1/2 z-20 flex w-[13.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+            <div className="relative flex h-[3.75rem] w-[3.75rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
+              <p className="text-[9px] font-bold tracking-wider text-accent/80 uppercase">
                 {t("interval.pot")}
               </p>
-              <p className="font-mono text-[26px] font-bold tabular-nums leading-none text-accent">
+              <p className="font-mono text-[22px] font-bold tabular-nums leading-none text-accent">
                 {potDisplay}
               </p>
               {deltaLabel && (
-                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[14px] font-bold text-[#e8b84a]">
+                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[13px] font-bold text-[#e8b84a]">
                   {deltaLabel}
                 </span>
               )}
             </div>
 
-            {(spinning || drawn) && (
-              <div className="flex flex-col items-center gap-1">
-                {spinning ? (
-                  <>
-                    <div className="interval-card-spin">
-                      <TileView tile={randomSpinTile(spinFace)} large />
+            {(showPublicHand || spinning || drawn) && (
+              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-3 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
+                <div className="flex items-end justify-center gap-2">
+                  {showPublicHand && (
+                    <>
+                      <TileView tile={game.public_c1!} />
+                      <TileView tile={game.public_c2!} />
+                    </>
+                  )}
+                  <div className="mx-0.5 h-10 w-px self-center bg-white/20" />
+                  {spinning ? (
+                    <div className="flex flex-col items-center gap-0.5">
+                      <div className="interval-card-spin">
+                        <TileView tile={randomSpinTile(spinFace)} />
+                      </div>
+                      <p className="font-mono text-[11px] font-bold text-accent tabular-nums">
+                        {spinLeft}
+                      </p>
                     </div>
-                    <p className="font-mono text-[13px] font-bold text-accent tabular-nums">
-                      {spinLeft}
-                    </p>
-                  </>
-                ) : (
-                  drawn && (
-                    <div className="interval-draw-pop flex flex-col items-center gap-0.5">
-                      <TileView tile={drawn} large />
-                      {ev && (ev.kind === "hit" || ev.kind === "miss") && (
-                        <p className="text-[12px] font-semibold text-text-muted">
-                          {t("interval.range", { lo: ev.lo, hi: ev.hi })} →{" "}
-                          {drawn.value}
-                        </p>
-                      )}
+                  ) : drawn ? (
+                    <div className="interval-draw-pop">
+                      <TileView tile={drawn} />
                     </div>
-                  )
+                  ) : (
+                    <div className="flex h-14 w-12 items-center justify-center rounded-xl border border-dashed border-white/25 text-[18px] font-bold text-white/35">
+                      ?
+                    </div>
+                  )}
+                </div>
+                {showPublicHand && (
+                  <p className="mt-1.5 text-center text-[12px] font-semibold text-white/75">
+                    {publicRange && canStake(publicRange.lo, publicRange.hi)
+                      ? t("interval.range", {
+                          lo: publicRange.lo,
+                          hi: publicRange.hi,
+                        })
+                      : t("interval.noRange")}
+                    {drawn &&
+                      ev &&
+                      (ev.kind === "hit" || ev.kind === "miss") &&
+                      ` → ${drawn.value}`}
+                  </p>
                 )}
               </div>
             )}
@@ -679,7 +645,7 @@ export function IntervalGameClient({
         </section>
       )}
 
-      {game.phase !== "match_end" && game.seen_tiles.length > 0 && (
+      {game.phase !== "match_end" && !preHand && game.seen_tiles.length > 0 && (
         <div className="space-y-1">
           <p className="text-center text-[11px] font-semibold tracking-wide text-text-dim uppercase">
             {t("interval.seen")}
@@ -694,6 +660,19 @@ export function IntervalGameClient({
             ))}
           </div>
         </div>
+      )}
+
+      {preHand && (
+        <section className="space-y-2">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={onContinue}
+            className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
+          >
+            {t("interval.startFirstHand")}
+          </button>
+        </section>
       )}
 
       {game.phase === "turn" && myTurn && !preHand && (

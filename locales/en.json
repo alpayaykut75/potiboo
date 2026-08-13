@@ -178,7 +178,7 @@
     "spinWait": "Revealing… {sec}",
     "seen": "Drawn this hand",
     "handReady": "Ready",
-    "startFirstHand": "Start first hand",
+    "startFirstHand": "Start",
     "matchStartHint": "Banks at {bank}. On start, each puts {ante} into the pot.",
     "yourCards": "Your hand",
     "theirCards": "{name}'s hand",

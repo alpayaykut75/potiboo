@@ -28,6 +28,7 @@ import { ProfileChip, useProfile } from "@/components/profile-gate";
 import { GameClient } from "./game-client";
 import { XoxGameClient } from "./xox-client";
 import { SynkedGameClient } from "./synked-client";
+import { OnlukGameClient } from "./onluk-client";
 import { clsx } from "@/lib/utils";
 import { gameTitle } from "@/lib/games/catalog";
 import { gamePlayerLimits } from "@/lib/games/limits";
@@ -74,12 +75,15 @@ export function LobbyClient({
   const limits = gamePlayerLimits(room.game_type);
   const isXox = room.game_type === "xox";
   const isSynked = room.game_type === "synked";
+  const isOnluk = room.game_type === "onluk";
   const isIsimSehir = room.game_type === "isim_sehir";
   const canStart = isSynked
     ? players.length === 2 || players.length === 4
     : isXox
       ? players.length === 2 || players.length === 4 || players.length === 8
-      : players.length >= limits.min && players.length <= limits.max;
+      : isOnluk
+        ? players.length === 2
+        : players.length >= limits.min && players.length <= limits.max;
 
   useEffect(() => {
     QRCode.toDataURL(joinUrl, {
@@ -244,12 +248,13 @@ export function LobbyClient({
         : t("lobby.statusNeedMore", { n: count, min });
 
     if (isSynked) return t("lobby.statusNeedSynked", { n });
+    if (isOnluk) return needMore(n, 2);
     if (isXox) {
       if (n < 2) return needMore(n, 2);
       return t("lobby.statusNeedXox", { n });
     }
     return needMore(n, limits.min);
-  }, [canStart, isSynked, isXox, limits.min, locale, players.length, t]);
+  }, [canStart, isOnluk, isSynked, isXox, limits.min, locale, players.length, t]);
 
   function onStart() {
     if (!canStart) return;
@@ -316,6 +321,15 @@ export function LobbyClient({
     if (isSynked) {
       return (
         <SynkedGameClient
+          roomId={roomId}
+          initialRoom={room}
+          initialPlayers={players}
+        />
+      );
+    }
+    if (isOnluk) {
+      return (
+        <OnlukGameClient
           roomId={roomId}
           initialRoom={room}
           initialPlayers={players}
@@ -488,6 +502,12 @@ export function LobbyClient({
         <p className="text-center text-[15px] text-text-muted">
           {t("lobby.synkedGuestHint")}
         </p>
+      )}
+
+      {!isHost && isOnluk && (
+        <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
+          {t("lobby.settings")} · {t("lobby.onlukGuestHint")}
+        </section>
       )}
 
       {!isHost && isIsimSehir && settingsSummary && (

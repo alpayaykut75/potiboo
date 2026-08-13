@@ -62,7 +62,7 @@ export function defaultSettingsFor(gameType: GameId): RoomSettings {
       winLength: 3,
     };
   }
-  if (gameType === "synked") {
+  if (gameType === "synked" || gameType === "onluk") {
     return {
       duration: 60,
       roundCount: 1,

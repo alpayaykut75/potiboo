@@ -96,6 +96,7 @@
     "board": "Papan",
     "xoxGuestHint": "2 klasik · 4/8 turnamen",
     "synkedGuestHint": "2 klasik · 4 balapan (tim 1–2 / 3–4)",
+    "onlukGuestHint": "2 pemain · tumpuk aturan, salah kalah",
     "howTo": "Cara main",
     "synkedHowTo": "Di 2p, tulis benih lalu asosiasi sampai cocok. Di 4p, tim mengunci benih dengan STOP, lalu balapan",
     "tournamentMode": "Turnamen · {n} pemain · 3×3",
@@ -104,6 +105,28 @@
     "lanHint": "Ponsel di Wi‑Fi yang sama: {url}",
     "localhostHint": "QR mengarah ke localhost — tidak terbuka di ponsel. Tambahkan NEXT_PUBLIC_LAN_HOST",
     "qrAlt": "Kode QR gabung"
+  },
+  "onluk": {
+    "firstTo": "Pertama ke {n}",
+    "yourTurn": "Giliranmu",
+    "theirTurn": "Giliran {name}",
+    "step": "Langkah {n}/{max}",
+    "addRule": "Tambah aturan",
+    "waitRule": "Lawan sedang menambah aturan…",
+    "ruleSwap": "Tukar",
+    "ruleRename": "Jadi",
+    "ruleSkip": "Lewati",
+    "ruleReverse": "Balik",
+    "pickTwo": "Pilih dua",
+    "pickSource": "Yang mana berubah?",
+    "pickTarget": "Jadi apa? Pilih angka atau ketik kata",
+    "pickSkip": "Yang mana dilewati?",
+    "wordPlaceholder": "mis. pir",
+    "confirm": "Oke",
+    "youWon": "Kamu menang!",
+    "theyWon": "{name} menang",
+    "rematch": "Main lagi",
+    "waitRematch": "Menunggu host memulai ulang"
   },
   "gameCopy": {
     "isim_sehir": {
@@ -131,6 +154,15 @@
         "Di 2p, tulis benih rahasia lalu asosiasi sampai cocok",
         "Di 4p, tim mengunci benih dengan STOP, lalu balapan",
         "Tim pertama yang kata-katanya cocok menang"
+      ]
+    },
+    "onluk": {
+      "blurb": "Hitung bergiliran, tumpuk aturan, jangan salah",
+      "meta": "2 pemain",
+      "howTo": [
+        "Bergiliran mengucapkan urutan dari 1 (3 dtk)",
+        "Setelah ronde bersih: tukar, jadi, lewati, atau balik",
+        "Salah atau waktu habis: poin lawan; yang pertama ke 3 menang"
       ]
     },
     "wordle": {

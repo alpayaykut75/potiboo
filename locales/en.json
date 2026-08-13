@@ -96,6 +96,7 @@
     "board": "Board",
     "xoxGuestHint": "2 classic · 4/8 tournament",
     "synkedGuestHint": "2 classic · 4 race (1–2 / 3–4 teams)",
+    "onlukGuestHint": "2 players · stack rules, miss and lose",
     "howTo": "How to play",
     "synkedHowTo": "In 2p, write a seed and associate until you match. In 4p, teams lock seeds with STOP, then race",
     "tournamentMode": "Tournament · {n} players · 3×3",
@@ -104,6 +105,28 @@
     "lanHint": "Phone on the same Wi‑Fi: {url}",
     "localhostHint": "QR points to localhost — won't open on phone. Add NEXT_PUBLIC_LAN_HOST",
     "qrAlt": "Join QR code"
+  },
+  "onluk": {
+    "firstTo": "First to {n}",
+    "yourTurn": "Your turn",
+    "theirTurn": "{name}'s turn",
+    "step": "Step {n}/{max}",
+    "addRule": "Add a rule",
+    "waitRule": "Opponent is adding a rule…",
+    "ruleSwap": "Swap",
+    "ruleRename": "Become",
+    "ruleSkip": "Skip",
+    "ruleReverse": "Reverse",
+    "pickTwo": "Pick two",
+    "pickSource": "Which one changes?",
+    "pickTarget": "Become what? Pick a number or type a word",
+    "pickSkip": "Which one to skip?",
+    "wordPlaceholder": "e.g. pear",
+    "confirm": "OK",
+    "youWon": "You won!",
+    "theyWon": "{name} won",
+    "rematch": "Play again",
+    "waitRematch": "Waiting for the host to rematch"
   },
   "gameCopy": {
     "isim_sehir": {
@@ -131,6 +154,15 @@
         "In 2p, write a private seed and associate until you match",
         "In 4p, teams lock seeds with STOP, then race",
         "First team to match the same word wins"
+      ]
+    },
+    "onluk": {
+      "blurb": "Count in turn, stack rules, don't slip",
+      "meta": "2 players",
+      "howTo": [
+        "Take turns saying the sequence from 1 (3s each)",
+        "After a clean round, swap, rename, skip, or reverse",
+        "Wrong or timeout gives opponent a point; first to 3 wins"
       ]
     },
     "wordle": {

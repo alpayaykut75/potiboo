@@ -396,6 +396,43 @@ export async function startGame(roomId: string): Promise<void> {
     return;
   }
 
+  if (room.game_type === "onluk") {
+    if (sorted.length !== 2) {
+      throw new Error("Onluk için 2 oyuncu gerekli.");
+    }
+
+    const { error } = await supabase
+      .from("rooms")
+      .update({ status: "playing", current_round: 1 })
+      .eq("id", roomId)
+      .eq("status", "lobby");
+    if (error) throw new Error(error.message);
+
+    const playerA = sorted[0]!.profile_id;
+    const playerB = sorted[1]!.profile_id;
+    const { error: onlukErr } = await supabase.from("onluk_games").upsert(
+      {
+        room_id: roomId,
+        player_a: playerA,
+        player_b: playerB,
+        score_a: 0,
+        score_b: 0,
+        phase: "counting",
+        sequence: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
+        cursor: 0,
+        turn_profile_id: playerA,
+        rule_turn_profile_id: playerB,
+        rules: [],
+        deadline_at: new Date(Date.now() + 3000).toISOString(),
+        last_event: null,
+        winner_id: null,
+      },
+      { onConflict: "room_id" },
+    );
+    if (onlukErr) throw new Error(onlukErr.message);
+    return;
+  }
+
   // İsim Şehir
   const stopperId = sorted[0]?.profile_id;
   if (!stopperId) throw new Error("Oyuncu yok");

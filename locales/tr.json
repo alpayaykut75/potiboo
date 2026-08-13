@@ -96,6 +96,7 @@
     "board": "Tahta",
     "xoxGuestHint": "2 klasik · 4/8 turnuva",
     "synkedGuestHint": "2 kişi klasik · 4 kişi yarış (1–2 / 3–4 takım)",
+    "onlukGuestHint": "2 kişi · kural biriktir, yanılan kaybeder",
     "howTo": "Nasıl oynanır",
     "synkedHowTo": "2 kişide tohum yazıp çağrışımla aynı kelimeye ulaş. 4 kişide takımlar (1–2 vs 3–4) DUR ile tohum kilitler, sonra yarışır",
     "tournamentMode": "Turnuva modu · {n} oyuncu · 3×3",
@@ -104,6 +105,28 @@
     "lanHint": "Telefon aynı Wi‑Fi'de olsun: {url}",
     "localhostHint": "Karekod localhost — telefonda açılmaz. NEXT_PUBLIC_LAN_HOST ekle",
     "qrAlt": "Katılım karekodu"
+  },
+  "onluk": {
+    "firstTo": "İlk {n} puan",
+    "yourTurn": "Sıra sende",
+    "theirTurn": "Sıra: {name}",
+    "step": "Adım {n}/{max}",
+    "addRule": "Bir kural ekle",
+    "waitRule": "Rakip kural ekliyor…",
+    "ruleSwap": "Yer değiştir",
+    "ruleRename": "Olsun",
+    "ruleSkip": "Atla",
+    "ruleReverse": "Ters çevir",
+    "pickTwo": "İki tanesini seç",
+    "pickSource": "Hangisi değişsin?",
+    "pickTarget": "Ne olsun? Sayı seç veya kelime yaz",
+    "pickSkip": "Hangisini atlayalım?",
+    "wordPlaceholder": "örn. armut",
+    "confirm": "Tamam",
+    "youWon": "Kazandın!",
+    "theyWon": "{name} kazandı",
+    "rematch": "Yeniden oyna",
+    "waitRematch": "Kurucu yeniden başlatana kadar bekle"
   },
   "gameCopy": {
     "isim_sehir": {
@@ -131,6 +154,15 @@
         "2 kişide gizli kelime yaz, eşleşene kadar çağrışım yap",
         "4 kişide takımlar DUR ile tohum seçer, sonra yarışır",
         "Takımın aynı kelimeye gelirse kazanırsın"
+      ]
+    },
+    "onluk": {
+      "blurb": "Sırayla say, kural ekle, yanılma",
+      "meta": "2 kişi",
+      "howTo": [
+        "Sırayla 1'den itibaren doğru sırayı söyle (3 sn)",
+        "Tur bitince yer değiştir, olsun, atla veya ters çevir",
+        "Yanlış veya süre dolunca rakibe puan; ilk 3 kazanan"
       ]
     },
     "wordle": {

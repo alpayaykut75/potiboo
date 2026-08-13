@@ -114,6 +114,7 @@
     "yourTurn": "Sıra sende",
     "theirTurn": "Sıra: {name}",
     "step": "Adım {n}/{max}",
+    "wordChips": "Kelimeler",
     "addRule": "Bir kural ekle",
     "waitRule": "Rakip kural ekliyor…",
     "ruleSwap": "Yer değiştir",

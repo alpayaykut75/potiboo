@@ -22,8 +22,9 @@ import {
   onlukTimeout,
 } from "@/lib/games/onluk-api";
 import {
+  ONLUK_NUMBER_CHIPS,
   ONLUK_WIN_SCORE,
-  tokensForChips,
+  wordChipsFromSequence,
   type OnlukGameRow,
   type OnlukLastEvent,
   type OnlukRule,
@@ -155,8 +156,8 @@ export function OnlukGameClient({
 
   const secondsLeft = Math.ceil(msLeft / 1000);
 
-  const chips = useMemo(
-    () => (game ? tokensForChips(game.sequence) : []),
+  const wordChips = useMemo(
+    () => (game ? wordChipsFromSequence(game.sequence) : []),
     [game],
   );
 
@@ -300,15 +301,15 @@ export function OnlukGameClient({
               max: game.sequence.length,
             })}
           </p>
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-            {chips.map((token) => (
+          <div className="grid grid-cols-5 gap-1.5">
+            {ONLUK_NUMBER_CHIPS.map((token) => (
               <button
                 key={token}
                 type="button"
                 disabled={!myTurn || pending}
                 onClick={() => playToken(token)}
                 className={clsx(
-                  "min-h-14 rounded-2xl border px-2 py-3 text-[20px] font-bold transition",
+                  "min-h-11 rounded-xl border px-1 py-2 text-[17px] font-bold transition sm:min-h-12 sm:text-[18px]",
                   myTurn
                     ? "border-border bg-bg-elevated text-text active:bg-accent active:text-[#041018]"
                     : "border-border/50 bg-bg-card text-text-dim opacity-60",
@@ -318,6 +319,31 @@ export function OnlukGameClient({
               </button>
             ))}
           </div>
+          {wordChips.length > 0 && (
+            <div className="space-y-1.5">
+              <p className="text-center text-[13px] text-text-dim">
+                {t("onluk.wordChips")}
+              </p>
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {wordChips.map((token) => (
+                  <button
+                    key={token}
+                    type="button"
+                    disabled={!myTurn || pending}
+                    onClick={() => playToken(token)}
+                    className={clsx(
+                      "min-h-11 rounded-xl border px-3 py-2 text-[16px] font-bold transition",
+                      myTurn
+                        ? "border-accent/40 bg-accent/15 text-text active:bg-accent active:text-[#041018]"
+                        : "border-border/50 bg-bg-card text-text-dim opacity-60",
+                    )}
+                  >
+                    {token}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </section>
       )}
 

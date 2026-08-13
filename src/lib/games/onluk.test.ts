@@ -5,7 +5,7 @@ import {
   expectedToken,
   initialSequence,
   normalizeOnlukToken,
-  tokensForChips,
+  wordChipsFromSequence,
   validateToken,
 } from "./onluk";
 
@@ -66,11 +66,10 @@ describe("onluk rules", () => {
     expect(validateToken("a".repeat(13))).toBeNull();
   });
 
-  it("chip list is unique", () => {
-    expect(tokensForChips(["1", "9", "1", "armut"])).toEqual([
-      "1",
-      "9",
+  it("word chips exclude numbers", () => {
+    expect(wordChipsFromSequence(["1", "9", "armut", "elma", "9"])).toEqual([
       "armut",
+      "elma",
     ]);
   });
 });

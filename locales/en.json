@@ -114,6 +114,7 @@
     "yourTurn": "Your turn",
     "theirTurn": "{name}'s turn",
     "step": "Step {n}/{max}",
+    "wordChips": "Words",
     "addRule": "Add a rule",
     "waitRule": "Opponent is adding a rule…",
     "ruleSwap": "Swap",

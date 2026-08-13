@@ -126,14 +126,34 @@ export function expectedToken(sequence: string[], cursor: number): string {
   return sequence[cursor]!;
 }
 
-export function tokensForChips(sequence: string[]): string[] {
+/** Sayma paneli: her zaman sabit 1–10 */
+export const ONLUK_NUMBER_CHIPS = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+] as const;
+
+export function isOnlukNumberToken(token: string): boolean {
+  const t = normalizeOnlukToken(token);
+  return (ONLUK_NUMBER_CHIPS as readonly string[]).includes(t);
+}
+
+/** Dizideki kelime token’ları (sayı→sayı rename chip üretmez) */
+export function wordChipsFromSequence(sequence: string[]): string[] {
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const t of sequence) {
-    const key = normalizeOnlukToken(t);
-    if (seen.has(key)) continue;
+  for (const raw of sequence) {
+    const key = normalizeOnlukToken(raw);
+    if (!key || isOnlukNumberToken(key) || seen.has(key)) continue;
     seen.add(key);
-    out.push(t);
+    out.push(raw);
   }
   return out;
 }

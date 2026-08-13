@@ -114,6 +114,7 @@
     "yourTurn": "Giliranmu",
     "theirTurn": "Giliran {name}",
     "step": "Langkah {n}/{max}",
+    "wordChips": "Kata",
     "addRule": "Tambah aturan",
     "waitRule": "Lawan sedang menambah aturan…",
     "ruleSwap": "Tukar",

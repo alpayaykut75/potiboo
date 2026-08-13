@@ -20,7 +20,7 @@ export type OnlukPhase =
   | "match_end";
 
 export type OnlukRule =
-  | { type: "swap"; i: number; j: number }
+  | { type: "swap"; a: string; b: string }
   | { type: "rename"; index: number; token: string }
   | { type: "skip"; index: number }
   | { type: "reverse" };
@@ -92,14 +92,14 @@ export function applyRule(sequence: string[], rule: OnlukRule): string[] {
   const next = [...sequence];
   switch (rule.type) {
     case "swap": {
-      const { i, j } = rule;
-      if (
-        i < 0 ||
-        j < 0 ||
-        i >= next.length ||
-        j >= next.length ||
-        i === j
-      ) {
+      const na = normalizeOnlukToken(rule.a);
+      const nb = normalizeOnlukToken(rule.b);
+      if (!na || !nb || na === nb) {
+        throw new Error("Geçersiz yer değiştirme");
+      }
+      const i = next.findIndex((t) => normalizeOnlukToken(t) === na);
+      const j = next.findIndex((t) => normalizeOnlukToken(t) === nb);
+      if (i < 0 || j < 0) {
         throw new Error("Geçersiz yer değiştirme");
       }
       const tmp = next[i]!;
@@ -196,8 +196,15 @@ export function parseOnlukRules(raw: unknown): OnlukRule[] {
     if (!item || typeof item !== "object") continue;
     const row = item as Record<string, unknown>;
     if (row.type === "swap") {
-      if (typeof row.i === "number" && typeof row.j === "number") {
-        out.push({ type: "swap", i: row.i, j: row.j });
+      if (typeof row.a === "string" && typeof row.b === "string") {
+        out.push({ type: "swap", a: row.a, b: row.b });
+      } else if (typeof row.i === "number" && typeof row.j === "number") {
+        // eski index formatı — yalnızca parse; apply değer ister
+        out.push({
+          type: "swap",
+          a: String(row.i + 1),
+          b: String(row.j + 1),
+        });
       }
     } else if (row.type === "rename") {
       if (typeof row.index === "number" && typeof row.token === "string") {
@@ -275,7 +282,7 @@ export function parseOnlukLastEvent(raw: unknown): OnlukLastEvent {
 export function describeRule(rule: OnlukRule): string {
   switch (rule.type) {
     case "swap":
-      return `swap:${rule.i}:${rule.j}`;
+      return `swap:${rule.a}:${rule.b}`;
     case "rename":
       return `rename:${rule.index}:${rule.token}`;
     case "skip":
@@ -283,4 +290,20 @@ export function describeRule(rule: OnlukRule): string {
     case "reverse":
       return "reverse";
   }
+}
+
+/** Swap seçimi: dizideki benzersiz token’lar (sayılar sırayla, sonra kelimeler) */
+export function swapChoicesFromSequence(sequence: string[]): string[] {
+  const seen = new Set<string>();
+  const nums: string[] = [];
+  const words: string[] = [];
+  for (const raw of sequence) {
+    const key = normalizeOnlukToken(raw);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    if (isOnlukNumberToken(key)) nums.push(key);
+    else words.push(raw);
+  }
+  nums.sort((a, b) => Number(a) - Number(b));
+  return [...nums, ...words];
 }

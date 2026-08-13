@@ -24,6 +24,7 @@ import {
 import {
   ONLUK_NUMBER_CHIPS,
   ONLUK_WIN_SCORE,
+  swapChoicesFromSequence,
   wordChipsFromSequence,
   type OnlukGameRow,
   type OnlukLastEvent,
@@ -55,7 +56,7 @@ export function OnlukGameClient({
   const [pending, startTransition] = useTransition();
   const [now, setNow] = useState(() => Date.now());
   const [ruleKind, setRuleKind] = useState<RuleKind | null>(null);
-  const [swapPick, setSwapPick] = useState<number[]>([]);
+  const [swapPick, setSwapPick] = useState<string[]>([]);
   const [renameIndex, setRenameIndex] = useState<number | null>(null);
   const [renameText, setRenameText] = useState("");
   const [skipIndex, setSkipIndex] = useState<number | null>(null);
@@ -163,6 +164,11 @@ export function OnlukGameClient({
 
   const wordChips = useMemo(
     () => (game ? wordChipsFromSequence(game.sequence) : []),
+    [game],
+  );
+
+  const swapChoices = useMemo(
+    () => (game ? swapChoicesFromSequence(game.sequence) : []),
     [game],
   );
 
@@ -492,11 +498,11 @@ export function OnlukGameClient({
             <div className="space-y-2">
               <p className="text-[15px] text-text-muted">{t("onluk.pickTwo")}</p>
               <div className="flex flex-wrap gap-2">
-                {game.sequence.map((token, i) => {
-                  const selected = swapPick.includes(i);
+                {swapChoices.map((token) => {
+                  const selected = swapPick.includes(token);
                   return (
                     <button
-                      key={`${token}-${i}`}
+                      key={token}
                       type="button"
                       className={clsx(
                         "min-h-11 rounded-xl px-3 py-2 text-[17px] font-bold",
@@ -505,17 +511,17 @@ export function OnlukGameClient({
                           : "border border-border bg-bg-elevated text-text",
                       )}
                       onClick={() => {
-                        let next = swapPick.includes(i)
-                          ? swapPick.filter((x) => x !== i)
+                        const next = selected
+                          ? swapPick.filter((x) => x !== token)
                           : swapPick.length >= 2
-                            ? [swapPick[1]!, i]
-                            : [...swapPick, i];
+                            ? [swapPick[1]!, token]
+                            : [...swapPick, token];
                         setSwapPick(next);
                         if (next.length === 2) {
                           submitRule({
                             type: "swap",
-                            i: next[0]!,
-                            j: next[1]!,
+                            a: next[0]!,
+                            b: next[1]!,
                           });
                         }
                       }}
@@ -734,8 +740,8 @@ function formatRuleHeadline(
   switch (ev.rule.type) {
     case "swap":
       return t("onluk.headlineSwap", {
-        a: ev.a ?? "?",
-        b: ev.b ?? "?",
+        a: ev.a ?? ev.rule.a ?? "?",
+        b: ev.b ?? ev.rule.b ?? "?",
       });
     case "rename":
       return t("onluk.headlineRename", {

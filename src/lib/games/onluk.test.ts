@@ -10,10 +10,19 @@ import {
 } from "./onluk";
 
 describe("onluk rules", () => {
-  it("swap places two slots", () => {
-    const seq = applyRule(initialSequence(), { type: "swap", i: 1, j: 4 });
-    expect(seq[1]).toBe("5");
-    expect(seq[4]).toBe("2");
+  it("swap by value: 5 and 6 trade places in the count order", () => {
+    const seq = applyRule(initialSequence(), { type: "swap", a: "5", b: "6" });
+    expect(seq).toEqual(["1", "2", "3", "4", "6", "5", "7", "8", "9", "10"]);
+    expect(expectedToken(seq, 4)).toBe("6");
+    expect(expectedToken(seq, 5)).toBe("5");
+  });
+
+  it("swap by value works after reverse", () => {
+    let seq = applyRule(initialSequence(), { type: "reverse" });
+    seq = applyRule(seq, { type: "swap", a: "5", b: "6" });
+    // ...10,9,8,7,6,5,4,3,2,1 → 6 and 5 swap → ...10,9,8,7,5,6,4,3,2,1
+    expect(seq[4]).toBe("5");
+    expect(seq[5]).toBe("6");
   });
 
   it("rename accepts word or number", () => {
@@ -34,7 +43,7 @@ describe("onluk rules", () => {
   });
 
   it("skip refuses below min length", () => {
-    let seq = ["1", "2"];
+    const seq = ["1", "2"];
     expect(() => applyRule(seq, { type: "skip", index: 0 })).toThrow();
   });
 
@@ -45,19 +54,13 @@ describe("onluk rules", () => {
 
   it("stacks rules like kids play", () => {
     const seq = applyRules(initialSequence(), [
-      { type: "swap", i: 1, j: 4 },
+      { type: "swap", a: "2", b: "5" },
       { type: "rename", index: 5, token: "armut" },
       { type: "skip", index: 0 },
     ]);
     expect(seq[0]).toBe("5");
     expect(seq).toContain("armut");
     expect(seq).not.toContain("1");
-  });
-
-  it("expected token follows cursor", () => {
-    const seq = applyRule(initialSequence(), { type: "swap", i: 0, j: 1 });
-    expect(expectedToken(seq, 0)).toBe("2");
-    expect(expectedToken(seq, 1)).toBe("1");
   });
 
   it("normalizes TR case for compare", () => {

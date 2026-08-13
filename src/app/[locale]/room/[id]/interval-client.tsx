@@ -19,6 +19,7 @@ import {
   fetchIntervalHand,
   intervalBet,
   intervalContinue,
+  intervalIntend,
   intervalPass,
   intervalRematch,
 } from "@/lib/games/interval-api";
@@ -44,20 +45,28 @@ type PotFx = {
   amount: number;
 };
 
+type RevealStep = "put" | "card";
+
 function TileView({
   tile,
   large,
+  mini,
   className,
 }: {
   tile: IntervalTile;
   large?: boolean;
+  mini?: boolean;
   className?: string;
 }) {
   return (
     <div
       className={clsx(
-        "flex items-center justify-center rounded-2xl font-bold text-[#041018] shadow-sm",
-        large ? "h-24 w-20 text-[36px]" : "h-16 w-14 text-[26px]",
+        "flex items-center justify-center font-bold text-[#041018] shadow-sm",
+        mini
+          ? "h-7 w-6 rounded-md text-[12px]"
+          : large
+            ? "h-24 w-20 rounded-2xl text-[36px]"
+            : "h-16 w-14 rounded-2xl text-[26px]",
         className,
       )}
       style={{ backgroundColor: colorHex(tile.color) }}
@@ -67,12 +76,11 @@ function TileView({
   );
 }
 
-/** Sen altta; diğerleri saat yönünde elips üzerinde */
 function seatStyle(index: number, total: number): CSSProperties {
   const n = Math.max(total, 1);
   const angle = Math.PI / 2 + (index * 2 * Math.PI) / n;
-  const rx = 42;
-  const ry = 38;
+  const rx = 41;
+  const ry = 37;
   const x = 50 + Math.cos(angle) * rx;
   const y = 50 + Math.sin(angle) * ry;
   return {
@@ -84,9 +92,8 @@ function seatStyle(index: number, total: number): CSSProperties {
 
 function potFxFromEvent(ev: IntervalLastEvent): Omit<PotFx, "key"> | null {
   if (!ev) return null;
-  if (ev.kind === "miss") return { kind: "in", amount: ev.stake };
+  // Miss: +stake zaten "put" adımında; kartta sadece tutturma (ortadan çıkış)
   if (ev.kind === "hit") return { kind: "hit", amount: ev.payout };
-  if (ev.kind === "pass") return null;
   return null;
 }
 
@@ -111,6 +118,7 @@ export function IntervalGameClient({
   const [stake, setStake] = useState<number | null>(null);
   const [potFx, setPotFx] = useState<PotFx | null>(null);
   const [fxTick, setFxTick] = useState(0);
+  const [revealStep, setRevealStep] = useState<RevealStep>("put");
 
   const refresh = useCallback(async () => {
     const [nextRoom, nextPlayers, nextGame, nextHand] = await Promise.all([
@@ -172,16 +180,34 @@ export function IntervalGameClient({
   }, [roomId, refresh]);
 
   useEffect(() => {
-    setStake(null);
-  }, [game?.phase, game?.turn_profile_id, game?.hand_index, game?.updated_at]);
+    if (game?.phase === "turn") {
+      setStake(game.intent_amount);
+    }
+  }, [game?.phase, game?.intent_amount, game?.turn_profile_id]);
 
   useEffect(() => {
-    if (!game?.last_event || !game.updated_at) return;
+    if (!game?.last_event || game.phase !== "reveal") return;
     const fx = potFxFromEvent(game.last_event);
     if (!fx) return;
     setFxTick((n) => n + 1);
     setPotFx({ ...fx, key: Date.now() });
-  }, [game?.updated_at, game?.last_event]);
+  }, [game?.updated_at, game?.last_event, game?.phase]);
+
+  // Reveal: önce koyma, sonra taş — bekleyiş
+  useEffect(() => {
+    if (game?.phase !== "reveal") {
+      setRevealStep("put");
+      return;
+    }
+    setRevealStep("put");
+    playSfx("tap");
+    const id = window.setTimeout(() => {
+      setRevealStep("card");
+      const ev = game.last_event;
+      playSfx(ev?.kind === "hit" ? "confetti" : "timeUp");
+    }, 1100);
+    return () => window.clearTimeout(id);
+  }, [game?.phase, game?.updated_at, game?.last_event]);
 
   const me = profile.userId;
   const isHost = room.host_id === me;
@@ -218,7 +244,6 @@ export function IntervalGameClient({
     return leaders(game.banks, game.seats);
   }, [game]);
 
-  /** Sen index 0 (alt); diğerleri join sırasına göre */
   const tableSeats = useMemo(() => {
     if (!game) return [] as string[];
     const seats = game.seats;
@@ -230,8 +255,12 @@ export function IntervalGameClient({
   const statusLine = useMemo(() => {
     if (!game) return "";
     const ev = game.last_event;
+
     if (game.phase === "reveal" && ev && (ev.kind === "hit" || ev.kind === "miss")) {
       const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
+      if (revealStep === "put") {
+        return t("interval.statusPutWait", { name: who, n: ev.stake });
+      }
       if (ev.kind === "hit") {
         return t("interval.statusHit", { name: who, n: ev.payout });
       }
@@ -248,13 +277,30 @@ export function IntervalGameClient({
       });
     }
     if (game.phase === "turn") {
+      if (
+        game.intent_amount != null &&
+        game.turn_profile_id &&
+        (ev?.kind === "intent" || game.intent_amount > 0)
+      ) {
+        const who =
+          game.turn_profile_id === me
+            ? t("interval.youShort")
+            : nameOf(game.turn_profile_id);
+        if (myTurn) {
+          return t("interval.statusYourIntent", { n: game.intent_amount });
+        }
+        return t("interval.statusIntent", {
+          name: who,
+          n: game.intent_amount,
+        });
+      }
       if (myTurn) return t("interval.statusYourTurn");
       return t("interval.statusWaiting", {
         name: nameOf(game.turn_profile_id ?? ""),
       });
     }
     return "";
-  }, [game, me, myTurn, nameOf, t, winners]);
+  }, [game, me, myTurn, nameOf, revealStep, t, winners]);
 
   function onPass() {
     unlockSfx();
@@ -270,6 +316,20 @@ export function IntervalGameClient({
     });
   }
 
+  function onIntend(amount: number) {
+    unlockSfx();
+    setStake(amount);
+    startTransition(async () => {
+      try {
+        setError(null);
+        setGame(await intervalIntend(roomId, amount));
+        playSfx("tap");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("common.errorGeneric"));
+      }
+    });
+  }
+
   function onPlay() {
     if (stake == null) return;
     unlockSfx();
@@ -278,7 +338,6 @@ export function IntervalGameClient({
         setError(null);
         const next = await intervalBet(roomId, stake);
         setGame(next);
-        playSfx(next.last_event?.kind === "hit" ? "confetti" : "timeUp");
         void refresh();
       } catch (e) {
         setError(e instanceof Error ? e.message : t("common.errorGeneric"));
@@ -327,10 +386,11 @@ export function IntervalGameClient({
   const iWon =
     game.phase === "match_end" &&
     (game.winner_id === me || (winners.length > 1 && winners.includes(me)));
-  const revealTile =
-    game.phase === "reveal" && ev && (ev.kind === "hit" || ev.kind === "miss")
-      ? ev.drawn
-      : null;
+  const revealReady =
+    game.phase === "reveal" &&
+    ev &&
+    (ev.kind === "hit" || ev.kind === "miss");
+  const showRevealCard = revealReady && revealStep === "card";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-3 px-4 py-3 pb-[calc(0.75rem+var(--safe-bottom))]">
@@ -350,14 +410,29 @@ export function IntervalGameClient({
         </p>
       </header>
 
-      {/* Durum bandı */}
       <div
         className={clsx(
           "rounded-2xl px-4 py-3 text-center transition",
-          game.phase === "reveal" && ev?.kind === "hit" && "bg-accent/20",
-          game.phase === "reveal" && ev?.kind === "miss" && "bg-danger/15",
-          game.phase === "turn" && myTurn && "bg-accent/15",
-          game.phase === "turn" && !myTurn && "bg-bg-elevated",
+          game.phase === "reveal" &&
+            revealStep === "card" &&
+            ev?.kind === "hit" &&
+            "bg-accent/20",
+          game.phase === "reveal" &&
+            revealStep === "card" &&
+            ev?.kind === "miss" &&
+            "bg-danger/15",
+          game.phase === "reveal" && revealStep === "put" && "bg-accent/10",
+          game.phase === "turn" &&
+            game.intent_amount != null &&
+            "bg-accent/12",
+          game.phase === "turn" &&
+            game.intent_amount == null &&
+            myTurn &&
+            "bg-accent/15",
+          game.phase === "turn" &&
+            game.intent_amount == null &&
+            !myTurn &&
+            "bg-bg-elevated",
           (game.phase === "hand_end" || game.phase === "match_end") &&
             "bg-bg-elevated",
         )}
@@ -365,12 +440,27 @@ export function IntervalGameClient({
         <p
           className={clsx(
             "text-[17px] font-bold leading-snug",
-            game.phase === "reveal" && ev?.kind === "hit" && "text-accent",
-            game.phase === "reveal" && ev?.kind === "miss" && "text-danger",
-            game.phase === "turn" && myTurn && "text-accent",
+            game.phase === "reveal" &&
+              revealStep === "card" &&
+              ev?.kind === "hit" &&
+              "text-accent",
+            game.phase === "reveal" &&
+              revealStep === "card" &&
+              ev?.kind === "miss" &&
+              "text-danger",
+            (myTurn ||
+              game.intent_amount != null ||
+              (game.phase === "reveal" && revealStep === "put")) &&
+              !(
+                game.phase === "reveal" &&
+                revealStep === "card" &&
+                ev?.kind === "miss"
+              ) &&
+              "text-accent",
             !(
-              (game.phase === "reveal" && (ev?.kind === "hit" || ev?.kind === "miss")) ||
-              (game.phase === "turn" && myTurn)
+              myTurn ||
+              game.intent_amount != null ||
+              game.phase === "reveal"
             ) && "text-text",
           )}
         >
@@ -384,7 +474,6 @@ export function IntervalGameClient({
           style={{ aspectRatio: "1 / 1.05" }}
           aria-label={t("interval.table")}
         >
-          {/* Masa yüzeyi */}
           <div
             className="absolute inset-[8%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
             style={{
@@ -393,21 +482,22 @@ export function IntervalGameClient({
             }}
           />
 
-          {/* Koltuklar */}
           {tableSeats.map((id, i) => {
             const turn =
               game.phase === "turn" && game.turn_profile_id === id;
             const p = players.find((x) => x.profile_id === id);
             const mine = id === me;
+            const intending =
+              turn && game.intent_amount != null && game.phase === "turn";
             return (
               <div
                 key={id}
-                className="absolute z-10 flex w-[4.75rem] flex-col items-center gap-0.5"
+                className="absolute z-10 flex w-[5.5rem] flex-col items-center gap-0.5"
                 style={seatStyle(i, tableSeats.length)}
               >
                 <div
                   className={clsx(
-                    "rounded-2xl border bg-bg-card/95 px-1.5 py-1.5 backdrop-blur-sm transition",
+                    "relative rounded-2xl border bg-bg-card/95 px-2 py-2 backdrop-blur-sm transition",
                     turn && "interval-seat-turn border-accent",
                     !turn && mine && "border-accent/40",
                     !turn && !mine && "border-border/70",
@@ -415,37 +505,51 @@ export function IntervalGameClient({
                 >
                   <AvatarImage
                     avatar={p?.profiles?.avatar_key ?? "panda"}
-                    size="sm"
+                    size="md"
                   />
+                  {intending && (
+                    <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[11px] font-bold text-[#041018]">
+                      {game.intent_amount}
+                    </span>
+                  )}
                 </div>
                 <p
                   className={clsx(
-                    "max-w-[4.75rem] truncate text-center text-[11px] font-semibold leading-tight",
+                    "max-w-[5.5rem] truncate text-center text-[12px] font-semibold leading-tight",
                     turn ? "text-accent" : "text-text",
                   )}
                 >
                   {mine ? t("interval.youShort") : nameOf(id)}
                 </p>
-                <p className="font-mono text-[12px] font-bold tabular-nums text-text-muted">
+                <p className="font-mono text-[16px] font-bold tabular-nums text-text">
                   {game.banks[id] ?? 0}
                 </p>
               </div>
             );
           })}
 
-          {/* Orta */}
           <div className="absolute left-1/2 top-1/2 z-20 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center">
             <div
               key={`pot-${fxTick}`}
               className={clsx(
                 "relative flex h-[5.75rem] w-[5.75rem] flex-col items-center justify-center rounded-full border-2 border-accent/40 bg-[#0a1612]/95",
-                potFx?.kind === "hit" && "interval-pot-out",
-                potFx?.kind === "in" && "interval-pot-in",
+                potFx?.kind === "hit" &&
+                  revealStep === "card" &&
+                  "interval-pot-out",
+                potFx?.kind === "in" &&
+                  revealStep === "card" &&
+                  "interval-pot-in",
+                revealReady &&
+                  revealStep === "put" &&
+                  "interval-pot-in",
               )}
             >
-              {revealTile ? (
-                <div className="interval-draw-pop flex flex-col items-center gap-0.5">
-                  <TileView tile={revealTile} className="!h-14 !w-12 !text-[22px] !rounded-xl" />
+              {showRevealCard && revealReady ? (
+                <div className="interval-draw-pop">
+                  <TileView
+                    tile={ev.drawn}
+                    className="!h-14 !w-12 !rounded-xl !text-[22px]"
+                  />
                 </div>
               ) : (
                 <>
@@ -455,9 +559,14 @@ export function IntervalGameClient({
                   <p className="font-mono text-[28px] font-bold tabular-nums leading-none text-accent">
                     {game.pot}
                   </p>
+                  {revealReady && revealStep === "put" && (
+                    <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 z-10 text-[15px] font-bold tabular-nums text-[#e8b84a]">
+                      +{ev.stake}
+                    </span>
+                  )}
                 </>
               )}
-              {potFx && (
+              {potFx && revealStep === "card" && (
                 <span
                   key={potFx.key}
                   className={clsx(
@@ -467,20 +576,34 @@ export function IntervalGameClient({
                       : "interval-float-down text-[#e85d5d]",
                   )}
                 >
-                  {potFx.kind === "hit" ? `−${potFx.amount}` : `+${potFx.amount}`}
+                  {potFx.kind === "hit"
+                    ? `−${potFx.amount}`
+                    : `+${potFx.amount}`}
                 </span>
               )}
             </div>
-            {revealTile && ev && (ev.kind === "hit" || ev.kind === "miss") && (
+            {showRevealCard && revealReady && (
               <p className="mt-1 whitespace-nowrap text-[12px] font-semibold text-text-muted">
-                {game.pot} · {t("interval.range", { lo: ev.lo, hi: ev.hi })}
+                {t("interval.range", { lo: ev.lo, hi: ev.hi })}
               </p>
             )}
           </div>
         </section>
       )}
 
-      {/* Alt aksiyon / el */}
+      {game.phase !== "match_end" && game.seen_tiles.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-center text-[11px] font-semibold tracking-wide text-text-dim uppercase">
+            {t("interval.seen")}
+          </p>
+          <div className="flex flex-wrap justify-center gap-1">
+            {game.seen_tiles.map((tile, i) => (
+              <TileView key={`${tile.color}-${tile.value}-${i}`} tile={tile} mini />
+            ))}
+          </div>
+        </div>
+      )}
+
       {game.phase !== "match_end" && (
         <section className="mt-1 space-y-3">
           {hand && (
@@ -518,7 +641,7 @@ export function IntervalGameClient({
                         key={n}
                         type="button"
                         disabled={pending}
-                        onClick={() => setStake(n)}
+                        onClick={() => onIntend(n)}
                         className={clsx(
                           "min-h-11 min-w-[3.25rem] rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
                           stake === n
@@ -546,11 +669,13 @@ export function IntervalGameClient({
           {game.phase === "reveal" && (
             <button
               type="button"
-              disabled={pending}
+              disabled={pending || revealStep !== "card"}
               onClick={onContinue}
-              className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
+              className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018] disabled:opacity-40"
             >
-              {t("interval.continue")}
+              {revealStep === "card"
+                ? t("interval.continue")
+                : t("interval.drawing")}
             </button>
           )}
 
@@ -592,11 +717,11 @@ export function IntervalGameClient({
                       players.find((p) => p.profile_id === id)?.profiles
                         ?.avatar_key ?? "panda"
                     }
-                    size="sm"
+                    size="md"
                   />
                   {nameOf(id)}
                 </span>
-                <span className="font-mono text-[17px] font-bold tabular-nums text-text">
+                <span className="font-mono text-[18px] font-bold tabular-nums text-text">
                   {game.banks[id] ?? 0}
                 </span>
               </li>

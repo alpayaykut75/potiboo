@@ -7,6 +7,7 @@ import {
   parseIntervalPhase,
   parseIntervalSeats,
   parseIntervalTile,
+  parseIntervalTiles,
   type IntervalGameRow,
   type IntervalHandRow,
 } from "@/lib/games/interval";
@@ -24,6 +25,9 @@ function mapGame(data: Record<string, unknown>): IntervalGameRow {
     turn_index: typeof data.turn_index === "number" ? data.turn_index : 0,
     hand_index: typeof data.hand_index === "number" ? data.hand_index : 0,
     hand_total: typeof data.hand_total === "number" ? data.hand_total : 5,
+    intent_amount:
+      typeof data.intent_amount === "number" ? data.intent_amount : null,
+    seen_tiles: parseIntervalTiles(data.seen_tiles),
     last_event: parseIntervalLastEvent(data.last_event),
     winner_id: data.winner_id ? String(data.winner_id) : null,
     updated_at: String(data.updated_at ?? ""),
@@ -74,6 +78,19 @@ export async function intervalPass(roomId: string): Promise<IntervalGameRow> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("interval_pass", {
     p_room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return mapGame(data as Record<string, unknown>);
+}
+
+export async function intervalIntend(
+  roomId: string,
+  amount: number,
+): Promise<IntervalGameRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("interval_intend", {
+    p_room_id: roomId,
+    p_amount: amount,
   });
   if (error) throw new Error(error.message);
   return mapGame(data as Record<string, unknown>);

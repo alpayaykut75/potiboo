@@ -25,6 +25,7 @@ export type IntervalPhase = "turn" | "reveal" | "hand_end" | "match_end";
 
 export type IntervalLastEvent =
   | { kind: "pass"; by: string }
+  | { kind: "intent"; by: string; amount: number }
   | {
       kind: "hit";
       by: string;
@@ -58,6 +59,8 @@ export type IntervalGameRow = {
   turn_index: number;
   hand_index: number;
   hand_total: number;
+  intent_amount: number | null;
+  seen_tiles: IntervalTile[];
   last_event: IntervalLastEvent;
   winner_id: string | null;
   updated_at: string;
@@ -273,11 +276,28 @@ export function parseIntervalSeats(raw: unknown): string[] {
   return raw.map((x) => String(x));
 }
 
+export function parseIntervalTiles(raw: unknown): IntervalTile[] {
+  if (!Array.isArray(raw)) return [];
+  const out: IntervalTile[] = [];
+  for (const item of raw) {
+    const tile = parseIntervalTile(item);
+    if (tile) out.push(tile);
+  }
+  return out;
+}
+
 export function parseIntervalLastEvent(raw: unknown): IntervalLastEvent {
   if (!raw || typeof raw !== "object") return null;
   const row = raw as Record<string, unknown>;
   if (row.kind === "pass" && typeof row.by === "string") {
     return { kind: "pass", by: row.by };
+  }
+  if (
+    row.kind === "intent" &&
+    typeof row.by === "string" &&
+    typeof row.amount === "number"
+  ) {
+    return { kind: "intent", by: row.by, amount: row.amount };
   }
   if (
     (row.kind === "hit" || row.kind === "miss") &&

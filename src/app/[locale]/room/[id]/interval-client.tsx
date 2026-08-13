@@ -73,9 +73,9 @@ function TileView({
 function seatStyle(index: number, total: number): CSSProperties {
   const n = Math.max(total, 1);
   const angle = Math.PI / 2 + (index * 2 * Math.PI) / n;
-  // Ortadaki kart paneline yer: koltuklar biraz dışarı
-  const rx = 44;
-  const ry = 40;
+  // Üst/alt taşmayı azalt — elips biraz daha yatay
+  const rx = 42;
+  const ry = 33;
   return {
     left: `${50 + Math.cos(angle) * rx}%`,
     top: `${50 + Math.sin(angle) * ry}%`,
@@ -478,10 +478,10 @@ export function IntervalGameClient({
     revealed && ev && (ev.kind === "hit" || ev.kind === "miss") ? ev.drawn : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col gap-3 px-4 py-3 pb-[calc(0.75rem+var(--safe-bottom))]">
+    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-2 pb-[calc(0.5rem+var(--safe-bottom))]">
       {iWon && <ConfettiBurst />}
 
-      <header className="flex items-center justify-between gap-2">
+      <header className="relative z-30 flex shrink-0 items-center justify-between gap-2 pb-1">
         <button
           type="button"
           className="btn-ghost text-base text-text-muted"
@@ -500,7 +500,7 @@ export function IntervalGameClient({
       {statusLine !== "" && (
         <div
           className={clsx(
-            "rounded-2xl px-4 py-3 text-center",
+            "mb-1 shrink-0 rounded-xl px-3 py-2 text-center",
             spinning && "bg-accent/12",
             revealed && ev?.kind === "hit" && "bg-accent/20",
             revealed && ev?.kind === "miss" && "bg-danger/15",
@@ -509,7 +509,7 @@ export function IntervalGameClient({
         >
           <p
             className={clsx(
-              "text-[17px] font-bold leading-snug",
+              "text-[15px] font-bold leading-snug",
               (spinning || game.intent_amount != null) && "text-accent",
               revealed && ev?.kind === "hit" && "text-accent",
               revealed && ev?.kind === "miss" && "text-danger",
@@ -526,12 +526,12 @@ export function IntervalGameClient({
 
       {game.phase !== "match_end" && (
         <section
-          className="relative mx-auto w-full max-w-[22rem]"
-          style={{ aspectRatio: "1 / 1.08" }}
+          className="relative mx-auto w-full max-w-[22rem] shrink-0 overflow-hidden"
+          style={{ aspectRatio: "1 / 0.92", maxHeight: "min(48vh, 20rem)" }}
           aria-label={t("interval.table")}
         >
           <div
-            className="absolute inset-[7%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
+            className="absolute inset-[10%] rounded-[50%] border border-[#2a5a4a]/50 shadow-[inset_0_0_40px_rgba(0,0,0,0.35)]"
             style={{
               background:
                 "radial-gradient(ellipse at center, #1a3d32 0%, #122820 55%, #0c1a16 100%)",
@@ -549,12 +549,12 @@ export function IntervalGameClient({
             return (
               <div
                 key={id}
-                className="absolute z-10 flex w-[5.5rem] flex-col items-center gap-0.5"
+                className="absolute z-10 flex w-[4.75rem] flex-col items-center"
                 style={seatStyle(i, tableSeats.length)}
               >
                 <div
                   className={clsx(
-                    "relative rounded-2xl border-2 bg-bg-card/95 px-2 py-2 backdrop-blur-sm",
+                    "relative rounded-xl border-2 bg-bg-card/95 p-1 backdrop-blur-sm",
                     turn && "interval-seat-turn border-accent",
                     !turn && mine && "border-accent/40",
                     !turn && !mine && "border-border/70",
@@ -562,56 +562,55 @@ export function IntervalGameClient({
                 >
                   <AvatarImage
                     avatar={p?.profiles?.avatar_key ?? "panda"}
-                    size="md"
+                    size="sm"
                   />
                   {intending && (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[11px] font-bold text-[#041018]">
+                    <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1 py-0.5 font-mono text-[10px] font-bold text-[#041018]">
                       {game.intent_amount}
                     </span>
                   )}
+                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-md bg-[#0a1612]/95 px-1 font-mono text-[11px] font-bold tabular-nums text-accent">
+                    {game.banks[id] ?? 0}
+                  </span>
                 </div>
-                <p className="max-w-[5.5rem] truncate text-center text-[12px] font-semibold text-text">
+                <p className="mt-1.5 max-w-[4.75rem] truncate text-center text-[11px] font-semibold leading-tight text-text">
                   {mine ? t("interval.youShort") : nameOf(id)}
-                </p>
-                <p className="font-mono text-[16px] font-bold tabular-nums text-text">
-                  {game.banks[id] ?? 0}
                 </p>
               </div>
             );
           })}
 
-          {/* Orta: pot üstte; kartlar yarı saydam panelde */}
-          <div className="absolute left-1/2 top-1/2 z-20 flex w-[13.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
-            <div className="relative flex h-[3.75rem] w-[3.75rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
-              <p className="text-[9px] font-bold tracking-wider text-accent/80 uppercase">
+          <div className="absolute left-1/2 top-1/2 z-20 flex w-[12.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1.5">
+            <div className="relative flex h-[3.25rem] w-[3.25rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
+              <p className="text-[8px] font-bold tracking-wider text-accent/80 uppercase">
                 {t("interval.pot")}
               </p>
-              <p className="font-mono text-[22px] font-bold tabular-nums leading-none text-accent">
+              <p className="font-mono text-[20px] font-bold tabular-nums leading-none text-accent">
                 {potDisplay}
               </p>
               {deltaLabel && (
-                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[13px] font-bold text-[#e8b84a]">
+                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[12px] font-bold text-[#e8b84a]">
                   {deltaLabel}
                 </span>
               )}
             </div>
 
             {(showPublicHand || spinning || drawn) && (
-              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-3 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
-                <div className="flex items-end justify-center gap-2">
+              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-2.5 py-2 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
+                <div className="flex items-center justify-center gap-1.5">
                   {showPublicHand && (
                     <>
                       <TileView tile={game.public_c1!} />
                       <TileView tile={game.public_c2!} />
                     </>
                   )}
-                  <div className="mx-0.5 h-10 w-px self-center bg-white/20" />
+                  <div className="mx-0.5 h-8 w-px bg-white/20" />
                   {spinning ? (
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="interval-card-spin">
                         <TileView tile={randomSpinTile(spinFace)} />
                       </div>
-                      <p className="font-mono text-[11px] font-bold text-accent tabular-nums">
+                      <p className="font-mono text-[10px] font-bold text-accent tabular-nums">
                         {spinLeft}
                       </p>
                     </div>
@@ -625,130 +624,23 @@ export function IntervalGameClient({
                     </div>
                   )}
                 </div>
-                {showPublicHand && (
-                  <p className="mt-1.5 text-center text-[12px] font-semibold text-white/75">
-                    {publicRange && canStake(publicRange.lo, publicRange.hi)
-                      ? t("interval.range", {
-                          lo: publicRange.lo,
-                          hi: publicRange.hi,
-                        })
-                      : t("interval.noRange")}
-                    {drawn &&
-                      ev &&
-                      (ev.kind === "hit" || ev.kind === "miss") &&
-                      ` → ${drawn.value}`}
-                  </p>
-                )}
+                {showPublicHand &&
+                  publicRange &&
+                  !canStake(publicRange.lo, publicRange.hi) && (
+                    <p className="mt-1 text-center text-[11px] font-semibold text-white/60">
+                      {t("interval.noRange")}
+                    </p>
+                  )}
               </div>
             )}
           </div>
         </section>
       )}
 
-      {game.phase !== "match_end" && !preHand && game.seen_tiles.length > 0 && (
-        <div className="space-y-1">
-          <p className="text-center text-[11px] font-semibold tracking-wide text-text-dim uppercase">
-            {t("interval.seen")}
-          </p>
-          <div className="flex flex-wrap justify-center gap-1">
-            {game.seen_tiles.map((tile, i) => (
-              <TileView
-                key={`${tile.color}-${tile.value}-${i}`}
-                tile={tile}
-                mini
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {preHand && (
-        <section className="space-y-2">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={onContinue}
-            className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
-          >
-            {t("interval.startFirstHand")}
-          </button>
-        </section>
-      )}
-
-      {game.phase === "turn" && myTurn && !preHand && (
-        <section className="space-y-2.5">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={onPass}
-            className="btn w-full border border-border bg-bg-elevated py-3.5 text-[18px] font-bold text-text"
-          >
-            {t("interval.pass")}
-          </button>
-          {playable && options.length > 0 && (
-            <>
-              <p className="text-center text-[13px] text-text-dim">
-                {t("interval.putHint")}
-              </p>
-              <div className="flex flex-wrap justify-center gap-2">
-                {options.map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    disabled={pending}
-                    onClick={() => onIntend(n)}
-                    className={clsx(
-                      "min-h-11 min-w-[3.25rem] rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
-                      stake === n
-                        ? "bg-accent text-[#041018]"
-                        : "border border-border bg-bg-elevated text-text-muted",
-                    )}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
-              <button
-                type="button"
-                disabled={pending || stake == null}
-                onClick={onPlay}
-                className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018] disabled:opacity-40"
-              >
-                {t("interval.draw")}
-              </button>
-            </>
-          )}
-        </section>
-      )}
-
-      {game.phase === "reveal" && (
-        <button
-          type="button"
-          disabled={pending || spinning}
-          onClick={onContinue}
-          className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018] disabled:opacity-40"
-        >
-          {spinning
-            ? t("interval.spinWait", { sec: spinLeft })
-            : t("interval.continue")}
-        </button>
-      )}
-
-      {game.phase === "hand_end" && (
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onContinue}
-          className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
-        >
-          {t("interval.nextHand")}
-        </button>
-      )}
-
       {game.phase === "match_end" && (
-        <section className="space-y-4 text-center">
+        <section className="mt-2 flex-1 space-y-3 overflow-y-auto text-center">
           {ev?.kind === "burn" && ev.pot > 0 && (
-            <p className="text-[16px] text-text-muted">
+            <p className="text-[15px] text-text-muted">
               {t("interval.burned", { n: ev.pot })}
             </p>
           )}
@@ -780,24 +672,122 @@ export function IntervalGameClient({
               </li>
             ))}
           </ol>
-          {isHost ? (
+        </section>
+      )}
+
+      <div className="mt-auto shrink-0 border-t border-border/50 bg-bg/95 pt-2 backdrop-blur-sm">
+        {preHand &&
+          (isHost ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={onContinue}
+              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
+            >
+              {t("interval.startFirstHand")}
+            </button>
+          ) : (
+            <p className="py-2 text-center text-[14px] text-text-muted">
+              {t("interval.waitHostAction")}
+            </p>
+          ))}
+
+        {game.phase === "turn" && myTurn && !preHand && (
+          <div className="flex flex-wrap items-center justify-center gap-1.5">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={onPass}
+              className="min-h-11 rounded-xl border border-border bg-bg-elevated px-3 py-2 text-[15px] font-bold text-text"
+            >
+              {t("interval.pass")}
+            </button>
+            {playable &&
+              options.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  disabled={pending}
+                  onClick={() => onIntend(n)}
+                  className={clsx(
+                    "min-h-11 min-w-[2.75rem] rounded-xl px-2.5 py-2 text-[16px] font-bold transition",
+                    stake === n
+                      ? "bg-accent text-[#041018]"
+                      : "border border-border bg-bg-elevated text-text-muted",
+                  )}
+                >
+                  {n}
+                </button>
+              ))}
+            {playable && (
+              <button
+                type="button"
+                disabled={pending || stake == null}
+                onClick={onPlay}
+                className="min-h-11 rounded-xl bg-accent px-3.5 py-2 text-[15px] font-bold text-[#041018] disabled:opacity-40"
+              >
+                {t("interval.draw")}
+              </button>
+            )}
+          </div>
+        )}
+
+        {game.phase === "reveal" &&
+          (spinning ? (
+            <p className="py-2 text-center text-[14px] font-semibold text-accent">
+              {t("interval.spinWait", { sec: spinLeft })}
+            </p>
+          ) : isHost ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={onContinue}
+              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
+            >
+              {t("interval.continue")}
+            </button>
+          ) : (
+            <p className="py-2 text-center text-[14px] text-text-muted">
+              {t("interval.waitHostAction")}
+            </p>
+          ))}
+
+        {game.phase === "hand_end" &&
+          (isHost ? (
+            <button
+              type="button"
+              disabled={pending}
+              onClick={onContinue}
+              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
+            >
+              {t("interval.nextHand")}
+            </button>
+          ) : (
+            <p className="py-2 text-center text-[14px] text-text-muted">
+              {t("interval.waitHostAction")}
+            </p>
+          ))}
+
+        {game.phase === "match_end" &&
+          (isHost ? (
             <button
               type="button"
               disabled={pending}
               onClick={onRematch}
-              className="btn w-full bg-accent text-[18px] font-bold text-[#041018]"
+              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
             >
               {t("interval.rematch")}
             </button>
           ) : (
-            <p className="text-[15px] text-text-muted">
+            <p className="py-2 text-center text-[14px] text-text-muted">
               {t("interval.waitRematch")}
             </p>
-          )}
-        </section>
-      )}
+          ))}
 
-      {error && <p className="text-center text-[15px] text-danger">{error}</p>}
+        {error && (
+          <p className="pt-1 text-center text-[14px] text-danger">{error}</p>
+        )}
+      </div>
     </div>
   );
 }

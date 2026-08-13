@@ -23,6 +23,8 @@ function mapRow(data: Record<string, unknown>): OnlukGameRow {
     turn_profile_id: String(data.turn_profile_id),
     rule_turn_profile_id: String(data.rule_turn_profile_id),
     rules: parseOnlukRules(data.rules),
+    ack_a: Boolean(data.ack_a),
+    ack_b: Boolean(data.ack_b),
     deadline_at: String(data.deadline_at ?? ""),
     last_event: parseOnlukLastEvent(data.last_event),
     winner_id: data.winner_id ? String(data.winner_id) : null,
@@ -82,6 +84,15 @@ export async function onlukTimeout(roomId: string): Promise<OnlukGameRow> {
 export async function onlukRematch(roomId: string): Promise<OnlukGameRow> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("onluk_rematch", {
+    p_room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return mapRow(data as Record<string, unknown>);
+}
+
+export async function onlukAckRule(roomId: string): Promise<OnlukGameRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("onluk_ack_rule", {
     p_room_id: roomId,
   });
   if (error) throw new Error(error.message);

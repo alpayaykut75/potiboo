@@ -3,7 +3,7 @@
 export const ONLUK_COUNT_OPTIONS = [3, 5, 7] as const;
 export type OnlukCountSec = (typeof ONLUK_COUNT_OPTIONS)[number];
 export const ONLUK_DEFAULT_COUNT_SEC: OnlukCountSec = 5;
-export const ONLUK_RULE_MS = 10000;
+export const ONLUK_RULE_MS = 30000;
 export const ONLUK_WIN_SCORE = 3;
 export const ONLUK_MIN_SEQUENCE = 2;
 export const ONLUK_MAX_TOKEN_LEN = 12;
@@ -12,7 +12,7 @@ export function resolveOnlukCountSec(raw: unknown): OnlukCountSec {
   return raw === 3 || raw === 5 || raw === 7 ? raw : ONLUK_DEFAULT_COUNT_SEC;
 }
 
-export type OnlukPhase = "counting" | "rule" | "match_end";
+export type OnlukPhase = "counting" | "rule" | "reveal" | "match_end";
 
 export type OnlukRule =
   | { type: "swap"; i: number; j: number }
@@ -23,7 +23,13 @@ export type OnlukRule =
 export type OnlukLastEvent =
   | { kind: "wrong"; by: string; expected: string; got: string }
   | { kind: "timeout"; by: string; expected: string }
-  | { kind: "rule"; by: string; rule: OnlukRule }
+  | {
+      kind: "rule";
+      by: string;
+      rule: OnlukRule;
+      a?: string;
+      b?: string;
+    }
   | { kind: "point"; scorer: string; scoreA: number; scoreB: number }
   | null;
 
@@ -39,6 +45,8 @@ export type OnlukGameRow = {
   turn_profile_id: string;
   rule_turn_profile_id: string;
   rules: OnlukRule[];
+  ack_a: boolean;
+  ack_b: boolean;
   deadline_at: string;
   last_event: OnlukLastEvent;
   winner_id: string | null;
@@ -131,7 +139,10 @@ export function tokensForChips(sequence: string[]): string[] {
 }
 
 export function parseOnlukPhase(raw: unknown): OnlukPhase {
-  return raw === "rule" || raw === "match_end" || raw === "counting"
+  return raw === "rule" ||
+    raw === "reveal" ||
+    raw === "match_end" ||
+    raw === "counting"
     ? raw
     : "counting";
 }
@@ -186,7 +197,15 @@ export function parseOnlukLastEvent(raw: unknown): OnlukLastEvent {
   }
   if (row.kind === "rule" && typeof row.by === "string") {
     const rules = parseOnlukRules([row.rule]);
-    if (rules[0]) return { kind: "rule", by: row.by, rule: rules[0] };
+    if (rules[0]) {
+      return {
+        kind: "rule",
+        by: row.by,
+        rule: rules[0],
+        a: typeof row.a === "string" ? row.a : undefined,
+        b: typeof row.b === "string" ? row.b : undefined,
+      };
+    }
   }
   if (
     row.kind === "point" &&

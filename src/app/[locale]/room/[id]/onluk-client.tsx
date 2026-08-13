@@ -15,6 +15,7 @@ import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
 import {
   fetchOnlukGame,
+  onlukAckRule,
   onlukAddRule,
   onlukPlayToken,
   onlukRematch,
@@ -24,6 +25,7 @@ import {
   ONLUK_WIN_SCORE,
   tokensForChips,
   type OnlukGameRow,
+  type OnlukLastEvent,
   type OnlukRule,
 } from "@/lib/games/onluk";
 import type { Room, RoomPlayerWithProfile } from "@/lib/rooms/types";
@@ -111,6 +113,7 @@ export function OnlukGameClient({
 
   useEffect(() => {
     if (!game || game.phase === "match_end") return;
+    // reveal'da süre sadece yedek; asıl geçiş Anlaşıldı ile
     const deadline = Date.parse(game.deadline_at);
     if (!Number.isFinite(deadline) || deadline > Date.now()) return;
     const handle = window.setTimeout(() => {
@@ -144,7 +147,9 @@ export function OnlukGameClient({
   );
 
   const msLeft = useMemo(() => {
-    if (!game || game.phase === "match_end") return 0;
+    if (!game || game.phase === "match_end" || game.phase === "reveal") {
+      return 0;
+    }
     return Math.max(0, Date.parse(game.deadline_at) - now);
   }, [game, now]);
 
@@ -154,6 +159,17 @@ export function OnlukGameClient({
     () => (game ? tokensForChips(game.sequence) : []),
     [game],
   );
+
+  const iAcked =
+    game != null &&
+    ((me === game.player_a && game.ack_a) ||
+      (me === game.player_b && game.ack_b));
+
+  const ruleHeadline = useMemo(() => {
+    const ev = game?.last_event;
+    if (!ev || ev.kind !== "rule") return null;
+    return formatRuleHeadline(ev, t);
+  }, [game?.last_event, t]);
 
   function playToken(token: string) {
     if (!game || !myTurn || game.phase !== "counting" || pending) return;
@@ -203,6 +219,20 @@ export function OnlukGameClient({
     });
   }
 
+  function onAck() {
+    if (!game || game.phase !== "reveal" || iAcked || pending) return;
+    unlockSfx();
+    startTransition(async () => {
+      try {
+        setError(null);
+        setGame(await onlukAckRule(roomId));
+        playSfx("tap");
+      } catch (e) {
+        setError(e instanceof Error ? e.message : t("common.errorGeneric"));
+      }
+    });
+  }
+
   if (!game) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center gap-3 px-5">
@@ -239,7 +269,7 @@ export function OnlukGameClient({
         {t("onluk.firstTo", { n: ONLUK_WIN_SCORE })}
       </p>
 
-      {game.phase !== "match_end" && (
+      {(game.phase === "counting" || game.phase === "rule") && (
         <div className="flex flex-col items-center gap-1">
           <p
             className={clsx(
@@ -247,7 +277,9 @@ export function OnlukGameClient({
               myTurn ? "text-accent" : "text-text-muted",
             )}
           >
-            {myTurn ? t("onluk.yourTurn") : t("onluk.theirTurn", { name: nameOf(game.turn_profile_id) })}
+            {myTurn
+              ? t("onluk.yourTurn")
+              : t("onluk.theirTurn", { name: nameOf(game.turn_profile_id) })}
           </p>
           <p
             className={clsx(
@@ -286,6 +318,34 @@ export function OnlukGameClient({
               </button>
             ))}
           </div>
+        </section>
+      )}
+
+      {game.phase === "reveal" && (
+        <section className="card flex flex-col items-center gap-5 p-6 text-center">
+          <p className="text-[16px] font-semibold tracking-wide text-text-muted uppercase">
+            {t("onluk.newRule")}
+          </p>
+          <p className="text-[36px] font-extrabold leading-tight text-text sm:text-[42px]">
+            {ruleHeadline ?? t("onluk.ruleReverse")}
+          </p>
+          {iAcked ? (
+            <p className="text-[16px] text-text-muted">{t("onluk.waitAck")}</p>
+          ) : (
+            <button
+              type="button"
+              className="btn w-full bg-accent py-3.5 text-[18px] font-bold text-[#041018]"
+              disabled={pending}
+              onClick={onAck}
+            >
+              {t("onluk.gotIt")}
+            </button>
+          )}
+          <p className="text-[14px] text-text-dim">
+            {t("onluk.ackProgress", {
+              n: Number(game.ack_a) + Number(game.ack_b),
+            })}
+          </p>
         </section>
       )}
 
@@ -555,4 +615,26 @@ export function OnlukGameClient({
       )}
     </div>
   );
+}
+
+function formatRuleHeadline(
+  ev: Extract<OnlukLastEvent, { kind: "rule" }>,
+  t: (path: string, vars?: Record<string, string | number>) => string,
+): string {
+  switch (ev.rule.type) {
+    case "swap":
+      return t("onluk.headlineSwap", {
+        a: ev.a ?? "?",
+        b: ev.b ?? "?",
+      });
+    case "rename":
+      return t("onluk.headlineRename", {
+        a: ev.a ?? "?",
+        b: ev.b ?? ev.rule.token,
+      });
+    case "skip":
+      return t("onluk.headlineSkip", { a: ev.a ?? "?" });
+    case "reverse":
+      return t("onluk.headlineReverse");
+  }
 }

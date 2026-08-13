@@ -439,6 +439,17 @@ export async function startGame(roomId: string): Promise<void> {
     return;
   }
 
+  if (room.game_type === "interval") {
+    if (sorted.length < 2 || sorted.length > 8) {
+      throw new Error("Interval için 2–8 oyuncu gerekli.");
+    }
+    const { error: intervalErr } = await supabase.rpc("interval_start", {
+      p_room_id: roomId,
+    });
+    if (intervalErr) throw new Error(intervalErr.message);
+    return;
+  }
+
   // İsim Şehir
   const stopperId = sorted[0]?.profile_id;
   if (!stopperId) throw new Error("Oyuncu yok");

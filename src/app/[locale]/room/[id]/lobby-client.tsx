@@ -29,6 +29,7 @@ import { GameClient } from "./game-client";
 import { XoxGameClient } from "./xox-client";
 import { SynkedGameClient } from "./synked-client";
 import { OnlukGameClient } from "./onluk-client";
+import { IntervalGameClient } from "./interval-client";
 import { clsx } from "@/lib/utils";
 import { gameTitle } from "@/lib/games/catalog";
 import { gamePlayerLimits } from "@/lib/games/limits";
@@ -43,6 +44,10 @@ import {
   ONLUK_COUNT_OPTIONS,
   resolveOnlukCountSec,
 } from "@/lib/games/onluk";
+import {
+  INTERVAL_HAND_OPTIONS,
+  resolveIntervalHands,
+} from "@/lib/games/interval";
 
 const DURATION_OPTIONS = [45, 60, 90];
 const ROUND_OPTIONS = [1, 3, 5, 7];
@@ -80,6 +85,7 @@ export function LobbyClient({
   const isXox = room.game_type === "xox";
   const isSynked = room.game_type === "synked";
   const isOnluk = room.game_type === "onluk";
+  const isInterval = room.game_type === "interval";
   const isIsimSehir = room.game_type === "isim_sehir";
   const canStart = isSynked
     ? players.length === 2 || players.length === 4
@@ -196,8 +202,13 @@ export function LobbyClient({
         sec: resolveOnlukCountSec(settings.duration),
       });
     }
+    if (isInterval) {
+      return t("lobby.settingsSummaryInterval", {
+        hands: resolveIntervalHands(settings.roundCount),
+      });
+    }
     return null;
-  }, [isIsimSehir, isOnluk, isXox, players.length, settings, t]);
+  }, [isInterval, isIsimSehir, isOnluk, isXox, players.length, settings, t]);
 
   function patchSettings(patch: Partial<RoomSettings>) {
     if (!isHost) return;
@@ -339,6 +350,15 @@ export function LobbyClient({
     if (isOnluk) {
       return (
         <OnlukGameClient
+          roomId={roomId}
+          initialRoom={room}
+          initialPlayers={players}
+        />
+      );
+    }
+    if (isInterval) {
+      return (
+        <IntervalGameClient
           roomId={roomId}
           initialRoom={room}
           initialPlayers={players}
@@ -519,6 +539,12 @@ export function LobbyClient({
         </section>
       )}
 
+      {!isHost && isInterval && settingsSummary && (
+        <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
+          {settingsSummary}
+        </section>
+      )}
+
       {!isHost && isIsimSehir && settingsSummary && (
         <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
           {settingsSummary}
@@ -526,7 +552,7 @@ export function LobbyClient({
       )}
 
       {/* Ayarlar — katlanır */}
-      {isHost && (isIsimSehir || isXox || isOnluk) && settingsSummary && (
+      {isHost && (isIsimSehir || isXox || isOnluk || isInterval) && settingsSummary && (
         <section className="card overflow-hidden">
           <button
             type="button"
@@ -765,6 +791,38 @@ export function LobbyClient({
                 })}
               </div>
               <p className="text-[14px] text-text-dim">{t("lobby.onlukMoveHint")}</p>
+            </div>
+          )}
+
+          {settingsOpen && isInterval && (
+            <div className="space-y-3 border-t border-border/60 px-4 py-4">
+              <p className="text-[16px] font-semibold text-text-muted">
+                {t("lobby.intervalHands")}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {INTERVAL_HAND_OPTIONS.map((n) => {
+                  const selected =
+                    resolveIntervalHands(settings.roundCount) === n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => patchSettings({ roundCount: n })}
+                      className={clsx(
+                        "min-h-11 min-w-[3rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
+                        selected
+                          ? "bg-accent text-[#041018]"
+                          : "border border-border bg-bg-elevated text-text-muted",
+                      )}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[14px] text-text-dim">
+                {t("lobby.intervalHandsHint")}
+              </p>
             </div>
           )}
         </section>

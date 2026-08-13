@@ -88,6 +88,9 @@
     "settingsSummaryXox": "Ayarlar · {board}",
     "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
     "settingsSummaryOnluk": "Ayarlar · {sec} sn",
+    "settingsSummaryInterval": "Ayarlar · {hands} el",
+    "intervalHands": "El sayısı",
+    "intervalHandsHint": "Her el ante + bir tur; bitişte ortada kalan yanar",
     "moveTime": "Hamle süresi",
     "onlukMoveHint": "Alışınca 3 sn daha zorlayıcı olur",
     "duration": "Süre",
@@ -100,6 +103,7 @@
     "xoxGuestHint": "2 klasik · 4/8 turnuva",
     "synkedGuestHint": "2 kişi klasik · 4 kişi yarış (1–2 / 3–4 takım)",
     "onlukGuestHint": "2 kişi · kural biriktir, yanılan kaybeder",
+    "intervalGuestHint": "2–8 kişi · aralıkta çek, puan topla",
     "howTo": "Nasıl oynanır",
     "synkedHowTo": "2 kişide tohum yazıp çağrışımla aynı kelimeye ulaş. 4 kişide takımlar (1–2 vs 3–4) DUR ile tohum kilitler, sonra yarışır",
     "tournamentMode": "Turnuva modu · {n} oyuncu · 3×3",
@@ -149,6 +153,34 @@
     "rematch": "Yeniden oyna",
     "waitRematch": "Kurucu yeniden başlatana kadar bekle"
   },
+  "interval": {
+    "hand": "El {n}/{max}",
+    "pot": "Orta",
+    "yourBank": "Bankan {n}",
+    "banks": "Bankalar",
+    "yourTurn": "Sıra sende",
+    "theirTurn": "Sıra: {name}",
+    "waitTurn": "Sıranı bekle…",
+    "range": "{lo} – {hi}",
+    "noRange": "Aralık yok — sadece pas",
+    "pass": "Pas",
+    "putHint": "Ortaya ne kadar koyacaksın?",
+    "draw": "Çek",
+    "youDrew": "Çektiğin taş",
+    "theyDrew": "{name} çekti",
+    "hit": "Aralıkta! +{n}",
+    "miss": "Tutmadı · {n} ortada kaldı",
+    "continue": "Devam",
+    "handDone": "El {n} bitti",
+    "potCarries": "Orta taşınıyor · {n}",
+    "nextHand": "Sonraki el",
+    "youWon": "Kazandın!",
+    "theyWon": "{name} kazandı",
+    "tie": "Berabere!",
+    "burned": "Ortada {n} yandı",
+    "rematch": "Yeniden oyna",
+    "waitRematch": "Kurucu yeniden başlatana kadar bekle"
+  },
   "gameCopy": {
     "isim_sehir": {
       "blurb": "Aynı anda yaz, ilk biten DUR desin",
@@ -184,6 +216,15 @@
         "Sırayla 1'den itibaren doğru sırayı söyle (süre ayarlanır)",
         "Tur bitince yer değiştir, olsun, atla veya ters çevir",
         "Yanlış veya süre dolunca rakibe puan; ilk 3 kazanan"
+      ]
+    },
+    "interval": {
+      "blurb": "İki taşın aralığına çek, ortadan puan al",
+      "meta": "2–8 kişi",
+      "howTo": [
+        "Her el ante koyulur; iki renkli taşın gelir",
+        "Sıranda pas geç veya ortaya koyup üçüncü taşı çek",
+        "Aralıkta tutturursan koyduğunun ikisini al; maç sonunda orta yanar"
       ]
     },
     "wordle": {

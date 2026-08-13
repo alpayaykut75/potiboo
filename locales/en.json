@@ -88,6 +88,9 @@
     "settingsSummaryXox": "Settings · {board}",
     "settingsSummaryTournament": "Settings · Tournament · 3×3",
     "settingsSummaryOnluk": "Settings · {sec}s",
+    "settingsSummaryInterval": "Settings · {hands} hands",
+    "intervalHands": "Hands",
+    "intervalHandsHint": "Each hand antes and one round; leftover pot burns at the end",
     "moveTime": "Move timer",
     "onlukMoveHint": "Switch to 3s when you're warmed up",
     "duration": "Timer",
@@ -100,6 +103,7 @@
     "xoxGuestHint": "2 classic · 4/8 tournament",
     "synkedGuestHint": "2 classic · 4 race (1–2 / 3–4 teams)",
     "onlukGuestHint": "2 players · stack rules, miss and lose",
+    "intervalGuestHint": "2–8 players · draw in the gap, stack points",
     "howTo": "How to play",
     "synkedHowTo": "In 2p, write a seed and associate until you match. In 4p, teams lock seeds with STOP, then race",
     "tournamentMode": "Tournament · {n} players · 3×3",
@@ -149,6 +153,34 @@
     "rematch": "Play again",
     "waitRematch": "Waiting for the host to rematch"
   },
+  "interval": {
+    "hand": "Hand {n}/{max}",
+    "pot": "Pot",
+    "yourBank": "Your bank {n}",
+    "banks": "Banks",
+    "yourTurn": "Your turn",
+    "theirTurn": "{name}'s turn",
+    "waitTurn": "Wait for your turn…",
+    "range": "{lo} – {hi}",
+    "noRange": "No gap — pass only",
+    "pass": "Pass",
+    "putHint": "How much into the pot?",
+    "draw": "Draw",
+    "youDrew": "You drew",
+    "theyDrew": "{name} drew",
+    "hit": "In the gap! +{n}",
+    "miss": "Miss · {n} stays in the pot",
+    "continue": "Continue",
+    "handDone": "Hand {n} done",
+    "potCarries": "Pot carries · {n}",
+    "nextHand": "Next hand",
+    "youWon": "You won!",
+    "theyWon": "{name} won",
+    "tie": "Tie!",
+    "burned": "{n} in the pot burned",
+    "rematch": "Play again",
+    "waitRematch": "Waiting for the host to rematch"
+  },
   "gameCopy": {
     "isim_sehir": {
       "blurb": "Write together, first one done calls STOP",
@@ -184,6 +216,15 @@
         "Take turns saying the sequence from 1 (timer is adjustable)",
         "After a clean round, swap, rename, skip, or reverse",
         "Wrong or timeout gives opponent a point; first to 3 wins"
+      ]
+    },
+    "interval": {
+      "blurb": "Draw between your tiles, take from the pot",
+      "meta": "2–8 players",
+      "howTo": [
+        "Each hand starts with an ante and two colored tiles",
+        "On your turn, pass or put into the pot and draw a third",
+        "Hit the gap to take twice your put; leftover pot burns at the end"
       ]
     },
     "wordle": {

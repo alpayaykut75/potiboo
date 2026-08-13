@@ -78,6 +78,14 @@ export function defaultSettingsFor(gameType: GameId): RoomSettings {
       speedBonus: false,
     };
   }
+  if (gameType === "interval") {
+    return {
+      duration: 60,
+      roundCount: 5,
+      categories: [],
+      speedBonus: false,
+    };
+  }
   return {
     duration: 60,
     roundCount: 5,

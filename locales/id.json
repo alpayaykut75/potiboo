@@ -88,6 +88,9 @@
     "settingsSummaryXox": "Pengaturan · {board}",
     "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
     "settingsSummaryOnluk": "Pengaturan · {sec} dtk",
+    "settingsSummaryInterval": "Pengaturan · {hands} tangan",
+    "intervalHands": "Jumlah tangan",
+    "intervalHandsHint": "Setiap tangan ante + satu putaran; sisa pot hangus di akhir",
     "moveTime": "Waktu giliran",
     "onlukMoveHint": "Pilih 3 dtk kalau sudah terbiasa",
     "duration": "Waktu",
@@ -100,6 +103,7 @@
     "xoxGuestHint": "2 klasik · 4/8 turnamen",
     "synkedGuestHint": "2 klasik · 4 balapan (tim 1–2 / 3–4)",
     "onlukGuestHint": "2 pemain · tumpuk aturan, salah kalah",
+    "intervalGuestHint": "2–8 pemain · tarik di celah, kumpulkan poin",
     "howTo": "Cara main",
     "synkedHowTo": "Di 2p, tulis benih lalu asosiasi sampai cocok. Di 4p, tim mengunci benih dengan STOP, lalu balapan",
     "tournamentMode": "Turnamen · {n} pemain · 3×3",
@@ -149,6 +153,34 @@
     "rematch": "Main lagi",
     "waitRematch": "Menunggu host memulai ulang"
   },
+  "interval": {
+    "hand": "Tangan {n}/{max}",
+    "pot": "Pot",
+    "yourBank": "Bankmu {n}",
+    "banks": "Bank",
+    "yourTurn": "Giliranmu",
+    "theirTurn": "Giliran {name}",
+    "waitTurn": "Tunggu giliranmu…",
+    "range": "{lo} – {hi}",
+    "noRange": "Tidak ada celah — hanya pass",
+    "pass": "Pass",
+    "putHint": "Berapa masuk ke pot?",
+    "draw": "Tarik",
+    "youDrew": "Kamu menarik",
+    "theyDrew": "{name} menarik",
+    "hit": "Masuk celah! +{n}",
+    "miss": "Meleset · {n} tetap di pot",
+    "continue": "Lanjut",
+    "handDone": "Tangan {n} selesai",
+    "potCarries": "Pot berlanjut · {n}",
+    "nextHand": "Tangan berikutnya",
+    "youWon": "Kamu menang!",
+    "theyWon": "{name} menang",
+    "tie": "Seri!",
+    "burned": "{n} di pot hangus",
+    "rematch": "Main lagi",
+    "waitRematch": "Menunggu host memulai ulang"
+  },
   "gameCopy": {
     "isim_sehir": {
       "blurb": "Tulis bareng, yang selesai duluan bilang STOP",
@@ -184,6 +216,15 @@
         "Bergiliran mengucapkan urutan dari 1 (waktu bisa diatur)",
         "Setelah ronde bersih: tukar, jadi, lewati, atau balik",
         "Salah atau waktu habis: poin lawan; yang pertama ke 3 menang"
+      ]
+    },
+    "interval": {
+      "blurb": "Tarik di antara ubinmu, ambil dari pot",
+      "meta": "2–8 pemain",
+      "howTo": [
+        "Setiap tangan mulai dengan ante dan dua ubin berwarna",
+        "Di giliranmu, pass atau taruh ke pot lalu tarik ketiga",
+        "Masuk celah = ambil dua kali; sisa pot hangus di akhir"
       ]
     },
     "wordle": {

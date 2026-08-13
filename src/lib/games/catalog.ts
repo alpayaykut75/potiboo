@@ -5,6 +5,7 @@ export const GAME_IDS = [
   "xox",
   "synked",
   "onluk",
+  "interval",
   "wordle",
   "amiral",
   "tabu",
@@ -56,6 +57,13 @@ export const GAMES: GameMeta[] = [
     title: "Onluk",
     status: "live",
     accent: "#e8a45c",
+  },
+  {
+    id: "interval",
+    slug: "interval",
+    title: "Interval",
+    status: "live",
+    accent: "#3d9dc4",
   },
   {
     id: "wordle",

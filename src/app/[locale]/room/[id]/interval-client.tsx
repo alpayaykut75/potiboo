@@ -42,6 +42,47 @@ import { clsx } from "@/lib/utils";
 import { playSfx, unlockSfx } from "@/lib/sfx";
 
 const ANNOUNCE_HOLD_MS = 4000;
+const PUT_HOLD_MS = 1500;
+
+type BetAnnounceStage = "put" | "spin" | "result";
+type AnnounceTone = "accent" | "danger" | "neutral";
+
+function AnnounceOverlay({
+  text,
+  tone,
+  footer,
+}: {
+  text: string;
+  tone: AnnounceTone;
+  footer?: string;
+}) {
+  return (
+    <div className="absolute inset-2.5 z-30 flex items-center justify-center rounded-[1.75rem] bg-black/45 px-5 backdrop-blur-[2px]">
+      <div
+        className={clsx(
+          "w-full max-w-[18rem] rounded-2xl border px-5 py-8 text-center shadow-lg",
+          tone === "accent" && "border-accent/45 bg-[#0a1612]/72",
+          tone === "danger" && "border-danger/45 bg-[#160a0a]/72",
+          tone === "neutral" && "border-white/25 bg-[#0a1612]/72",
+        )}
+      >
+        <p
+          className={clsx(
+            "text-[20px] font-bold leading-snug",
+            tone === "accent" && "text-accent",
+            tone === "danger" && "text-danger",
+            tone === "neutral" && "text-white",
+          )}
+        >
+          {text}
+        </p>
+        {footer ? (
+          <p className="mt-3 text-[13px] font-semibold text-white/55">{footer}</p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 
 function TileView({
   tile,
@@ -298,14 +339,13 @@ export function IntervalGameClient({
     return;
   }, [game?.phase, game?.pot, game?.last_event, game?.reveal_at, game?.updated_at]);
 
-  // Spin tick
+  // Spin face + clock during reveal
   useEffect(() => {
-    if (game?.phase !== "reveal" || !game.reveal_at) return;
-    const end = Date.parse(game.reveal_at);
-    if (!Number.isFinite(end)) return;
+    if (game?.phase !== "reveal") return;
+    const end = game.reveal_at ? Date.parse(game.reveal_at) : 0;
     const tick = window.setInterval(() => {
       setNow(Date.now());
-      if (Date.now() < end) setSpinFace((n) => n + 1);
+      if (Number.isFinite(end) && Date.now() < end) setSpinFace((n) => n + 1);
     }, 140);
     return () => window.clearInterval(tick);
   }, [game?.phase, game?.reveal_at, game?.updated_at]);
@@ -366,91 +406,112 @@ export function IntervalGameClient({
   }, [game]);
 
   const revealAtMs = game?.reveal_at ? Date.parse(game.reveal_at) : 0;
-  const spinning =
-    game?.phase === "reveal" &&
-    Number.isFinite(revealAtMs) &&
-    now < revealAtMs;
-  const spinLeft = spinning
-    ? Math.max(0, Math.ceil((revealAtMs - now) / 1000))
-    : 0;
   const revealed =
     game?.phase === "reveal" &&
     (!game.reveal_at || now >= revealAtMs);
 
   const preHand = game ? isIntervalPreHand(game) : false;
 
-  /** Popup (spin sırasında yok — taşlar görünsün) */
-  const announceText = useMemo(() => {
-    if (!game || preHand) return "";
+  /** hit/miss: put (1.5s) → spin → result */
+  const betStage = useMemo((): BetAnnounceStage | null => {
+    if (!game || game.phase !== "reveal") return null;
+    const ev = game.last_event;
+    if (!ev || (ev.kind !== "hit" && ev.kind !== "miss")) return null;
+    const eventAt = Date.parse(game.updated_at);
+    if (!Number.isFinite(revealAtMs) || now >= revealAtMs) return "result";
+    if (Number.isFinite(eventAt) && now < eventAt + PUT_HOLD_MS) return "put";
+    return "spin";
+  }, [game, now, revealAtMs]);
+
+  const showSpin = betStage === "spin";
+  const spinLeft = showSpin
+    ? Math.max(0, Math.ceil((revealAtMs - now) / 1000))
+    : 0;
+
+  const overlay = useMemo(() => {
+    if (!game || preHand) return null;
     const ev = game.last_event;
 
-    if (game.phase === "reveal" && ev) {
-      if (ev.kind === "ante") {
-        return t("interval.statusAnte", { n: ev.per, pot: ev.to_pot });
-      }
-      if (ev.kind === "pass") {
-        return t("interval.statusPass", { name: announceWho(ev.by) });
-      }
-      if (ev.kind === "hit" || ev.kind === "miss") {
-        const who = announceWho(ev.by);
-        if (spinning) {
-          return t("interval.statusSpinning", {
-            name: who,
-            n: ev.stake,
-            sec: spinLeft,
-          });
-        }
-        if (ev.kind === "hit") {
-          return t("interval.statusHit", { name: who, n: ev.payout });
-        }
-        return t("interval.statusMiss", { name: who, n: ev.stake });
-      }
-    }
     if (game.phase === "hand_end") {
-      return t("interval.statusHandEnd", { n: game.hand_index, pot: game.pot });
+      return {
+        text: t("interval.statusHandEnd", {
+          n: game.hand_index,
+          pot: game.pot,
+        }),
+        tone: "neutral" as AnnounceTone,
+        holdMs: ANNOUNCE_HOLD_MS,
+        autoContinue: true,
+      };
     }
-    return "";
-  }, [announceWho, game, preHand, spinLeft, spinning, t]);
 
-  const intentLine = useMemo(() => {
-    if (!game || game.phase !== "turn" || game.intent_amount == null) return "";
-    if (myTurn) {
-      return t("interval.statusYourIntent", { n: game.intent_amount });
+    if (game.phase !== "reveal" || !ev) return null;
+
+    if (ev.kind === "ante") {
+      return {
+        text: t("interval.statusAnte", { n: ev.per, pot: ev.to_pot }),
+        tone: "accent" as AnnounceTone,
+        holdMs: ANNOUNCE_HOLD_MS,
+        autoContinue: true,
+      };
     }
-    return t("interval.statusIntent", {
-      name: announceWho(game.turn_profile_id ?? ""),
-      n: game.intent_amount,
-    });
-  }, [announceWho, game, myTurn, t]);
-
-  const showAnnounceOverlay =
-    !spinning &&
-    announceText !== "" &&
-    (game?.phase === "reveal" || game?.phase === "hand_end");
+    if (ev.kind === "pass") {
+      return {
+        text: t("interval.statusPass", { name: announceWho(ev.by) }),
+        tone: "neutral" as AnnounceTone,
+        holdMs: ANNOUNCE_HOLD_MS,
+        autoContinue: true,
+      };
+    }
+    if (ev.kind === "hit" || ev.kind === "miss") {
+      const who = announceWho(ev.by);
+      if (betStage === "put") {
+        return {
+          text: t("interval.statusPut", { name: who, n: ev.stake }),
+          tone: "accent" as AnnounceTone,
+          holdMs: PUT_HOLD_MS,
+          autoContinue: false,
+        };
+      }
+      if (betStage === "result") {
+        if (ev.kind === "hit") {
+          return {
+            text: t("interval.statusHit", { name: who, n: ev.payout }),
+            tone: "accent" as AnnounceTone,
+            holdMs: ANNOUNCE_HOLD_MS,
+            autoContinue: true,
+          };
+        }
+        return {
+          text: t("interval.statusMiss", { name: who, n: ev.stake }),
+          tone: "danger" as AnnounceTone,
+          holdMs: ANNOUNCE_HOLD_MS,
+          autoContinue: true,
+        };
+      }
+      return null; // spin: no popup
+    }
+    return null;
+  }, [announceWho, betStage, game, preHand, t]);
 
   const autoContinueReady =
-    !!game &&
-    isHost &&
-    !preHand &&
-    !spinning &&
-    ((game.phase === "reveal" && revealed) || game.phase === "hand_end");
+    !!game && isHost && !preHand && !!overlay?.autoContinue;
 
   useEffect(() => {
-    if (!showAnnounceOverlay || !game) {
+    if (!overlay) {
       setAnnounceLeft(0);
       return;
     }
-    const endAt = Date.now() + ANNOUNCE_HOLD_MS;
+    const endAt = Date.now() + overlay.holdMs;
     const tick = () =>
       setAnnounceLeft(Math.max(0, Math.ceil((endAt - Date.now()) / 1000)));
     tick();
     const id = window.setInterval(tick, 200);
     return () => window.clearInterval(id);
-  }, [showAnnounceOverlay, game?.updated_at, game?.phase, game]);
+  }, [overlay, game?.updated_at, game?.phase, betStage]);
 
   useEffect(() => {
     if (!autoContinueReady || !game || pending) return;
-    const key = `${game.phase}:${game.updated_at}`;
+    const key = `${game.phase}:${game.updated_at}:${betStage ?? ""}`;
     if (autoKeyRef.current === key) return;
     const id = window.setTimeout(() => {
       autoKeyRef.current = key;
@@ -466,9 +527,18 @@ export function IntervalGameClient({
           setError(e instanceof Error ? e.message : t("common.errorGeneric"));
         }
       });
-    }, ANNOUNCE_HOLD_MS);
+    }, overlay?.holdMs ?? ANNOUNCE_HOLD_MS);
     return () => window.clearTimeout(id);
-  }, [autoContinueReady, game, pending, refresh, roomId, t]);
+  }, [
+    autoContinueReady,
+    betStage,
+    game,
+    overlay?.holdMs,
+    pending,
+    refresh,
+    roomId,
+    t,
+  ]);
 
   function onPass() {
     unlockSfx();
@@ -560,13 +630,13 @@ export function IntervalGameClient({
     game.public_c1 &&
     game.public_c2;
   const drawn =
-    revealed && ev && (ev.kind === "hit" || ev.kind === "miss") ? ev.drawn : null;
-  const announceTone =
-    ev?.kind === "hit" || ev?.kind === "ante"
-      ? "accent"
-      : ev?.kind === "miss"
-        ? "danger"
-        : "neutral";
+    (betStage === "result" || (revealed && betStage == null)) &&
+    ev &&
+    (ev.kind === "hit" || ev.kind === "miss")
+      ? ev.drawn
+      : null;
+  const showThirdSlot =
+    showPublicHand || showSpin || drawn != null || betStage === "put";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-2 pb-[calc(0.5rem+var(--safe-bottom))]">
@@ -589,22 +659,6 @@ export function IntervalGameClient({
             : t("interval.hand", { n: game.hand_index, max: game.hand_total })}
         </p>
       </header>
-
-      {intentLine !== "" && (
-        <div className="mb-1.5 shrink-0 rounded-xl bg-accent/12 px-3 py-2 text-center">
-          <p className="text-[15px] font-bold leading-snug text-accent">
-            {intentLine}
-          </p>
-        </div>
-      )}
-
-      {spinning && announceText !== "" && (
-        <div className="mb-1.5 shrink-0 rounded-xl bg-accent/12 px-3 py-2 text-center">
-          <p className="text-[15px] font-bold leading-snug text-accent">
-            {announceText}
-          </p>
-        </div>
-      )}
 
       {game.phase !== "match_end" && (
         <section
@@ -691,7 +745,7 @@ export function IntervalGameClient({
               )}
             </div>
 
-            {(showPublicHand || spinning || drawn) && (
+            {showThirdSlot && (
               <div className="w-full rounded-xl border border-white/15 bg-[#061418]/55 px-2 py-2 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
                 <div className="flex flex-col items-center gap-1.5">
                   {showPublicHand && (
@@ -700,7 +754,7 @@ export function IntervalGameClient({
                       <TileView tile={game.public_c2!} large />
                     </div>
                   )}
-                  {spinning ? (
+                  {showSpin ? (
                     <div className="flex flex-col items-center gap-0.5">
                       <div className="interval-card-spin">
                         <TileView tile={randomSpinTile(spinFace)} large />
@@ -722,7 +776,7 @@ export function IntervalGameClient({
                 {showPublicHand &&
                   publicRange &&
                   !canStake(publicRange.lo, publicRange.hi) &&
-                  !showAnnounceOverlay && (
+                  !overlay && (
                     <p className="mt-1.5 text-center text-[11px] font-semibold text-white/60">
                       {t("interval.noRange")}
                     </p>
@@ -731,36 +785,16 @@ export function IntervalGameClient({
             )}
           </div>
 
-          {showAnnounceOverlay && (
-            <div className="pointer-events-none absolute inset-x-6 top-[18%] z-30 flex justify-center">
-              <div
-                className={clsx(
-                  "w-full max-w-[17rem] rounded-2xl border px-4 py-4 text-center shadow-lg backdrop-blur-md",
-                  announceTone === "accent" &&
-                    "border-accent/40 bg-[#0a1612]/78",
-                  announceTone === "danger" &&
-                    "border-danger/40 bg-[#160a0a]/78",
-                  announceTone === "neutral" &&
-                    "border-white/20 bg-[#0a1612]/78",
-                )}
-              >
-                <p
-                  className={clsx(
-                    "text-[17px] font-bold leading-snug",
-                    announceTone === "accent" && "text-accent",
-                    announceTone === "danger" && "text-danger",
-                    announceTone === "neutral" && "text-white",
-                  )}
-                >
-                  {announceText}
-                </p>
-                {announceLeft > 0 && (
-                  <p className="mt-2 text-[12px] font-semibold text-white/55">
-                    {t("interval.autoNext", { sec: announceLeft })}
-                  </p>
-                )}
-              </div>
-            </div>
+          {overlay && (
+            <AnnounceOverlay
+              text={overlay.text}
+              tone={overlay.tone}
+              footer={
+                overlay.autoContinue && announceLeft > 0
+                  ? t("interval.autoNext", { sec: announceLeft })
+                  : undefined
+              }
+            />
           )}
         </section>
       )}
@@ -861,24 +895,30 @@ export function IntervalGameClient({
         )}
 
         {game.phase === "reveal" &&
-          (spinning ? (
+          (showSpin ? (
             <p className="py-2 text-center text-[14px] font-semibold text-accent">
               {t("interval.spinWait", { sec: spinLeft })}
             </p>
-          ) : isHost ? (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={onContinue}
-              className="btn w-full border border-accent/40 bg-bg-elevated py-3 text-[16px] font-bold text-accent"
-            >
-              {t("interval.autoNext", { sec: announceLeft || 1 })}
-            </button>
-          ) : (
+          ) : overlay?.autoContinue ? (
+            isHost ? (
+              <button
+                type="button"
+                disabled={pending}
+                onClick={onContinue}
+                className="btn w-full border border-accent/40 bg-bg-elevated py-3 text-[16px] font-bold text-accent"
+              >
+                {t("interval.autoNext", { sec: announceLeft || 1 })}
+              </button>
+            ) : (
+              <p className="py-2 text-center text-[14px] text-text-muted">
+                {t("interval.waitAuto")}
+              </p>
+            )
+          ) : overlay && !overlay.autoContinue ? (
             <p className="py-2 text-center text-[14px] text-text-muted">
               {t("interval.waitAuto")}
             </p>
-          ))}
+          ) : null)}
 
         {game.phase === "hand_end" &&
           (isHost ? (

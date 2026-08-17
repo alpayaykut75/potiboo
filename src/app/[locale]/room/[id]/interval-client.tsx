@@ -59,8 +59,8 @@ function TileView({
         mini
           ? "h-7 w-6 rounded-md text-[12px]"
           : large
-            ? "h-20 w-[4.25rem] rounded-2xl text-[32px]"
-            : "h-14 w-12 rounded-xl text-[22px]",
+            ? "h-[3.6rem] w-[3rem] rounded-xl text-[26px]"
+            : "h-12 w-10 rounded-lg text-[20px]",
         className,
       )}
       style={{ backgroundColor: colorHex(tile.color) }}
@@ -70,44 +70,44 @@ function TileView({
   );
 }
 
-/** Saat yönü: 0=alt (ben), 1–3 sağ alt→üst, 4=üst, 5–7 sol üst→alt */
+/** Saat yönü sabit: 0=alt (seats[0]), 1–3 sağ, 4=üst, 5–7 sol — herkes aynı masa */
 const TABLE_SLOTS = 8;
 
 function slotStyle(slot: number): CSSProperties {
   const base: CSSProperties = { position: "absolute", zIndex: 10 };
   switch (slot) {
     case 0:
-      return { ...base, left: "50%", bottom: "2.5%", transform: "translateX(-50%)" };
+      return { ...base, left: "50%", bottom: "2%", transform: "translateX(-50%)" };
     case 1:
-      return { ...base, right: "2.5%", bottom: "15%" };
+      return { ...base, right: "1.5%", bottom: "16%" };
     case 2:
-      return { ...base, right: "2.5%", top: "50%", transform: "translateY(-50%)" };
+      return { ...base, right: "1.5%", top: "50%", transform: "translateY(-50%)" };
     case 3:
-      return { ...base, right: "2.5%", top: "13%" };
+      return { ...base, right: "1.5%", top: "14%" };
     case 4:
-      return { ...base, left: "50%", top: "2.5%", transform: "translateX(-50%)" };
+      return { ...base, left: "50%", top: "2%", transform: "translateX(-50%)" };
     case 5:
-      return { ...base, left: "2.5%", top: "13%" };
+      return { ...base, left: "1.5%", top: "14%" };
     case 6:
-      return { ...base, left: "2.5%", top: "50%", transform: "translateY(-50%)" };
+      return { ...base, left: "1.5%", top: "50%", transform: "translateY(-50%)" };
     case 7:
-      return { ...base, left: "2.5%", bottom: "15%" };
+      return { ...base, left: "1.5%", bottom: "16%" };
     default:
       return base;
   }
 }
 
-/** rotated[0]=ben → slot 0; diğerleri eşit aralıklı; boş slotlar null */
-function assignTableSlots(rotatedIds: string[]): (string | null)[] {
+/** seats sırası sabit; herkes aynı slotları görür */
+function assignTableSlots(seatIds: string[]): (string | null)[] {
   const slots: (string | null)[] = Array.from({ length: TABLE_SLOTS }, () => null);
-  const n = rotatedIds.length;
+  const n = seatIds.length;
   if (n === 0) return slots;
   const used = new Set<number>();
   for (let i = 0; i < n; i++) {
     let s = Math.floor((i * TABLE_SLOTS) / n) % TABLE_SLOTS;
     while (used.has(s)) s = (s + 1) % TABLE_SLOTS;
     used.add(s);
-    slots[s] = rotatedIds[i]!;
+    slots[s] = seatIds[i]!;
   }
   return slots;
 }
@@ -346,17 +346,11 @@ export function IntervalGameClient({
     return leaders(game.banks, game.seats);
   }, [game]);
 
-  /** Herkes kendini altta görür; rakip göreli konumda */
+  /** Herkese aynı masa: seats[0] altta */
   const tableSlots = useMemo(() => {
     if (!game) return Array.from({ length: TABLE_SLOTS }, () => null);
-    const seats = game.seats;
-    const myIdx = seats.indexOf(me);
-    const rotated =
-      myIdx < 0
-        ? seats
-        : [...seats.slice(myIdx), ...seats.slice(0, myIdx)];
-    return assignTableSlots(rotated);
-  }, [game, me]);
+    return assignTableSlots(game.seats);
+  }, [game]);
 
   const revealAtMs = game?.reveal_at ? Date.parse(game.reveal_at) : 0;
   const spinning =
@@ -372,24 +366,33 @@ export function IntervalGameClient({
 
   const preHand = game ? isIntervalPreHand(game) : false;
 
-  /** Sıra metni yok — sadece olay / sonuç / niyet */
-  const statusLine = useMemo(() => {
+  /** Adım adım popup metni (kurucu Devam ile akar) */
+  const announceText = useMemo(() => {
     if (!game || preHand) return "";
     const ev = game.last_event;
 
-    if (game.phase === "reveal" && ev && (ev.kind === "hit" || ev.kind === "miss")) {
-      const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
-      if (spinning) {
-        return t("interval.statusSpinning", {
-          name: who,
-          n: ev.stake,
-          sec: spinLeft,
-        });
+    if (game.phase === "reveal" && ev) {
+      if (ev.kind === "ante") {
+        return t("interval.statusAnte", { n: ev.per, pot: ev.to_pot });
       }
-      if (ev.kind === "hit") {
-        return t("interval.statusHit", { name: who, n: ev.payout });
+      if (ev.kind === "pass") {
+        const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
+        return t("interval.statusPass", { name: who });
       }
-      return t("interval.statusMiss", { name: who, n: ev.stake });
+      if (ev.kind === "hit" || ev.kind === "miss") {
+        const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
+        if (spinning) {
+          return t("interval.statusSpinning", {
+            name: who,
+            n: ev.stake,
+            sec: spinLeft,
+          });
+        }
+        if (ev.kind === "hit") {
+          return t("interval.statusHit", { name: who, n: ev.payout });
+        }
+        return t("interval.statusMiss", { name: who, n: ev.stake });
+      }
     }
     if (game.phase === "hand_end") {
       return t("interval.statusHandEnd", { n: game.hand_index, pot: game.pot });
@@ -401,24 +404,29 @@ export function IntervalGameClient({
         name: nameOf(winners[0] ?? game.winner_id ?? ""),
       });
     }
-    if (ev?.kind === "ante" && game.phase === "turn") {
-      return t("interval.statusAnte", { n: ev.per, pot: ev.to_pot });
-    }
-    if (game.phase === "turn" && game.intent_amount != null) {
-      const turnName =
-        game.turn_profile_id === me
-          ? t("interval.youShort")
-          : nameOf(game.turn_profile_id ?? "");
-      if (myTurn) {
-        return t("interval.statusYourIntent", { n: game.intent_amount });
-      }
-      return t("interval.statusIntent", {
-        name: turnName,
-        n: game.intent_amount,
-      });
-    }
     return "";
-  }, [game, me, myTurn, nameOf, preHand, spinLeft, spinning, t, winners]);
+  }, [game, me, nameOf, preHand, spinLeft, spinning, t, winners]);
+
+  const intentLine = useMemo(() => {
+    if (!game || game.phase !== "turn" || game.intent_amount == null) return "";
+    const turnName =
+      game.turn_profile_id === me
+        ? t("interval.youShort")
+        : nameOf(game.turn_profile_id ?? "");
+    if (myTurn) {
+      return t("interval.statusYourIntent", { n: game.intent_amount });
+    }
+    return t("interval.statusIntent", {
+      name: turnName,
+      n: game.intent_amount,
+    });
+  }, [game, me, myTurn, nameOf, t]);
+
+  const showAnnounce =
+    announceText !== "" &&
+    (game?.phase === "reveal" ||
+      game?.phase === "hand_end" ||
+      game?.phase === "match_end");
 
   function onPass() {
     unlockSfx();
@@ -509,6 +517,12 @@ export function IntervalGameClient({
     game.public_c2;
   const drawn =
     revealed && ev && (ev.kind === "hit" || ev.kind === "miss") ? ev.drawn : null;
+  const announceTone =
+    spinning || ev?.kind === "hit" || ev?.kind === "ante"
+      ? "accent"
+      : ev?.kind === "miss"
+        ? "danger"
+        : "neutral";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-2 pb-[calc(0.5rem+var(--safe-bottom))]">
@@ -530,29 +544,10 @@ export function IntervalGameClient({
         </p>
       </header>
 
-      {statusLine !== "" && (
-        <div
-          className={clsx(
-            "mb-1.5 shrink-0 rounded-xl px-3 py-2.5 text-center",
-            spinning && "bg-accent/12",
-            revealed && ev?.kind === "hit" && "bg-accent/20",
-            revealed && ev?.kind === "miss" && "bg-danger/15",
-            !spinning && !revealed && "bg-bg-elevated",
-          )}
-        >
-          <p
-            className={clsx(
-              "text-[16px] font-bold leading-snug",
-              (spinning || game.intent_amount != null) && "text-accent",
-              revealed && ev?.kind === "hit" && "text-accent",
-              revealed && ev?.kind === "miss" && "text-danger",
-              !spinning &&
-                game.intent_amount == null &&
-                !revealed &&
-                "text-text",
-            )}
-          >
-            {statusLine}
+      {intentLine !== "" && (
+        <div className="mb-1.5 shrink-0 rounded-xl bg-accent/12 px-3 py-2 text-center">
+          <p className="text-[15px] font-bold leading-snug text-accent">
+            {intentLine}
           </p>
         </div>
       )}
@@ -576,7 +571,7 @@ export function IntervalGameClient({
               return (
                 <div
                   key={`empty-${slot}`}
-                  className="flex w-[5.25rem] flex-col items-center opacity-35"
+                  className="flex w-[5.75rem] flex-col items-center opacity-35"
                   style={slotStyle(slot)}
                 >
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-white/25 bg-black/15" />
@@ -593,7 +588,7 @@ export function IntervalGameClient({
             return (
               <div
                 key={id}
-                className="flex w-[5.5rem] flex-col items-center"
+                className="flex w-[6rem] flex-col items-center"
                 style={slotStyle(slot)}
               >
                 <div
@@ -610,51 +605,51 @@ export function IntervalGameClient({
                     rounded="2xl"
                   />
                   {intending && (
-                    <span className="absolute -right-1.5 -top-1.5 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[12px] font-bold text-[#041018]">
+                    <span className="absolute -right-1.5 -top-1.5 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[13px] font-bold text-[#041018]">
                       {game.intent_amount}
                     </span>
                   )}
-                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-lg bg-[#0a1612]/95 px-1.5 py-0.5 font-mono text-[14px] font-bold tabular-nums text-accent">
+                  <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[#0a1612]/95 px-2 py-0.5 font-mono text-[16px] font-bold tabular-nums text-accent">
                     {game.banks[id] ?? 0}
                   </span>
                 </div>
-                <p className="mt-2 max-w-[5.5rem] truncate text-center text-[13px] font-bold leading-tight text-text">
+                <p className="mt-2.5 max-w-[6rem] truncate text-center text-[15px] font-bold leading-tight text-text">
                   {mine ? t("interval.youShort") : nameOf(id)}
                 </p>
               </div>
             );
           })}
 
-          <div className="absolute left-1/2 top-1/2 z-20 flex w-[min(15rem,72%)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2.5">
-            <div className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
-              <p className="text-[9px] font-bold tracking-wider text-accent/80 uppercase">
+          <div className="absolute left-1/2 top-1/2 z-20 flex w-[min(11.5rem,48%)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
+            <div className="relative flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border-2 border-accent/50 bg-[#0a1612]/92">
+              <p className="text-[10px] font-bold tracking-wider text-accent/80 uppercase">
                 {t("interval.pot")}
               </p>
-              <p className="font-mono text-[24px] font-bold tabular-nums leading-none text-accent">
+              <p className="font-mono text-[28px] font-bold tabular-nums leading-none text-accent">
                 {potDisplay}
               </p>
               {deltaLabel && (
-                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[14px] font-bold text-[#e8b84a]">
+                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[15px] font-bold text-[#e8b84a]">
                   {deltaLabel}
                 </span>
               )}
             </div>
 
             {(showPublicHand || spinning || drawn) && (
-              <div className="w-full rounded-2xl border border-white/15 bg-[#061418]/55 px-3 py-3 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
-                <div className="flex flex-col items-center gap-2">
+              <div className="w-full rounded-xl border border-white/15 bg-[#061418]/55 px-2 py-2 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
+                <div className="flex flex-col items-center gap-1.5">
                   {showPublicHand && (
-                    <div className="flex items-center justify-center gap-2.5">
+                    <div className="flex items-center justify-center gap-2">
                       <TileView tile={game.public_c1!} large />
                       <TileView tile={game.public_c2!} large />
                     </div>
                   )}
                   {spinning ? (
-                    <div className="flex flex-col items-center gap-1">
+                    <div className="flex flex-col items-center gap-0.5">
                       <div className="interval-card-spin">
                         <TileView tile={randomSpinTile(spinFace)} large />
                       </div>
-                      <p className="font-mono text-[12px] font-bold text-accent tabular-nums">
+                      <p className="font-mono text-[11px] font-bold text-accent tabular-nums">
                         {spinLeft}
                       </p>
                     </div>
@@ -663,21 +658,49 @@ export function IntervalGameClient({
                       <TileView tile={drawn} large />
                     </div>
                   ) : showPublicHand ? (
-                    <div className="flex h-20 w-[4.25rem] items-center justify-center rounded-2xl border border-dashed border-white/25 text-[22px] font-bold text-white/35">
+                    <div className="flex h-[3.6rem] w-[3rem] items-center justify-center rounded-xl border border-dashed border-white/25 text-[20px] font-bold text-white/35">
                       ?
                     </div>
                   ) : null}
                 </div>
                 {showPublicHand &&
                   publicRange &&
-                  !canStake(publicRange.lo, publicRange.hi) && (
-                    <p className="mt-2 text-center text-[12px] font-semibold text-white/60">
+                  !canStake(publicRange.lo, publicRange.hi) &&
+                  !showAnnounce && (
+                    <p className="mt-1.5 text-center text-[11px] font-semibold text-white/60">
                       {t("interval.noRange")}
                     </p>
                   )}
               </div>
             )}
           </div>
+
+          {showAnnounce && game.phase !== "match_end" && (
+            <div className="absolute inset-2.5 z-30 flex items-center justify-center rounded-[1.75rem] bg-black/40 px-4 backdrop-blur-[3px]">
+              <div
+                className={clsx(
+                  "w-full max-w-[17rem] rounded-2xl border px-4 py-5 text-center shadow-lg",
+                  announceTone === "accent" &&
+                    "border-accent/40 bg-[#0a1612]/80",
+                  announceTone === "danger" &&
+                    "border-danger/40 bg-[#160a0a]/80",
+                  announceTone === "neutral" &&
+                    "border-white/20 bg-[#0a1612]/80",
+                )}
+              >
+                <p
+                  className={clsx(
+                    "text-[18px] font-bold leading-snug",
+                    announceTone === "accent" && "text-accent",
+                    announceTone === "danger" && "text-danger",
+                    announceTone === "neutral" && "text-white",
+                  )}
+                >
+                  {announceText}
+                </p>
+              </div>
+            </div>
+          )}
         </section>
       )}
 

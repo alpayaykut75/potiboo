@@ -5,7 +5,7 @@ export type IntervalHandCount = (typeof INTERVAL_HAND_OPTIONS)[number];
 export const INTERVAL_DEFAULT_HANDS: IntervalHandCount = 5;
 export const INTERVAL_START_BANK = 100;
 export const INTERVAL_ANTE = 10;
-export const INTERVAL_SPIN_MS = 5000;
+export const INTERVAL_SPIN_MS = 8000;
 
 export const INTERVAL_COLORS = [
   { id: "cyan", hex: "#3d9dc4" },

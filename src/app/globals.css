@@ -216,7 +216,7 @@
 }
 
 .interval-draw-pop {
-  animation: intervalDrawPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: intervalDrawPop 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @keyframes intervalCardSpin {
@@ -232,7 +232,7 @@
 }
 
 .interval-card-spin {
-  animation: intervalCardSpin 0.28s linear infinite;
+  animation: intervalCardSpin 0.42s linear infinite;
   transform-style: preserve-3d;
 }
 

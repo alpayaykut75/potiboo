@@ -77,21 +77,21 @@ function slotStyle(slot: number): CSSProperties {
   const base: CSSProperties = { position: "absolute", zIndex: 10 };
   switch (slot) {
     case 0:
-      return { ...base, left: "50%", bottom: "1.5%", transform: "translateX(-50%)" };
+      return { ...base, left: "50%", bottom: "2.5%", transform: "translateX(-50%)" };
     case 1:
-      return { ...base, right: "1.5%", bottom: "16%" };
+      return { ...base, right: "2.5%", bottom: "15%" };
     case 2:
-      return { ...base, right: "1.5%", top: "50%", transform: "translateY(-50%)" };
+      return { ...base, right: "2.5%", top: "50%", transform: "translateY(-50%)" };
     case 3:
-      return { ...base, right: "1.5%", top: "14%" };
+      return { ...base, right: "2.5%", top: "13%" };
     case 4:
-      return { ...base, left: "50%", top: "1.5%", transform: "translateX(-50%)" };
+      return { ...base, left: "50%", top: "2.5%", transform: "translateX(-50%)" };
     case 5:
-      return { ...base, left: "1.5%", top: "14%" };
+      return { ...base, left: "2.5%", top: "13%" };
     case 6:
-      return { ...base, left: "1.5%", top: "50%", transform: "translateY(-50%)" };
+      return { ...base, left: "2.5%", top: "50%", transform: "translateY(-50%)" };
     case 7:
-      return { ...base, left: "1.5%", bottom: "16%" };
+      return { ...base, left: "2.5%", bottom: "15%" };
     default:
       return base;
   }
@@ -168,7 +168,7 @@ export function IntervalGameClient({
   const [potTarget, setPotTarget] = useState(0);
   const [deltaLabel, setDeltaLabel] = useState<string | null>(null);
 
-  const potDisplay = useAnimatedNumber(potTarget, 650);
+  const potDisplay = useAnimatedNumber(potTarget, 900);
 
   const refresh = useCallback(async () => {
     const [nextRoom, nextPlayers, nextGame, nextHand] = await Promise.all([
@@ -244,8 +244,8 @@ export function IntervalGameClient({
       playSfx("tap");
       const id = window.setTimeout(() => {
         setPotTarget(ev.to_pot);
-      }, 120);
-      const clear = window.setTimeout(() => setDeltaLabel(null), 1200);
+      }, 280);
+      const clear = window.setTimeout(() => setDeltaLabel(null), 2200);
       return () => {
         window.clearTimeout(id);
         window.clearTimeout(clear);
@@ -264,8 +264,8 @@ export function IntervalGameClient({
         const id = window.setTimeout(() => {
           setPotTarget(ev.pot_before + ev.stake);
           setDeltaLabel(`+${ev.stake}`);
-        }, 80);
-        const clear = window.setTimeout(() => setDeltaLabel(null), 900);
+        }, 200);
+        const clear = window.setTimeout(() => setDeltaLabel(null), 1800);
         return () => {
           window.clearTimeout(id);
           window.clearTimeout(clear);
@@ -282,8 +282,8 @@ export function IntervalGameClient({
           setDeltaLabel(null);
           playSfx("timeUp");
         }
-      }, 200);
-      const clear = window.setTimeout(() => setDeltaLabel(null), 1400);
+      }, 450);
+      const clear = window.setTimeout(() => setDeltaLabel(null), 2400);
       return () => {
         window.clearTimeout(id);
         window.clearTimeout(clear);
@@ -302,7 +302,7 @@ export function IntervalGameClient({
     const tick = window.setInterval(() => {
       setNow(Date.now());
       if (Date.now() < end) setSpinFace((n) => n + 1);
-    }, 90);
+    }, 140);
     return () => window.clearInterval(tick);
   }, [game?.phase, game?.reveal_at, game?.updated_at]);
 
@@ -533,7 +533,7 @@ export function IntervalGameClient({
       {statusLine !== "" && (
         <div
           className={clsx(
-            "mb-1 shrink-0 rounded-xl px-3 py-2 text-center",
+            "mb-1.5 shrink-0 rounded-xl px-3 py-2.5 text-center",
             spinning && "bg-accent/12",
             revealed && ev?.kind === "hit" && "bg-accent/20",
             revealed && ev?.kind === "miss" && "bg-danger/15",
@@ -542,7 +542,7 @@ export function IntervalGameClient({
         >
           <p
             className={clsx(
-              "text-[15px] font-bold leading-snug",
+              "text-[16px] font-bold leading-snug",
               (spinning || game.intent_amount != null) && "text-accent",
               revealed && ev?.kind === "hit" && "text-accent",
               revealed && ev?.kind === "miss" && "text-danger",
@@ -562,12 +562,12 @@ export function IntervalGameClient({
           className="relative mx-auto min-h-0 w-full max-w-lg flex-1"
           aria-label={t("interval.table")}
         >
-          {/* Dikdörtgen keçe masa — sayfanın ortasını doldurur */}
+          {/* Turkuaz masa — hafif kenar boşluğu */}
           <div
-            className="absolute inset-1 rounded-[1.75rem] border border-[#2a5a4a]/55 shadow-[inset_0_0_48px_rgba(0,0,0,0.4)]"
+            className="absolute inset-2.5 rounded-[1.75rem] border border-[#2a7a7e]/50 shadow-[inset_0_0_48px_rgba(0,0,0,0.35)]"
             style={{
               background:
-                "radial-gradient(ellipse at center, #1f4a3c 0%, #16352c 45%, #0e221c 100%)",
+                "radial-gradient(ellipse at center, #1a5f63 0%, #13484c 48%, #0c2f33 100%)",
             }}
           />
 
@@ -576,10 +576,10 @@ export function IntervalGameClient({
               return (
                 <div
                   key={`empty-${slot}`}
-                  className="flex w-[4.25rem] flex-col items-center opacity-40"
+                  className="flex w-[5.25rem] flex-col items-center opacity-35"
                   style={slotStyle(slot)}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-dashed border-white/25 bg-black/20" />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-white/25 bg-black/15" />
                 </div>
               );
             }
@@ -593,12 +593,12 @@ export function IntervalGameClient({
             return (
               <div
                 key={id}
-                className="flex w-[4.5rem] flex-col items-center"
+                className="flex w-[5.5rem] flex-col items-center"
                 style={slotStyle(slot)}
               >
                 <div
                   className={clsx(
-                    "relative rounded-xl border-2 bg-bg-card/95 p-1 backdrop-blur-sm",
+                    "relative rounded-2xl border-[3px] bg-bg-card/95 p-1.5 backdrop-blur-sm",
                     turn && "interval-seat-turn border-accent",
                     !turn && mine && "border-accent/40",
                     !turn && !mine && "border-border/70",
@@ -606,72 +606,72 @@ export function IntervalGameClient({
                 >
                   <AvatarImage
                     avatar={p?.profiles?.avatar_key ?? "panda"}
-                    size="sm"
+                    size="lg"
+                    rounded="2xl"
                   />
                   {intending && (
-                    <span className="absolute -right-1 -top-1 rounded-full bg-accent px-1 py-0.5 font-mono text-[10px] font-bold text-[#041018]">
+                    <span className="absolute -right-1.5 -top-1.5 rounded-full bg-accent px-1.5 py-0.5 font-mono text-[12px] font-bold text-[#041018]">
                       {game.intent_amount}
                     </span>
                   )}
-                  <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-md bg-[#0a1612]/95 px-1 font-mono text-[11px] font-bold tabular-nums text-accent">
+                  <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-lg bg-[#0a1612]/95 px-1.5 py-0.5 font-mono text-[14px] font-bold tabular-nums text-accent">
                     {game.banks[id] ?? 0}
                   </span>
                 </div>
-                <p className="mt-1.5 max-w-[4.5rem] truncate text-center text-[11px] font-semibold leading-tight text-text">
+                <p className="mt-2 max-w-[5.5rem] truncate text-center text-[13px] font-bold leading-tight text-text">
                   {mine ? t("interval.youShort") : nameOf(id)}
                 </p>
               </div>
             );
           })}
 
-          <div className="absolute left-1/2 top-1/2 z-20 flex w-[min(14rem,70%)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2">
-            <div className="relative flex h-[3.5rem] w-[3.5rem] flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
-              <p className="text-[8px] font-bold tracking-wider text-accent/80 uppercase">
+          <div className="absolute left-1/2 top-1/2 z-20 flex w-[min(15rem,72%)] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2.5">
+            <div className="relative flex h-16 w-16 flex-col items-center justify-center rounded-full border-2 border-accent/45 bg-[#0a1612]/92">
+              <p className="text-[9px] font-bold tracking-wider text-accent/80 uppercase">
                 {t("interval.pot")}
               </p>
-              <p className="font-mono text-[22px] font-bold tabular-nums leading-none text-accent">
+              <p className="font-mono text-[24px] font-bold tabular-nums leading-none text-accent">
                 {potDisplay}
               </p>
               {deltaLabel && (
-                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[12px] font-bold text-[#e8b84a]">
+                <span className="interval-float-down pointer-events-none absolute left-1/2 top-0 text-[14px] font-bold text-[#e8b84a]">
                   {deltaLabel}
                 </span>
               )}
             </div>
 
             {(showPublicHand || spinning || drawn) && (
-              <div className="w-full rounded-2xl border border-white/15 bg-[#06140f]/55 px-2.5 py-2.5 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
-                <div className="flex items-center justify-center gap-1.5">
+              <div className="w-full rounded-2xl border border-white/15 bg-[#061418]/55 px-3 py-3 shadow-[0_8px_28px_rgba(0,0,0,0.35)] backdrop-blur-[6px]">
+                <div className="flex flex-col items-center gap-2">
                   {showPublicHand && (
-                    <>
-                      <TileView tile={game.public_c1!} />
-                      <TileView tile={game.public_c2!} />
-                    </>
+                    <div className="flex items-center justify-center gap-2.5">
+                      <TileView tile={game.public_c1!} large />
+                      <TileView tile={game.public_c2!} large />
+                    </div>
                   )}
-                  <div className="mx-0.5 h-8 w-px bg-white/20" />
                   {spinning ? (
-                    <div className="flex flex-col items-center gap-0.5">
+                    <div className="flex flex-col items-center gap-1">
                       <div className="interval-card-spin">
-                        <TileView tile={randomSpinTile(spinFace)} />
+                        <TileView tile={randomSpinTile(spinFace)} large />
                       </div>
-                      <p className="font-mono text-[10px] font-bold text-accent tabular-nums">
+                      <p className="font-mono text-[12px] font-bold text-accent tabular-nums">
                         {spinLeft}
                       </p>
                     </div>
                   ) : drawn ? (
                     <div className="interval-draw-pop">
-                      <TileView tile={drawn} />
+                      <TileView tile={drawn} large />
                     </div>
-                  ) : (
-                    <div className="flex h-14 w-12 items-center justify-center rounded-xl border border-dashed border-white/25 text-[18px] font-bold text-white/35">
+                  ) : showPublicHand ? (
+                    <div className="flex h-20 w-[4.25rem] items-center justify-center rounded-2xl border border-dashed border-white/25 text-[22px] font-bold text-white/35">
                       ?
                     </div>
-                  )}
+                  ) : null}
                 </div>
                 {showPublicHand &&
                   publicRange &&
                   !canStake(publicRange.lo, publicRange.hi) && (
-                    <p className="mt-1 text-center text-[11px] font-semibold text-white/60">
+                    <p className="mt-2 text-center text-[12px] font-semibold text-white/60">
                       {t("interval.noRange")}
                     </p>
                   )}

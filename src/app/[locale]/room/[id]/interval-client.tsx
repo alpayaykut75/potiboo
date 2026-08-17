@@ -41,6 +41,8 @@ import { fetchRoom, fetchRoomPlayers } from "@/lib/rooms/api";
 import { clsx } from "@/lib/utils";
 import { playSfx, unlockSfx } from "@/lib/sfx";
 
+const ANNOUNCE_HOLD_MS = 4000;
+
 function TileView({
   tile,
   large,
@@ -167,6 +169,8 @@ export function IntervalGameClient({
   const [spinFace, setSpinFace] = useState(0);
   const [potTarget, setPotTarget] = useState(0);
   const [deltaLabel, setDeltaLabel] = useState<string | null>(null);
+  const [announceLeft, setAnnounceLeft] = useState(0);
+  const autoKeyRef = useRef<string | null>(null);
 
   const potDisplay = useAnimatedNumber(potTarget, 900);
 
@@ -318,6 +322,15 @@ export function IntervalGameClient({
     [players, t],
   );
 
+  /** Açıklamalarda hep isim; kendinse "Alpay (Sen)" */
+  const announceWho = useCallback(
+    (id: string) => {
+      const name = nameOf(id);
+      return id === me ? t("interval.nameYou", { name }) : name;
+    },
+    [me, nameOf, t],
+  );
+
   const publicRange = useMemo(() => {
     if (!game?.public_c1 || !game.public_c2) return null;
     return rangeOf(game.public_c1, game.public_c2);
@@ -366,7 +379,7 @@ export function IntervalGameClient({
 
   const preHand = game ? isIntervalPreHand(game) : false;
 
-  /** Adım adım popup metni (kurucu Devam ile akar) */
+  /** Popup (spin sırasında yok — taşlar görünsün) */
   const announceText = useMemo(() => {
     if (!game || preHand) return "";
     const ev = game.last_event;
@@ -376,11 +389,10 @@ export function IntervalGameClient({
         return t("interval.statusAnte", { n: ev.per, pot: ev.to_pot });
       }
       if (ev.kind === "pass") {
-        const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
-        return t("interval.statusPass", { name: who });
+        return t("interval.statusPass", { name: announceWho(ev.by) });
       }
       if (ev.kind === "hit" || ev.kind === "miss") {
-        const who = ev.by === me ? t("interval.youShort") : nameOf(ev.by);
+        const who = announceWho(ev.by);
         if (spinning) {
           return t("interval.statusSpinning", {
             name: who,
@@ -397,36 +409,66 @@ export function IntervalGameClient({
     if (game.phase === "hand_end") {
       return t("interval.statusHandEnd", { n: game.hand_index, pot: game.pot });
     }
-    if (game.phase === "match_end") {
-      if (winners.length > 1) return t("interval.tie");
-      if (winners[0] === me) return t("interval.youWon");
-      return t("interval.theyWon", {
-        name: nameOf(winners[0] ?? game.winner_id ?? ""),
-      });
-    }
     return "";
-  }, [game, me, nameOf, preHand, spinLeft, spinning, t, winners]);
+  }, [announceWho, game, preHand, spinLeft, spinning, t]);
 
   const intentLine = useMemo(() => {
     if (!game || game.phase !== "turn" || game.intent_amount == null) return "";
-    const turnName =
-      game.turn_profile_id === me
-        ? t("interval.youShort")
-        : nameOf(game.turn_profile_id ?? "");
     if (myTurn) {
       return t("interval.statusYourIntent", { n: game.intent_amount });
     }
     return t("interval.statusIntent", {
-      name: turnName,
+      name: announceWho(game.turn_profile_id ?? ""),
       n: game.intent_amount,
     });
-  }, [game, me, myTurn, nameOf, t]);
+  }, [announceWho, game, myTurn, t]);
 
-  const showAnnounce =
+  const showAnnounceOverlay =
+    !spinning &&
     announceText !== "" &&
-    (game?.phase === "reveal" ||
-      game?.phase === "hand_end" ||
-      game?.phase === "match_end");
+    (game?.phase === "reveal" || game?.phase === "hand_end");
+
+  const autoContinueReady =
+    !!game &&
+    isHost &&
+    !preHand &&
+    !spinning &&
+    ((game.phase === "reveal" && revealed) || game.phase === "hand_end");
+
+  useEffect(() => {
+    if (!showAnnounceOverlay || !game) {
+      setAnnounceLeft(0);
+      return;
+    }
+    const endAt = Date.now() + ANNOUNCE_HOLD_MS;
+    const tick = () =>
+      setAnnounceLeft(Math.max(0, Math.ceil((endAt - Date.now()) / 1000)));
+    tick();
+    const id = window.setInterval(tick, 200);
+    return () => window.clearInterval(id);
+  }, [showAnnounceOverlay, game?.updated_at, game?.phase, game]);
+
+  useEffect(() => {
+    if (!autoContinueReady || !game || pending) return;
+    const key = `${game.phase}:${game.updated_at}`;
+    if (autoKeyRef.current === key) return;
+    const id = window.setTimeout(() => {
+      autoKeyRef.current = key;
+      unlockSfx();
+      startTransition(async () => {
+        try {
+          setError(null);
+          setGame(await intervalContinue(roomId));
+          playSfx("tap");
+          void refresh();
+        } catch (e) {
+          autoKeyRef.current = null;
+          setError(e instanceof Error ? e.message : t("common.errorGeneric"));
+        }
+      });
+    }, ANNOUNCE_HOLD_MS);
+    return () => window.clearTimeout(id);
+  }, [autoContinueReady, game, pending, refresh, roomId, t]);
 
   function onPass() {
     unlockSfx();
@@ -471,6 +513,7 @@ export function IntervalGameClient({
   }
 
   function onContinue() {
+    if (game) autoKeyRef.current = `${game.phase}:${game.updated_at}`;
     unlockSfx();
     startTransition(async () => {
       try {
@@ -479,6 +522,7 @@ export function IntervalGameClient({
         playSfx("tap");
         void refresh();
       } catch (e) {
+        autoKeyRef.current = null;
         setError(e instanceof Error ? e.message : t("common.errorGeneric"));
       }
     });
@@ -518,7 +562,7 @@ export function IntervalGameClient({
   const drawn =
     revealed && ev && (ev.kind === "hit" || ev.kind === "miss") ? ev.drawn : null;
   const announceTone =
-    spinning || ev?.kind === "hit" || ev?.kind === "ante"
+    ev?.kind === "hit" || ev?.kind === "ante"
       ? "accent"
       : ev?.kind === "miss"
         ? "danger"
@@ -528,16 +572,18 @@ export function IntervalGameClient({
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-2 pb-[calc(0.5rem+var(--safe-bottom))]">
       {iWon && <ConfettiBurst />}
 
-      <header className="relative z-30 flex shrink-0 items-center justify-between gap-2 pb-1">
+      <header className="relative z-30 grid shrink-0 grid-cols-3 items-center gap-2 pb-1">
         <button
           type="button"
-          className="btn-ghost text-base text-text-muted"
+          className="btn-ghost justify-self-start text-base text-text-muted"
           onClick={() => router.push(href("/"))}
         >
           {t("common.home")}
         </button>
-        <p className="text-base font-semibold text-text">Interval</p>
-        <p className="text-base font-bold text-text tabular-nums">
+        <p className="justify-self-center text-center text-base font-semibold text-text">
+          Interval
+        </p>
+        <p className="justify-self-end text-right text-base font-bold text-text tabular-nums">
           {preHand
             ? t("interval.handReady")
             : t("interval.hand", { n: game.hand_index, max: game.hand_total })}
@@ -548,6 +594,14 @@ export function IntervalGameClient({
         <div className="mb-1.5 shrink-0 rounded-xl bg-accent/12 px-3 py-2 text-center">
           <p className="text-[15px] font-bold leading-snug text-accent">
             {intentLine}
+          </p>
+        </div>
+      )}
+
+      {spinning && announceText !== "" && (
+        <div className="mb-1.5 shrink-0 rounded-xl bg-accent/12 px-3 py-2 text-center">
+          <p className="text-[15px] font-bold leading-snug text-accent">
+            {announceText}
           </p>
         </div>
       )}
@@ -614,7 +668,9 @@ export function IntervalGameClient({
                   </span>
                 </div>
                 <p className="mt-2.5 max-w-[6rem] truncate text-center text-[15px] font-bold leading-tight text-text">
-                  {mine ? t("interval.youShort") : nameOf(id)}
+                  {mine
+                    ? t("interval.nameYou", { name: nameOf(id) })
+                    : nameOf(id)}
                 </p>
               </div>
             );
@@ -666,7 +722,7 @@ export function IntervalGameClient({
                 {showPublicHand &&
                   publicRange &&
                   !canStake(publicRange.lo, publicRange.hi) &&
-                  !showAnnounce && (
+                  !showAnnounceOverlay && (
                     <p className="mt-1.5 text-center text-[11px] font-semibold text-white/60">
                       {t("interval.noRange")}
                     </p>
@@ -675,22 +731,22 @@ export function IntervalGameClient({
             )}
           </div>
 
-          {showAnnounce && (
-            <div className="absolute inset-2.5 z-30 flex items-center justify-center rounded-[1.75rem] bg-black/40 px-4 backdrop-blur-[3px]">
+          {showAnnounceOverlay && (
+            <div className="pointer-events-none absolute inset-x-6 top-[18%] z-30 flex justify-center">
               <div
                 className={clsx(
-                  "w-full max-w-[17rem] rounded-2xl border px-4 py-5 text-center shadow-lg",
+                  "w-full max-w-[17rem] rounded-2xl border px-4 py-4 text-center shadow-lg backdrop-blur-md",
                   announceTone === "accent" &&
-                    "border-accent/40 bg-[#0a1612]/80",
+                    "border-accent/40 bg-[#0a1612]/78",
                   announceTone === "danger" &&
-                    "border-danger/40 bg-[#160a0a]/80",
+                    "border-danger/40 bg-[#160a0a]/78",
                   announceTone === "neutral" &&
-                    "border-white/20 bg-[#0a1612]/80",
+                    "border-white/20 bg-[#0a1612]/78",
                 )}
               >
                 <p
                   className={clsx(
-                    "text-[18px] font-bold leading-snug",
+                    "text-[17px] font-bold leading-snug",
                     announceTone === "accent" && "text-accent",
                     announceTone === "danger" && "text-danger",
                     announceTone === "neutral" && "text-white",
@@ -698,6 +754,11 @@ export function IntervalGameClient({
                 >
                   {announceText}
                 </p>
+                {announceLeft > 0 && (
+                  <p className="mt-2 text-[12px] font-semibold text-white/55">
+                    {t("interval.autoNext", { sec: announceLeft })}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -809,13 +870,13 @@ export function IntervalGameClient({
               type="button"
               disabled={pending}
               onClick={onContinue}
-              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
+              className="btn w-full border border-accent/40 bg-bg-elevated py-3 text-[16px] font-bold text-accent"
             >
-              {t("interval.continue")}
+              {t("interval.autoNext", { sec: announceLeft || 1 })}
             </button>
           ) : (
             <p className="py-2 text-center text-[14px] text-text-muted">
-              {t("interval.waitHostAction")}
+              {t("interval.waitAuto")}
             </p>
           ))}
 
@@ -825,13 +886,13 @@ export function IntervalGameClient({
               type="button"
               disabled={pending}
               onClick={onContinue}
-              className="btn w-full bg-accent py-3 text-[17px] font-bold text-[#041018]"
+              className="btn w-full border border-accent/40 bg-bg-elevated py-3 text-[16px] font-bold text-accent"
             >
-              {t("interval.nextHand")}
+              {t("interval.autoNext", { sec: announceLeft || 1 })}
             </button>
           ) : (
             <p className="py-2 text-center text-[14px] text-text-muted">
-              {t("interval.waitHostAction")}
+              {t("interval.waitAuto")}
             </p>
           ))}
 

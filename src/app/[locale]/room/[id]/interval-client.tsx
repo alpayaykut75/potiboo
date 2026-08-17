@@ -675,7 +675,7 @@ export function IntervalGameClient({
             )}
           </div>
 
-          {showAnnounce && game.phase !== "match_end" && (
+          {showAnnounce && (
             <div className="absolute inset-2.5 z-30 flex items-center justify-center rounded-[1.75rem] bg-black/40 px-4 backdrop-blur-[3px]">
               <div
                 className={clsx(

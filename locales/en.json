@@ -188,7 +188,9 @@
     "yourCards": "Your hand",
     "theirCards": "{name}'s hand",
     "range": "{lo} – {hi}",
-    "noRange": "No gap — pass only",
+    "noRange": "Same number — pass only",
+    "watching": "Watching",
+    "youBusted": "You're out — watching the rest",
     "pass": "Pass",
     "putHint": "How much into the pot?",
     "draw": "Put",
@@ -251,7 +253,7 @@
       "howTo": [
         "Each hand starts with an ante and two colored tiles",
         "On your turn, pass or put into the pot and draw a third",
-        "Hit the gap to take twice your put; leftover pot burns at the end"
+        "Hit either number or anything between to take twice your put; leftover pot burns at the end"
       ]
     },
     "wordle": {

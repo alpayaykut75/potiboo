@@ -188,7 +188,9 @@
     "yourCards": "Kartmu",
     "theirCards": "Kart {name}",
     "range": "{lo} – {hi}",
-    "noRange": "Tidak ada celah — hanya pass",
+    "noRange": "Angka sama — hanya pass",
+    "watching": "Menonton",
+    "youBusted": "Poinmu habis — kamu menonton",
     "pass": "Pass",
     "putHint": "Berapa masuk ke pot?",
     "draw": "Pasang",
@@ -251,7 +253,7 @@
       "howTo": [
         "Setiap tangan mulai dengan ante dan dua ubin berwarna",
         "Di giliranmu, pass atau taruh ke pot lalu tarik ketiga",
-        "Masuk celah = ambil dua kali; sisa pot hangus di akhir"
+        "Masuk angka itu atau di antaranya = ambil dua kali; sisa pot hangus di akhir"
       ]
     },
     "wordle": {

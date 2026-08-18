@@ -6,6 +6,42 @@ export const INTERVAL_DEFAULT_HANDS: IntervalHandCount = 5;
 export const INTERVAL_START_BANK = 100;
 export const INTERVAL_ANTE = 10;
 export const INTERVAL_SPIN_MS = 8000;
+export const INTERVAL_PUT_HOLD_MS = 1500;
+/** Spin bittikten sonra sonuç popup’ından önce rakamı göster */
+export const INTERVAL_SHOW_DRAWN_MS = 2000;
+
+export type BetAnnounceStage = "put" | "spin" | "show" | "result";
+
+/** Saat yönü 8 koltuk: 0 alt, 2 sağ orta, 4 üst, 6 sol orta */
+export const TABLE_SLOTS = 8;
+
+/**
+ * Simetrik oturma: 2=iki baş, 3=bir baş+iki yan, 4=iki baş+iki yan.
+ * seats[i] → layout[i] (herkese aynı masa).
+ */
+export const INTERVAL_SEAT_LAYOUTS: number[][] = [
+  [],
+  [0],
+  [0, 4],
+  [0, 2, 6],
+  [0, 2, 4, 6],
+  [0, 1, 3, 4, 6],
+  [0, 1, 3, 4, 5, 7],
+  [0, 1, 2, 3, 4, 5, 6],
+  [0, 1, 2, 3, 4, 5, 6, 7],
+];
+
+export function assignTableSlots(seatIds: string[]): (string | null)[] {
+  const slots: (string | null)[] = Array.from({ length: TABLE_SLOTS }, () => null);
+  const n = Math.min(seatIds.length, TABLE_SLOTS);
+  const layout = INTERVAL_SEAT_LAYOUTS[n] ?? [];
+  for (let i = 0; i < n; i++) {
+    const s = layout[i];
+    if (s == null) continue;
+    slots[s] = seatIds[i]!;
+  }
+  return slots;
+}
 
 export const INTERVAL_COLORS = [
   { id: "cyan", hex: "#3d9dc4" },
@@ -92,6 +128,55 @@ export type IntervalHandRow = {
   c1: IntervalTile;
   c2: IntervalTile;
 };
+
+export function isSolvent(banks: IntervalBanks, playerId: string): boolean {
+  return (banks[playerId] ?? 0) > 0;
+}
+
+export function betAnnounceStage(
+  phase: IntervalPhase,
+  lastEvent: IntervalLastEvent,
+  updatedAt: string,
+  revealAt: string | null,
+  now: number,
+): BetAnnounceStage | null {
+  if (phase !== "reveal") return null;
+  if (!lastEvent || (lastEvent.kind !== "hit" && lastEvent.kind !== "miss")) {
+    return null;
+  }
+  const revealAtMs = revealAt ? Date.parse(revealAt) : Number.NaN;
+  const eventAt = Date.parse(updatedAt);
+  if (!Number.isFinite(revealAtMs)) return "result";
+  if (now >= revealAtMs + INTERVAL_SHOW_DRAWN_MS) return "result";
+  if (now >= revealAtMs) return "show";
+  if (Number.isFinite(eventAt) && now < eventAt + INTERVAL_PUT_HOLD_MS) {
+    return "put";
+  }
+  return "spin";
+}
+
+/** Spin bitene kadar kazanç/kayıp görünmesin; sadece koyulan miktar düşsün */
+export function visibleBank(
+  banks: IntervalBanks,
+  playerId: string,
+  ev: IntervalLastEvent,
+  stage: BetAnnounceStage | null,
+): number {
+  const final = banks[playerId] ?? 0;
+  if (
+    !ev ||
+    (ev.kind !== "hit" && ev.kind !== "miss") ||
+    ev.by !== playerId ||
+    stage == null ||
+    stage === "result"
+  ) {
+    return final;
+  }
+  const before =
+    ev.kind === "hit" ? final - ev.payout + ev.stake : final + ev.stake;
+  if (stage === "put") return before;
+  return before - ev.stake;
+}
 
 export function resolveIntervalHands(raw: unknown): IntervalHandCount {
   return raw === 3 || raw === 5 || raw === 10 ? raw : INTERVAL_DEFAULT_HANDS;

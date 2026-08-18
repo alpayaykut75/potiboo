@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyAnte,
   applyPlay,
+  assignTableSlots,
   buildDeck,
   canStake,
   isInRange,
@@ -10,6 +11,7 @@ import {
   rangeOf,
   resolveIntervalHands,
   stakeOptions,
+  visibleBank,
   type IntervalTile,
 } from "./interval";
 
@@ -31,9 +33,11 @@ describe("interval domain", () => {
     expect(isInRange(cyan(8), 3, 8)).toBe(true);
   });
 
-  it("adjacent values have no stakeable gap", () => {
-    expect(canStake(4, 5)).toBe(true);   // tek fark bile kazanabilir
-    expect(canStake(7, 7)).toBe(false);  // aynı sayı → aralık yok
+  it("adjacent values are stakeable; identical values are not", () => {
+    expect(canStake(4, 5)).toBe(true);
+    expect(isInRange(cyan(4), 4, 5)).toBe(true);
+    expect(isInRange(cyan(5), 4, 5)).toBe(true);
+    expect(canStake(7, 7)).toBe(false);
   });
 
   it("ante takes 10 from each bank into the pot", () => {
@@ -73,11 +77,56 @@ describe("interval domain", () => {
       stake: 5,
       lo: 2,
       hi: 9,
-      drawn: cyan(2),
+      drawn: cyan(1),
     });
     expect(result.event.kind).toBe("miss");
     expect(result.pot).toBe(25);
     expect(result.banks.a).toBe(85);
+  });
+
+  it("hit on endpoints (inclusive range)", () => {
+    const result = applyPlay({
+      banks: { a: 90, b: 90 },
+      pot: 20,
+      playerId: "a",
+      stake: 5,
+      lo: 4,
+      hi: 5,
+      drawn: cyan(4),
+    });
+    expect(result.event.kind).toBe("hit");
+    expect(result.banks.a).toBe(95);
+  });
+
+  it("seats 2–4 sit symmetrically on heads and sides", () => {
+    expect(assignTableSlots(["a", "b"])).toEqual([
+      "a", null, null, null, "b", null, null, null,
+    ]);
+    expect(assignTableSlots(["a", "b", "c"])).toEqual([
+      "a", null, "b", null, null, null, "c", null,
+    ]);
+    expect(assignTableSlots(["a", "b", "c", "d"])).toEqual([
+      "a", null, "b", null, "c", null, "d", null,
+    ]);
+  });
+
+  it("visibleBank hides hit/miss until result", () => {
+    const banks = { a: 95 };
+    const hit = {
+      kind: "hit" as const,
+      by: "a",
+      stake: 5,
+      drawn: cyan(4),
+      lo: 4,
+      hi: 5,
+      payout: 10,
+      pot_before: 20,
+      pot_after: 15,
+    };
+    expect(visibleBank(banks, "a", hit, "put")).toBe(90);
+    expect(visibleBank(banks, "a", hit, "spin")).toBe(85);
+    expect(visibleBank(banks, "a", hit, "show")).toBe(85);
+    expect(visibleBank(banks, "a", hit, "result")).toBe(95);
   });
 
   it("rejects stake above pot or bank", () => {

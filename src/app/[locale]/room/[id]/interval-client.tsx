@@ -26,12 +26,18 @@ import {
 } from "@/lib/games/interval-api";
 import {
   INTERVAL_COLORS,
+  assignTableSlots,
+  betAnnounceStage,
   canStake,
   colorHex,
   isIntervalPreHand,
+  isSolvent,
   leaders,
   rangeOf,
   stakeOptions,
+  TABLE_SLOTS,
+  visibleBank,
+  type BetAnnounceStage,
   type IntervalGameRow,
   type IntervalHandRow,
   type IntervalTile,
@@ -43,10 +49,7 @@ import { playSfx, unlockSfx } from "@/lib/sfx";
 
 const ANNOUNCE_HOLD_MS = 4000;
 const PUT_HOLD_MS = 1500;
-/** Spin bittikten sonra sonuç popup’ından önce rakamı göster */
-const SHOW_DRAWN_MS = 2000;
 
-type BetAnnounceStage = "put" | "spin" | "show" | "result";
 type AnnounceTone = "accent" | "danger" | "neutral";
 
 function AnnounceOverlay({
@@ -115,9 +118,6 @@ function TileView({
   );
 }
 
-/** Saat yönü sabit: 0=alt (seats[0]), 1–3 sağ, 4=üst, 5–7 sol — herkes aynı masa */
-const TABLE_SLOTS = 8;
-
 function slotStyle(slot: number): CSSProperties {
   const base: CSSProperties = { position: "absolute", zIndex: 10 };
   switch (slot) {
@@ -140,21 +140,6 @@ function slotStyle(slot: number): CSSProperties {
     default:
       return base;
   }
-}
-
-/** seats sırası sabit; herkes aynı slotları görür */
-function assignTableSlots(seatIds: string[]): (string | null)[] {
-  const slots: (string | null)[] = Array.from({ length: TABLE_SLOTS }, () => null);
-  const n = seatIds.length;
-  if (n === 0) return slots;
-  const used = new Set<number>();
-  for (let i = 0; i < n; i++) {
-    let s = Math.floor((i * TABLE_SLOTS) / n) % TABLE_SLOTS;
-    while (used.has(s)) s = (s + 1) % TABLE_SLOTS;
-    used.add(s);
-    slots[s] = seatIds[i]!;
-  }
-  return slots;
 }
 
 function randomSpinTile(seed: number): IntervalTile {
@@ -280,67 +265,6 @@ export function IntervalGameClient({
     if (game?.phase === "turn") setStake(game.intent_amount);
   }, [game?.phase, game?.intent_amount, game?.turn_profile_id]);
 
-  // Pot hedefi + ante / reveal animasyonları
-  useEffect(() => {
-    if (!game) return;
-    const ev = game.last_event;
-
-    if (ev?.kind === "ante") {
-      setPotTarget(ev.from_pot);
-      setDeltaLabel(`+${ev.to_pot - ev.from_pot}`);
-      playSfx("tap");
-      const id = window.setTimeout(() => {
-        setPotTarget(ev.to_pot);
-      }, 280);
-      const clear = window.setTimeout(() => setDeltaLabel(null), 2200);
-      return () => {
-        window.clearTimeout(id);
-        window.clearTimeout(clear);
-      };
-    }
-
-    if (
-      game.phase === "reveal" &&
-      ev &&
-      (ev.kind === "hit" || ev.kind === "miss")
-    ) {
-      const revealAt = game.reveal_at ? Date.parse(game.reveal_at) : Date.now();
-      const spinning = Date.now() < revealAt;
-      if (spinning) {
-        setPotTarget(ev.pot_before);
-        const id = window.setTimeout(() => {
-          setPotTarget(ev.pot_before + ev.stake);
-          setDeltaLabel(`+${ev.stake}`);
-        }, 200);
-        const clear = window.setTimeout(() => setDeltaLabel(null), 1800);
-        return () => {
-          window.clearTimeout(id);
-          window.clearTimeout(clear);
-        };
-      }
-      // Açıldı: final pot (+ hit ise ortadan düşüş)
-      setPotTarget(ev.pot_before + ev.stake);
-      const id = window.setTimeout(() => {
-        setPotTarget(ev.pot_after);
-        if (ev.kind === "hit") {
-          setDeltaLabel(`−${ev.payout}`);
-          playSfx("confetti");
-        } else {
-          setDeltaLabel(null);
-          playSfx("timeUp");
-        }
-      }, 450);
-      const clear = window.setTimeout(() => setDeltaLabel(null), 2400);
-      return () => {
-        window.clearTimeout(id);
-        window.clearTimeout(clear);
-      };
-    }
-
-    setPotTarget(game.pot);
-    return;
-  }, [game?.phase, game?.pot, game?.last_event, game?.reveal_at, game?.updated_at]);
-
   // Spin face + clock during reveal
   useEffect(() => {
     if (game?.phase !== "reveal") return;
@@ -383,7 +307,9 @@ export function IntervalGameClient({
     return rangeOf(hand.c1, hand.c2);
   }, [hand]);
 
-  const playable = myRange != null && canStake(myRange.lo, myRange.hi);
+  const playable =
+    myRange != null && canStake(myRange.lo, myRange.hi) && myBank > 0;
+  const watchingMe = game != null && !isSolvent(game.banks, me);
   const options = useMemo(() => {
     if (!game || !playable) return [];
     return stakeOptions(game.pot, myBank);
@@ -415,17 +341,84 @@ export function IntervalGameClient({
   const preHand = game ? isIntervalPreHand(game) : false;
 
   /** hit/miss: put (1.5s) → spin → show drawn (2s) → result popup */
-  const betStage = useMemo((): BetAnnounceStage | null => {
-    if (!game || game.phase !== "reveal") return null;
+  const betStage = useMemo(
+    (): BetAnnounceStage | null =>
+      game
+        ? betAnnounceStage(
+            game.phase,
+            game.last_event,
+            game.updated_at,
+            game.reveal_at,
+            now,
+          )
+        : null,
+    [game, now],
+  );
+
+  // Pot: spin bitene kadar sonuç (hit/miss) görünmesin
+  useEffect(() => {
+    if (!game) return;
     const ev = game.last_event;
-    if (!ev || (ev.kind !== "hit" && ev.kind !== "miss")) return null;
-    const eventAt = Date.parse(game.updated_at);
-    if (!Number.isFinite(revealAtMs)) return "result";
-    if (now >= revealAtMs + SHOW_DRAWN_MS) return "result";
-    if (now >= revealAtMs) return "show";
-    if (Number.isFinite(eventAt) && now < eventAt + PUT_HOLD_MS) return "put";
-    return "spin";
-  }, [game, now, revealAtMs]);
+
+    if (ev?.kind === "ante") {
+      setPotTarget(ev.from_pot);
+      setDeltaLabel(`+${ev.to_pot - ev.from_pot}`);
+      playSfx("tap");
+      const id = window.setTimeout(() => {
+        setPotTarget(ev.to_pot);
+      }, 280);
+      const clear = window.setTimeout(() => setDeltaLabel(null), 2200);
+      return () => {
+        window.clearTimeout(id);
+        window.clearTimeout(clear);
+      };
+    }
+
+    if (ev && (ev.kind === "hit" || ev.kind === "miss") && game.phase === "reveal") {
+      if (betStage === "put") {
+        setPotTarget(ev.pot_before);
+        return;
+      }
+      if (betStage === "spin") {
+        setPotTarget(ev.pot_before);
+        const id = window.setTimeout(() => {
+          setPotTarget(ev.pot_before + ev.stake);
+          setDeltaLabel(`+${ev.stake}`);
+        }, 200);
+        const clear = window.setTimeout(() => setDeltaLabel(null), 1800);
+        return () => {
+          window.clearTimeout(id);
+          window.clearTimeout(clear);
+        };
+      }
+      if (betStage === "show") {
+        setPotTarget(ev.pot_before + ev.stake);
+        setDeltaLabel(null);
+        return;
+      }
+      if (betStage === "result") {
+        setPotTarget(ev.pot_before + ev.stake);
+        const id = window.setTimeout(() => {
+          setPotTarget(ev.pot_after);
+          if (ev.kind === "hit") {
+            setDeltaLabel(`−${ev.payout}`);
+            playSfx("confetti");
+          } else {
+            setDeltaLabel(null);
+            playSfx("timeUp");
+          }
+        }, 450);
+        const clear = window.setTimeout(() => setDeltaLabel(null), 2400);
+        return () => {
+          window.clearTimeout(id);
+          window.clearTimeout(clear);
+        };
+      }
+    }
+
+    setPotTarget(game.pot);
+    return;
+  }, [betStage, game]);
 
   const showSpin = betStage === "spin";
   const spinLeft = showSpin
@@ -685,17 +678,7 @@ export function IntervalGameClient({
           />
 
           {tableSlots.map((id, slot) => {
-            if (id == null) {
-              return (
-                <div
-                  key={`empty-${slot}`}
-                  className="flex w-[5.75rem] flex-col items-center opacity-35"
-                  style={slotStyle(slot)}
-                >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-dashed border-white/25 bg-black/15" />
-                </div>
-              );
-            }
+            if (id == null) return null;
             const turn =
               !preHand &&
               game.phase === "turn" &&
@@ -703,10 +686,20 @@ export function IntervalGameClient({
             const p = players.find((x) => x.profile_id === id);
             const mine = id === me;
             const intending = turn && game.intent_amount != null;
+            const watching = !isSolvent(game.banks, id);
+            const shownBank = visibleBank(
+              game.banks,
+              id,
+              game.last_event,
+              betStage,
+            );
             return (
               <div
                 key={id}
-                className="flex w-[6rem] flex-col items-center"
+                className={clsx(
+                  "flex w-[6rem] flex-col items-center",
+                  watching && "opacity-55",
+                )}
                 style={slotStyle(slot)}
               >
                 <div
@@ -715,6 +708,7 @@ export function IntervalGameClient({
                     turn && "interval-seat-turn border-accent",
                     !turn && mine && "border-accent/40",
                     !turn && !mine && "border-border/70",
+                    watching && "grayscale",
                   )}
                 >
                   <AvatarImage
@@ -728,7 +722,7 @@ export function IntervalGameClient({
                     </span>
                   )}
                   <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 rounded-lg bg-[#0a1612]/95 px-2 py-0.5 font-mono text-[16px] font-bold tabular-nums text-accent">
-                    {game.banks[id] ?? 0}
+                    {shownBank}
                   </span>
                 </div>
                 <p className="mt-2.5 max-w-[6rem] truncate text-center text-[15px] font-bold leading-tight text-text">
@@ -736,6 +730,11 @@ export function IntervalGameClient({
                     ? t("interval.nameYou", { name: nameOf(id) })
                     : nameOf(id)}
                 </p>
+                {watching ? (
+                  <p className="mt-0.5 text-center text-[11px] font-semibold text-white/55">
+                    {t("interval.watching")}
+                  </p>
+                ) : null}
               </div>
             );
           })}
@@ -864,7 +863,13 @@ export function IntervalGameClient({
             </p>
           ))}
 
-        {game.phase === "turn" && myTurn && !preHand && (
+        {watchingMe && game.phase === "turn" && !preHand && (
+            <p className="py-2 text-center text-[14px] text-text-muted">
+              {t("interval.youBusted")}
+            </p>
+          )}
+
+        {game.phase === "turn" && myTurn && !preHand && !watchingMe && (
           <div className="flex flex-wrap items-center justify-center gap-1.5">
             <button
               type="button"

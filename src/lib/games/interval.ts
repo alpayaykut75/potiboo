@@ -133,13 +133,13 @@ export function rangeOf(
   };
 }
 
-/** Eşikler tutmaz; komşu sayılar → aralık yok */
+/** Aynı sayı gelirse aralık yok; eşikler artık kazandırır */
 export function canStake(lo: number, hi: number): boolean {
-  return hi - lo > 1;
+  return hi > lo;
 }
 
 export function isInRange(drawn: IntervalTile, lo: number, hi: number): boolean {
-  return drawn.value > lo && drawn.value < hi;
+  return drawn.value >= lo && drawn.value <= hi;
 }
 
 export function maxStake(pot: number, bank: number): number {

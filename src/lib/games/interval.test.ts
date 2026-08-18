@@ -23,17 +23,17 @@ describe("interval domain", () => {
     expect(deck.filter((t) => t.value === 7)).toHaveLength(5);
   });
 
-  it("range uses numbers only; endpoints do not win", () => {
+  it("range uses numbers only; endpoints win", () => {
     expect(rangeOf(cyan(3), red(8))).toEqual({ lo: 3, hi: 8 });
     expect(canStake(3, 8)).toBe(true);
     expect(isInRange(cyan(5), 3, 8)).toBe(true);
-    expect(isInRange(cyan(3), 3, 8)).toBe(false);
-    expect(isInRange(cyan(8), 3, 8)).toBe(false);
+    expect(isInRange(cyan(3), 3, 8)).toBe(true);
+    expect(isInRange(cyan(8), 3, 8)).toBe(true);
   });
 
   it("adjacent values have no stakeable gap", () => {
-    expect(canStake(4, 5)).toBe(false);
-    expect(canStake(7, 7)).toBe(false);
+    expect(canStake(4, 5)).toBe(true);   // tek fark bile kazanabilir
+    expect(canStake(7, 7)).toBe(false);  // aynı sayı → aralık yok
   });
 
   it("ante takes 10 from each bank into the pot", () => {

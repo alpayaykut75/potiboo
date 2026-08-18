@@ -14,6 +14,7 @@ import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
+import { InstallHint } from "@/components/pwa/install-hint";
 import { XoxBracket } from "@/components/xox-bracket";
 import {
   fetchXoxGame,
@@ -334,6 +335,11 @@ export function XoxGameClient({
               {nameOf(tournament.champion_id)} turnuvayı kazandı
             </p>
           )}
+          {tourPhase === "finished" && (
+            <InstallHint
+              completionId={`xox-tourney:${roomId}:${tournament.champion_id}`}
+            />
+          )}
           {(tourPhase === "intro" || tourPhase === "intermission") &&
             (isHost ? (
               <button
@@ -464,6 +470,12 @@ export function XoxGameClient({
             <p className="text-center text-sm text-text-muted">
               Kurucu yeniden başlatabilir.
             </p>
+          )}
+
+          {!isTournament && game && game.status !== "playing" && (
+            <InstallHint
+              completionId={`xox:${roomId}:${game.updated_at}`}
+            />
           )}
         </>
       )}

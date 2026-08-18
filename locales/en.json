@@ -22,6 +22,21 @@
     "bootFailed": "Couldn't connect. You can still create a profile.",
     "connectionNotReady": "Connection isn't ready. Refresh or try again shortly."
   },
+  "pwa": {
+    "title": "Add Potiboo to your home screen",
+    "iosBody": "Tap the Share icon, then choose Add to Home Screen",
+    "androidAdd": "Add",
+    "androidFallback": "Use the Chrome menu to Add to Home screen",
+    "desktopBody": "Install this app from your browser menu",
+    "tagline": "One tap to play, no more hunting for the link",
+    "close": "Close"
+  },
+  "profile": {
+    "menu": "Profile",
+    "edit": "Edit profile",
+    "save": "Save",
+    "addToHome": "Add to home screen"
+  },
   "room": {
     "loading": "Loading lobby…",
     "notFound": "Room not found.",

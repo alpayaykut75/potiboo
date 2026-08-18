@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0f14" />
+    <title>Potiboo</title>
+    <style>
+      html, body { height: 100%; margin: 0; }
+      body {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+        background: #0a0f14;
+        color: #fff;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+      }
+      h1 { font-size: 1.4rem; margin: 0 0 0.5rem; }
+      p { color: #a8b0ba; margin: 0 0 1.25rem; max-width: 18rem; }
+      button {
+        min-height: 3rem;
+        padding: 0.7rem 1.4rem;
+        border: 0;
+        border-radius: 18px;
+        background: #3d9dc4;
+        color: #041018;
+        font-weight: 700;
+        font-size: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bağlantı yok</h1>
+    <p>İnternet bağlantını kontrol et, sonra tekrar dene.</p>
+    <button type="button" onclick="location.reload()">Tekrar dene</button>
+  </body>
+</html>

@@ -22,6 +22,21 @@
     "bootFailed": "Bağlantı kurulamadı. Yine de profil oluşturabilirsin.",
     "connectionNotReady": "Bağlantı hazır değil. Sayfayı yenile veya biraz sonra dene."
   },
+  "pwa": {
+    "title": "Potiboo'yu ana ekranına ekle",
+    "iosBody": "Paylaş simgesine dokun, sonra ‘Ana Ekrana Ekle’ seç",
+    "androidAdd": "Ekle",
+    "androidFallback": "Chrome menüsünden Ana ekrana ekle",
+    "desktopBody": "Tarayıcı menüsünden bu uygulamayı yükle",
+    "tagline": "Bir dokunuşla gir, link aramana gerek kalmaz",
+    "close": "Kapat"
+  },
+  "profile": {
+    "menu": "Profil",
+    "edit": "Profili düzenle",
+    "save": "Kaydet",
+    "addToHome": "Ana ekrana ekle"
+  },
   "room": {
     "loading": "Lobi yükleniyor…",
     "notFound": "Oda bulunamadı.",

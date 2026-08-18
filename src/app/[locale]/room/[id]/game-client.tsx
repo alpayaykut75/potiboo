@@ -9,6 +9,7 @@ import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
+import { InstallHint } from "@/components/pwa/install-hint";
 import {
   advanceReveal,
   advanceToNextRound,
@@ -794,6 +795,9 @@ export function GameClient({
         >
           Ana ekrana dön
         </button>
+        <div className="relative z-10 w-full">
+          <InstallHint completionId={`stop:${room.id}`} />
+        </div>
       </div>
     );
   }

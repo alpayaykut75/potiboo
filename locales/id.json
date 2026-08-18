@@ -22,6 +22,21 @@
     "bootFailed": "Tidak bisa terhubung. Profil tetap bisa dibuat.",
     "connectionNotReady": "Koneksi belum siap. Muat ulang atau coba sebentar lagi."
   },
+  "pwa": {
+    "title": "Tambahkan Potiboo ke layar utama",
+    "iosBody": "Ketuk ikon Bagikan, lalu pilih Tambah ke Layar Utama",
+    "androidAdd": "Tambah",
+    "androidFallback": "Dari menu Chrome, pilih Tambah ke layar utama",
+    "desktopBody": "Pasang aplikasi ini dari menu peramban",
+    "tagline": "Satu ketukan langsung main, tidak perlu cari tautan lagi",
+    "close": "Tutup"
+  },
+  "profile": {
+    "menu": "Profil",
+    "edit": "Ubah profil",
+    "save": "Simpan",
+    "addToHome": "Tambah ke layar utama"
+  },
   "room": {
     "loading": "Memuat lobi…",
     "notFound": "Ruangan tidak ditemukan.",

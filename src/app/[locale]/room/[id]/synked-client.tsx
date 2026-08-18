@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
+import { InstallHint } from "@/components/pwa/install-hint";
 import {
   fetchSynkedState,
   synkedRaceRematch,
@@ -840,6 +841,12 @@ export function SynkedGameClient({
         <p className="text-center text-sm text-text-muted">
           Kurucu yeniden başlatabilir.
         </p>
+      )}
+
+      {(game?.phase === "won" || matchFinished) && (
+        <InstallHint
+          completionId={`synked:${roomId}:${game?.updated_at ?? match?.updated_at ?? "end"}`}
+        />
       )}
 
       {error && (

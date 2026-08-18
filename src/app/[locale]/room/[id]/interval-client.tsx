@@ -15,6 +15,7 @@ import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
+import { InstallHint } from "@/components/pwa/install-hint";
 import {
   fetchIntervalGame,
   fetchIntervalHand,
@@ -973,6 +974,12 @@ export function IntervalGameClient({
               {t("interval.waitRematch")}
             </p>
           ))}
+
+        {game.phase === "match_end" && (
+          <InstallHint
+            completionId={`interval:${roomId}:${game.updated_at}`}
+          />
+        )}
 
         {error && (
           <p className="pt-1 text-center text-[14px] text-danger">{error}</p>

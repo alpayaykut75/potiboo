@@ -13,6 +13,7 @@ import { useLocale } from "@/components/i18n/locale-provider";
 import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
+import { InstallHint } from "@/components/pwa/install-hint";
 import {
   fetchOnlukGame,
   onlukAckRule,
@@ -692,6 +693,10 @@ export function OnlukGameClient({
             <p className="text-[15px] text-text-muted">{t("onluk.waitRematch")}</p>
           )}
         </section>
+      )}
+
+      {game.phase === "match_end" && (
+        <InstallHint completionId={`onluk:${roomId}:${game.updated_at}`} />
       )}
 
       <ul className="mt-auto space-y-2">

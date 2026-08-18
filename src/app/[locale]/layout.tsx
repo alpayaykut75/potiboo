@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { LocaleEffects } from "@/components/i18n/locale-effects";
 import { LocaleProvider } from "@/components/i18n/locale-provider";
+import { PwaBootstrap } from "@/components/pwa/pwa-bootstrap";
 import { BRAND } from "@/lib/constants";
 import { isLocale, locales, type Locale } from "@/lib/i18n/config";
 
@@ -49,6 +50,7 @@ export default async function LocaleLayout({
   return (
     <LocaleProvider locale={locale}>
       <LocaleEffects locale={locale} />
+      <PwaBootstrap />
       {children}
     </LocaleProvider>
   );

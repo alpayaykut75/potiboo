@@ -16,6 +16,7 @@ export function LocaleEffects({ locale }: { locale: Locale }) {
     } catch {
       // ignore
     }
+    document.cookie = `${LOCALE_COOKIE}=${locale};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
   }, [locale]);
 
   useEffect(() => {

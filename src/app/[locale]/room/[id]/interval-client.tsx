@@ -43,8 +43,10 @@ import { playSfx, unlockSfx } from "@/lib/sfx";
 
 const ANNOUNCE_HOLD_MS = 4000;
 const PUT_HOLD_MS = 1500;
+/** Spin bittikten sonra sonuç popup’ından önce rakamı göster */
+const SHOW_DRAWN_MS = 2000;
 
-type BetAnnounceStage = "put" | "spin" | "result";
+type BetAnnounceStage = "put" | "spin" | "show" | "result";
 type AnnounceTone = "accent" | "danger" | "neutral";
 
 function AnnounceOverlay({
@@ -412,13 +414,15 @@ export function IntervalGameClient({
 
   const preHand = game ? isIntervalPreHand(game) : false;
 
-  /** hit/miss: put (1.5s) → spin → result */
+  /** hit/miss: put (1.5s) → spin → show drawn (2s) → result popup */
   const betStage = useMemo((): BetAnnounceStage | null => {
     if (!game || game.phase !== "reveal") return null;
     const ev = game.last_event;
     if (!ev || (ev.kind !== "hit" && ev.kind !== "miss")) return null;
     const eventAt = Date.parse(game.updated_at);
-    if (!Number.isFinite(revealAtMs) || now >= revealAtMs) return "result";
+    if (!Number.isFinite(revealAtMs)) return "result";
+    if (now >= revealAtMs + SHOW_DRAWN_MS) return "result";
+    if (now >= revealAtMs) return "show";
     if (Number.isFinite(eventAt) && now < eventAt + PUT_HOLD_MS) return "put";
     return "spin";
   }, [game, now, revealAtMs]);
@@ -472,6 +476,7 @@ export function IntervalGameClient({
           autoContinue: false,
         };
       }
+      // spin + show: popup yok — masa / rakam görünsün
       if (betStage === "result") {
         if (ev.kind === "hit") {
           return {
@@ -488,7 +493,7 @@ export function IntervalGameClient({
           autoContinue: true,
         };
       }
-      return null; // spin: no popup
+      return null;
     }
     return null;
   }, [announceWho, betStage, game, preHand, t]);
@@ -630,13 +635,18 @@ export function IntervalGameClient({
     game.public_c1 &&
     game.public_c2;
   const drawn =
-    (betStage === "result" || (revealed && betStage == null)) &&
+    (betStage === "show" ||
+      betStage === "result" ||
+      (revealed && betStage == null)) &&
     ev &&
     (ev.kind === "hit" || ev.kind === "miss")
       ? ev.drawn
       : null;
   const showThirdSlot =
-    showPublicHand || showSpin || drawn != null || betStage === "put";
+    showPublicHand ||
+    showSpin ||
+    drawn != null ||
+    betStage === "put";
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 pt-2 pb-[calc(0.5rem+var(--safe-bottom))]">
@@ -898,6 +908,10 @@ export function IntervalGameClient({
           (showSpin ? (
             <p className="py-2 text-center text-[14px] font-semibold text-accent">
               {t("interval.spinWait", { sec: spinLeft })}
+            </p>
+          ) : betStage === "show" ? (
+            <p className="py-2 text-center text-[14px] text-text-muted">
+              {t("interval.waitAuto")}
             </p>
           ) : overlay?.autoContinue ? (
             isHost ? (

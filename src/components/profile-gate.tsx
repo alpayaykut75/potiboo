@@ -228,7 +228,7 @@ export function ProfileChip() {
         view !== "closed" &&
         createPortal(
           <div
-            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 sm:items-center"
+            className="fixed inset-0 z-[200] flex items-end justify-center bg-black/70 pt-[var(--safe-top)] pb-[var(--safe-bottom)] sm:items-center"
             role="dialog"
             aria-modal="true"
             aria-label={t("profile.menu")}

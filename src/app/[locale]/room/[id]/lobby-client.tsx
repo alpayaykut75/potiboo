@@ -387,7 +387,7 @@ export function LobbyClient({
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-30 border-b border-border/50 bg-bg/95 pt-[var(--safe-top)] backdrop-blur-md">
+      <header className="sticky top-[var(--safe-top)] z-30 border-b border-border/50 bg-bg/95 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 py-2.5">
           <Link href={href("/")} className="min-w-0">
             <Logo size="md" />

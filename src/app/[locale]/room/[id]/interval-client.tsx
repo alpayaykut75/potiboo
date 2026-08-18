@@ -561,7 +561,10 @@ export function IntervalGameClient({
         setGame(await intervalIntend(roomId, amount));
         playSfx("tap");
       } catch (e) {
-        setError(e instanceof Error ? e.message : t("common.errorGeneric"));
+        const msg = e instanceof Error ? e.message : t("common.errorGeneric");
+        // Eski SQL hâlâ 5–6'yı reddedebilir; miktar seçili kalsın, Koy denenebilsin
+        if (playable && /aralık yok|aynı sayı/i.test(msg)) return;
+        setError(msg);
       }
     });
   }

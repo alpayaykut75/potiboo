@@ -197,7 +197,7 @@ export function ProfileChip() {
           <AvatarImage avatar={profile.avatarKey} size="sm" />
           {showInstall && !alreadyInstalled ? (
             <span
-              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold leading-none text-[#041018] ring-2 ring-bg-card"
+              className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[13px] font-black leading-none text-white ring-2 ring-bg-card"
               aria-hidden
             >
               +
@@ -264,7 +264,7 @@ export function ProfileChip() {
                         {t("profile.addToHome")}
                         {!alreadyInstalled && (
                           <span
-                            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold leading-none text-[#041018]"
+                            className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[15px] font-black leading-none text-white"
                             aria-hidden
                           >
                             +

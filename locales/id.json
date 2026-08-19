@@ -29,7 +29,10 @@
     "androidFallback": "Dari menu Chrome, pilih Tambah ke layar utama",
     "desktopBody": "Pasang aplikasi ini dari menu peramban",
     "tagline": "Satu ketukan langsung main, tidak perlu cari tautan lagi",
-    "close": "Tutup"
+    "close": "Tutup",
+    "iosStep1": "Ketuk ••• (kanan bawah)",
+    "iosStep2": "Ketuk Bagikan",
+    "iosStep3": "Pilih \"Tambah ke Layar Utama\""
   },
   "profile": {
     "menu": "Profil",

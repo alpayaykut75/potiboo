@@ -29,7 +29,10 @@
     "androidFallback": "Use the Chrome menu to Add to Home screen",
     "desktopBody": "Install this app from your browser menu",
     "tagline": "One tap to play, no more hunting for the link",
-    "close": "Close"
+    "close": "Close",
+    "iosStep1": "Tap ••• (bottom right)",
+    "iosStep2": "Tap Share",
+    "iosStep3": "Select \"Add to Home Screen\""
   },
   "profile": {
     "menu": "Profile",

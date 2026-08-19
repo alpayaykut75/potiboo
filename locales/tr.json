@@ -29,7 +29,10 @@
     "androidFallback": "Chrome menüsünden Ana ekrana ekle",
     "desktopBody": "Tarayıcı menüsünden bu uygulamayı yükle",
     "tagline": "Bir dokunuşla gir, link aramana gerek kalmaz",
-    "close": "Kapat"
+    "close": "Kapat",
+    "iosStep1": "••• (sağ alt) simgesine dokun",
+    "iosStep2": "Paylaş simgesine dokun",
+    "iosStep3": "\"Ana Ekrana Ekle\" seç"
   },
   "profile": {
     "menu": "Profil",

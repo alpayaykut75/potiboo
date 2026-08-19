@@ -73,14 +73,20 @@ export function InstallCard({
       </p>
 
       {platform === "ios" ? (
-        <div className="mt-2 flex items-start gap-2.5">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent">
-            <IosShareIcon />
-          </span>
-          <p className="text-[14px] leading-snug text-text-muted">
-            {t("pwa.iosBody")}
-          </p>
-        </div>
+        <ol className="mt-3 flex flex-col gap-2">
+          {([t("pwa.iosStep1"), t("pwa.iosStep2"), t("pwa.iosStep3")] as string[]).map(
+            (step, i) => (
+              <li key={i} className="flex items-center gap-3">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[12px] font-bold text-accent">
+                  {i + 1}
+                </span>
+                <span className="text-[14px] leading-snug text-text-muted">
+                  {step}
+                </span>
+              </li>
+            ),
+          )}
+        </ol>
       ) : canPrompt ? (
         <button
           type="button"

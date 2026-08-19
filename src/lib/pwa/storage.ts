@@ -109,3 +109,13 @@ export function dismissInstallHint(completionId: string): void {
 export function shouldShowInstallMenuItem(): boolean {
   return !read().standaloneSeen;
 }
+
+/** Debug: state'i sıfırla — sadece geliştirme amaçlı */
+export function _resetPwaState(): void {
+  try {
+    localStorage.removeItem(KEY);
+    listeners.forEach((fn) => fn());
+  } catch {
+    // ignore
+  }
+}

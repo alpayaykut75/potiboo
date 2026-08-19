@@ -16,7 +16,7 @@ import { AvatarImage } from "@/components/avatar-image";
 import { useLocale } from "@/components/i18n/locale-provider";
 import { InstallCard } from "@/components/pwa/install-card";
 import {
-  canShowInstallUi,
+  isInAppBrowser,
   detectPwaPlatform,
   isStandaloneDisplay,
 } from "@/lib/pwa/detect";
@@ -150,12 +150,15 @@ export function ProfileChip() {
   }, []);
 
   const refreshInstall = useCallback(() => {
-    const desktop = detectPwaPlatform() === "desktop";
-    const desktopOk = !desktop || getDeferredInstallPrompt() != null;
+    // Masaüstünde yalnızca native prompt varsa göster;
+    // iOS/Android'de her zaman göster (native prompt olmayabilir)
+    const platform = detectPwaPlatform();
+    const desktopOk =
+      platform !== "desktop" || getDeferredInstallPrompt() != null;
     setShowInstall(
       shouldShowInstallMenuItem() &&
-        canShowInstallUi() &&
         !isStandaloneDisplay() &&
+        !isInAppBrowser() &&
         desktopOk,
     );
   }, []);

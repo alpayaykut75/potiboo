@@ -25,6 +25,7 @@ import {
   subscribeInstallPrompt,
 } from "@/lib/pwa/install-event";
 import { subscribePwaState } from "@/lib/pwa/storage";
+import { clsx } from "@/lib/utils";
 
 type ProfileContextValue = {
   profile: PlayerProfile;

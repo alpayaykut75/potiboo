@@ -24,7 +24,7 @@
   },
   "pwa": {
     "title": "Add Potiboo to your home screen",
-    "iosBody": "Tap the Share icon, then choose Add to Home Screen",
+    "iosBody": "Tap ••• or the Share icon at the bottom, then choose Add to Home Screen",
     "androidAdd": "Add",
     "androidFallback": "Use the Chrome menu to Add to Home screen",
     "desktopBody": "Install this app from your browser menu",

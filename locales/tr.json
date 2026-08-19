@@ -24,7 +24,7 @@
   },
   "pwa": {
     "title": "Potiboo'yu ana ekranına ekle",
-    "iosBody": "Paylaş simgesine dokun, sonra ‘Ana Ekrana Ekle’ seç",
+    "iosBody": "Sağ alttaki ••• ya da alttaki Paylaş simgesine dokun → 'Ana Ekrana Ekle' seç",
     "androidAdd": "Ekle",
     "androidFallback": "Chrome menüsünden Ana ekrana ekle",
     "desktopBody": "Tarayıcı menüsünden bu uygulamayı yükle",

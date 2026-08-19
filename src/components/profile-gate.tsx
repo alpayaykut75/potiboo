@@ -143,7 +143,10 @@ export function ProfileChip() {
     "closed",
   );
   const [mounted, setMounted] = useState(false);
+  // showInstall = can install (not yet standalone, not in-app browser, prompt available on desktop)
+  // alreadyInstalled = currently running as standalone → menu item disabled
   const [showInstall, setShowInstall] = useState(false);
+  const [alreadyInstalled, setAlreadyInstalled] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -155,8 +158,9 @@ export function ProfileChip() {
     const inApp = isInAppBrowser();
     const desktopOk =
       platform !== "desktop" || getDeferredInstallPrompt() != null;
-    // Profil menüsünde her zaman göster; yalnızca gerçek standalone ve in-app'te gizle
-    setShowInstall(!standalone && !inApp && (platform !== "desktop" || desktopOk));
+    setAlreadyInstalled(standalone);
+    // Show the menu item unless in an in-app browser; desktop needs an available prompt
+    setShowInstall(!inApp && (platform !== "desktop" || desktopOk));
   }, []);
 
   useEffect(() => {
@@ -190,11 +194,13 @@ export function ProfileChip() {
       >
         <span className="relative shrink-0">
           <AvatarImage avatar={profile.avatarKey} size="sm" />
-          {showInstall ? (
+          {showInstall && !alreadyInstalled ? (
             <span
-              className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-danger ring-2 ring-bg-card"
+              className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold leading-none text-[#041018] ring-2 ring-bg-card"
               aria-hidden
-            />
+            >
+              +
+            </span>
           ) : null}
         </span>
         <span className="hidden max-w-[8rem] truncate text-sm font-semibold text-text sm:inline">
@@ -247,14 +253,22 @@ export function ProfileChip() {
                     {showInstall && (
                       <button
                         type="button"
-                        className="btn btn-secondary relative w-full justify-start"
-                        onClick={() => setView("install")}
+                        className={clsx(
+                          "btn btn-secondary relative w-full justify-start",
+                          alreadyInstalled && "cursor-not-allowed opacity-45",
+                        )}
+                        disabled={alreadyInstalled}
+                        onClick={() => !alreadyInstalled && setView("install")}
                       >
                         {t("profile.addToHome")}
-                        <span
-                          className="ml-auto h-2.5 w-2.5 shrink-0 rounded-full bg-danger"
-                          aria-hidden
-                        />
+                        {!alreadyInstalled && (
+                          <span
+                            className="ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent text-[11px] font-bold leading-none text-[#041018]"
+                            aria-hidden
+                          >
+                            +
+                          </span>
+                        )}
                       </button>
                     )}
                   </div>

@@ -24,7 +24,7 @@
   },
   "pwa": {
     "title": "Tambahkan Potiboo ke layar utama",
-    "iosBody": "Ketuk ikon Bagikan, lalu pilih Tambah ke Layar Utama",
+    "iosBody": "Ketuk ••• atau ikon Bagikan di bawah, lalu pilih Tambah ke Layar Utama",
     "androidAdd": "Tambah",
     "androidFallback": "Dari menu Chrome, pilih Tambah ke layar utama",
     "desktopBody": "Pasang aplikasi ini dari menu peramban",

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useLocale } from "@/components/i18n/locale-provider";
-import { IosShareIcon } from "@/components/pwa/ios-share-icon";
 import {
   detectPwaPlatform,
   type PwaPlatform,
@@ -51,36 +50,31 @@ export function InstallCard({
   }
 
   return (
-    <div
-      className={clsx(
-        "card relative px-4 py-3.5 text-left",
-        className,
-      )}
-    >
+    <div className={clsx("text-left", className)}>
       {onDismiss ? (
         <button
           type="button"
           onClick={onDismiss}
-          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full text-lg leading-none text-text-dim hover:bg-white/5 hover:text-text"
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-xl leading-none text-text-dim hover:bg-white/5 hover:text-text"
           aria-label={t("pwa.close")}
         >
           ×
         </button>
       ) : null}
 
-      <p className={clsx("pr-8 text-[16px] font-bold text-text")}>
+      <p className="text-[22px] font-bold text-text">
         {t("pwa.title")}
       </p>
 
       {platform === "ios" ? (
-        <ol className="mt-3 flex flex-col gap-2">
+        <ol className="mt-5 flex flex-col gap-4">
           {([t("pwa.iosStep1"), t("pwa.iosStep2"), t("pwa.iosStep3")] as string[]).map(
             (step, i) => (
-              <li key={i} className="flex items-center gap-3">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[12px] font-bold text-accent">
+              <li key={i} className="flex items-center gap-4">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20 text-[16px] font-bold text-accent">
                   {i + 1}
                 </span>
-                <span className="text-[14px] leading-snug text-text-muted">
+                <span className="text-[17px] leading-snug text-text-muted">
                   {step}
                 </span>
               </li>
@@ -92,17 +86,17 @@ export function InstallCard({
           type="button"
           onClick={() => void onAdd()}
           disabled={busy}
-          className="btn btn-primary mt-3 h-11 min-h-11 w-full py-0 text-[16px]"
+          className="btn btn-primary mt-5 h-14 min-h-14 w-full py-0 text-[18px]"
         >
           {t("pwa.androidAdd")}
         </button>
       ) : (
-        <p className="mt-2 text-[14px] leading-snug text-text-muted">
+        <p className="mt-4 text-[17px] leading-snug text-text-muted">
           {platform === "desktop" ? t("pwa.desktopBody") : t("pwa.androidFallback")}
         </p>
       )}
 
-      <p className="mt-2.5 text-[13px] leading-snug text-text-dim">
+      <p className="mt-5 text-[15px] leading-snug text-text-dim">
         {t("pwa.tagline")}
       </p>
     </div>

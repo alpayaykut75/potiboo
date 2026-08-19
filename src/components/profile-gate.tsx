@@ -236,17 +236,17 @@ export function ProfileChip() {
           >
             <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl border border-border bg-bg shadow-2xl sm:max-w-md sm:rounded-3xl">
               {view === "menu" && (
-                <div className="px-5 py-5">
-                  <div className="mb-4 flex items-center gap-3">
-                    <AvatarImage avatar={profile.avatarKey} size="md" />
-                    <p className="truncate text-lg font-bold text-text">
+                <div className="px-6 py-8">
+                  <div className="mb-6 flex flex-col items-center gap-3 text-center">
+                    <AvatarImage avatar={profile.avatarKey} size="xl" />
+                    <p className="text-2xl font-bold text-text">
                       {profile.displayName}
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-3">
                     <button
                       type="button"
-                      className="btn btn-secondary w-full justify-start"
+                      className="btn btn-secondary h-14 w-full justify-start px-5 text-[17px]"
                       onClick={() => setView("edit")}
                     >
                       {t("profile.edit")}
@@ -255,7 +255,7 @@ export function ProfileChip() {
                       <button
                         type="button"
                         className={clsx(
-                          "btn btn-secondary relative w-full justify-start",
+                          "btn btn-secondary relative h-14 w-full justify-start px-5 text-[17px]",
                           alreadyInstalled && "cursor-not-allowed opacity-45",
                         )}
                         disabled={alreadyInstalled}
@@ -264,7 +264,7 @@ export function ProfileChip() {
                         {t("profile.addToHome")}
                         {!alreadyInstalled && (
                           <span
-                            className="ml-auto flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-[15px] font-black leading-none text-white"
+                            className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-accent text-[17px] font-black leading-none text-white"
                             aria-hidden
                           >
                             +
@@ -292,7 +292,7 @@ export function ProfileChip() {
                 />
               )}
               {view === "install" && (
-                <div className="px-5 py-5">
+                <div className="px-6 py-8">
                   <InstallCard
                     onInstalled={() => {
                       refreshInstall();
@@ -301,7 +301,7 @@ export function ProfileChip() {
                   />
                   <button
                     type="button"
-                    className="btn-ghost mt-3 w-full text-text-muted"
+                    className="btn-ghost mt-4 w-full text-[17px] text-text-muted"
                     onClick={() => setView("menu")}
                   >
                     {t("common.back")}

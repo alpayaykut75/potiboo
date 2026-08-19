@@ -174,15 +174,7 @@ export function ProfileChip() {
 
   function open() {
     refreshInstall();
-    const desktop = detectPwaPlatform() === "desktop";
-    const desktopOk = !desktop || getDeferredInstallPrompt() != null;
-    const install =
-      shouldShowInstallMenuItem() &&
-      canShowInstallUi() &&
-      !isStandaloneDisplay() &&
-      desktopOk;
-    setShowInstall(install);
-    setView(install ? "menu" : "edit");
+    setView("menu");
   }
 
   return (

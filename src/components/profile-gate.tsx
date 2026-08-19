@@ -24,7 +24,7 @@ import {
   getDeferredInstallPrompt,
   subscribeInstallPrompt,
 } from "@/lib/pwa/install-event";
-import { shouldShowInstallMenuItem, subscribePwaState } from "@/lib/pwa/storage";
+import { subscribePwaState } from "@/lib/pwa/storage";
 
 type ProfileContextValue = {
   profile: PlayerProfile;
@@ -150,17 +150,13 @@ export function ProfileChip() {
   }, []);
 
   const refreshInstall = useCallback(() => {
-    // Masaüstünde yalnızca native prompt varsa göster;
-    // iOS/Android'de her zaman göster (native prompt olmayabilir)
     const platform = detectPwaPlatform();
+    const standalone = isStandaloneDisplay();
+    const inApp = isInAppBrowser();
     const desktopOk =
       platform !== "desktop" || getDeferredInstallPrompt() != null;
-    setShowInstall(
-      shouldShowInstallMenuItem() &&
-        !isStandaloneDisplay() &&
-        !isInAppBrowser() &&
-        desktopOk,
-    );
+    // Profil menüsünde her zaman göster; yalnızca gerçek standalone ve in-app'te gizle
+    setShowInstall(!standalone && !inApp && (platform !== "desktop" || desktopOk));
   }, []);
 
   useEffect(() => {

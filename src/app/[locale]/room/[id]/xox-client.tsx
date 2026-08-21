@@ -27,19 +27,17 @@ import {
   xoxTournamentContinue,
 } from "@/lib/games/xox-api";
 import {
-  formatXoxSeriesScoreLine,
   infiniteViewport,
   markKey,
   XOX_BETWEEN_HOLD_MS,
   XOX_INFINITE_MOVE_LIMIT,
-  XOX_MARK_SYMBOL,
   xoxBoardLabel,
-  xoxMarkSymbol,
   xoxPlayerColor,
   xoxSeriesLeadText,
   type XoxGameRow,
   type XoxMark,
 } from "@/lib/games/xox";
+import { XoxMarkGlyph } from "@/components/xox-mark-glyph";
 import {
   matchLabel,
   type XoxTournamentRow,
@@ -254,6 +252,28 @@ export function XoxGameClient({
     tournament?.current_match_key != null
       ? tournament.bracket.matches[tournament.current_match_key]
       : null;
+
+  const playersById = useMemo(() => {
+    const map: Record<string, { avatarKey: string; displayName: string }> = {};
+    for (const p of players) {
+      map[p.profile_id] = {
+        avatarKey: p.profiles?.avatar_key ?? "panda",
+        displayName: p.profiles?.display_name ?? "?",
+      };
+    }
+    return map;
+  }, [players]);
+
+  const seriesSummary = useMemo(() => {
+    if (!game?.match_history.length || !game.winner_id) return null;
+    let wins = 0;
+    let draws = 0;
+    for (const m of game.match_history) {
+      if (m.winner_id == null) draws += 1;
+      else if (m.winner_id === game.winner_id) wins += 1;
+    }
+    return { wins, draws };
+  }, [game?.match_history, game?.winner_id]);
 
   const nameOf = (id: string | null | undefined) =>
     players.find((p) => p.profile_id === id)?.profiles?.display_name ?? "?";
@@ -498,6 +518,7 @@ export function XoxGameClient({
                 status={game.status}
                 idA={pairIds.idA}
                 idB={pairIds.idB}
+                playersById={playersById}
               />
               {!seriesDone && !showBetween && (
                 <p className="text-[14px] font-semibold text-text-muted">
@@ -549,12 +570,8 @@ export function XoxGameClient({
                   <p className="max-w-[6rem] truncate text-sm font-bold text-text">
                     {p?.profiles?.display_name ?? mark}
                   </p>
-                  <span
-                    className="text-2xl font-black leading-none"
-                    style={{ color }}
-                    aria-label={mark}
-                  >
-                    {XOX_MARK_SYMBOL[mark]}
+                  <span aria-label={mark}>
+                    <XoxMarkGlyph mark={mark} color={color} size={28} />
                   </span>
                 </div>
               );
@@ -602,17 +619,24 @@ export function XoxGameClient({
                     }
                     onClick={() => onCell(row, col, Boolean(mark))}
                     className={clsx(
-                      "aspect-square border-2 border-border-strong bg-bg-card font-extrabold transition",
+                      "flex aspect-square items-center justify-center border-2 border-border-strong bg-bg-card transition",
                       isInfinite || boardSize === 5
-                        ? "rounded-lg text-base sm:rounded-xl sm:text-xl"
-                        : "rounded-2xl text-3xl",
+                        ? "rounded-lg"
+                        : "rounded-2xl",
                       isMyTurn && !mark && game?.status === "playing"
                         ? "hover:border-accent hover:bg-accent/10"
                         : "opacity-90",
                     )}
-                    style={cellColor ? { color: cellColor } : undefined}
                   >
-                    {xoxMarkSymbol(mark)}
+                    {mark ? (
+                      <XoxMarkGlyph
+                        mark={mark}
+                        color={cellColor ?? "#3d9dc4"}
+                        size={
+                          isInfinite || boardSize === 5 ? 22 : 36
+                        }
+                      />
+                    ) : null}
                   </button>
                 );
               })}
@@ -631,6 +655,7 @@ export function XoxGameClient({
                     status="between"
                     idA={pairIds.idA}
                     idB={pairIds.idB}
+                    playersById={playersById}
                   />
                   <p className="text-[15px] font-semibold text-text-muted">
                     {leadText}
@@ -668,14 +693,20 @@ export function XoxGameClient({
                     status="won"
                     idA={pairIds.idA}
                     idB={pairIds.idB}
+                    playersById={playersById}
                   />
-                  <p className="font-mono text-xl font-bold tabular-nums text-accent">
-                    {formatXoxSeriesScoreLine(
-                      game.scores,
-                      pairIds.idA,
-                      pairIds.idB,
-                    )}
-                  </p>
+                  {seriesSummary ? (
+                    <p className="text-[15px] font-semibold text-text-muted">
+                      {seriesSummary.draws > 0
+                        ? t("xox.seriesSummary", {
+                            wins: seriesSummary.wins,
+                            draws: seriesSummary.draws,
+                          })
+                        : t("xox.seriesSummaryWinsOnly", {
+                            wins: seriesSummary.wins,
+                          })}
+                    </p>
+                  ) : null}
                   {isHost ? (
                     <button
                       type="button"
@@ -717,6 +748,7 @@ export function XoxGameClient({
                     status="won"
                     idA={pairIds.idA}
                     idB={pairIds.idB}
+                    playersById={playersById}
                   />
                   <p className="text-sm text-text-muted">
                     {t("xox.waitBracket")}

@@ -330,6 +330,8 @@
     "playAgain": "Play again",
     "backHome": "Back home",
     "tourneyAdvanced": "{name} advances",
-    "waitBracket": "Waiting for other matches"
+    "waitBracket": "Waiting for other matches",
+    "seriesSummary": "{wins} wins, {draws} draws",
+    "seriesSummaryWinsOnly": "{wins} wins"
   }
 }

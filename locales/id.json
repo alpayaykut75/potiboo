@@ -330,6 +330,8 @@
     "playAgain": "Main lagi",
     "backHome": "Kembali",
     "tourneyAdvanced": "{name} naik babak",
-    "waitBracket": "Menunggu pertandingan lain"
+    "waitBracket": "Menunggu pertandingan lain",
+    "seriesSummary": "{wins} kemenangan, {draws} imbang",
+    "seriesSummaryWinsOnly": "{wins} kemenangan"
   }
 }

@@ -330,6 +330,8 @@
     "playAgain": "Tekrar Oyna",
     "backHome": "Odaya Dön",
     "tourneyAdvanced": "{name} üst tura çıktı",
-    "waitBracket": "Diğer eşleşme bitene kadar bekle"
+    "waitBracket": "Diğer eşleşme bitene kadar bekle",
+    "seriesSummary": "{wins} galibiyet, {draws} beraberlik",
+    "seriesSummaryWinsOnly": "{wins} galibiyet"
   }
 }

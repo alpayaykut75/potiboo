@@ -11,10 +11,19 @@ export type IsımSehirSettings = {
 /** 0 = sonsuz tahta */
 export type XoxBoardSize = 0 | 3 | 5;
 
-/** XOX ayarları */
+/** Seri uzunluğu (maç sayısı) */
+export type XoxSeriesLength = 1 | 3 | 5;
+
+export const XOX_SERIES_OPTIONS: XoxSeriesLength[] = [1, 3, 5];
+export const XOX_DEFAULT_SERIES: XoxSeriesLength = 3;
+/** Sonsuz tahta hamle tavanı (iki oyuncu toplam) */
+export const XOX_INFINITE_MOVE_LIMIT = 60;
+
+/** XOX / Toxxo ayarları */
 export type XoxSettings = {
   boardSize: XoxBoardSize;
   winLength: number;
+  seriesLength: XoxSeriesLength;
 };
 
 export type RoomSettings = IsımSehirSettings & Partial<XoxSettings>;
@@ -25,6 +34,24 @@ export function defaultWinLength(boardSize: XoxBoardSize): number {
   return 3;
 }
 
+export function resolveXoxSeriesLength(
+  raw: unknown,
+): XoxSeriesLength {
+  return raw === 1 || raw === 3 || raw === 5 ? raw : XOX_DEFAULT_SERIES;
+}
+
+/** Seriyi kazanmak için gereken puan */
+export function xoxSeriesTarget(seriesLength: XoxSeriesLength): number {
+  if (seriesLength === 1) return 1;
+  if (seriesLength === 5) return 3;
+  return 2;
+}
+
+export function formatXoxScore(n: number): string {
+  if (Number.isInteger(n)) return String(n);
+  return n.toFixed(1).replace(/\.0$/, "").replace(".", ",");
+}
+
 export function emptyXoxBoard(boardSize: XoxBoardSize): string[] {
   if (boardSize === 0) return [];
   return Array(boardSize * boardSize).fill("");
@@ -32,10 +59,12 @@ export function emptyXoxBoard(boardSize: XoxBoardSize): string[] {
 
 export function resolveXoxBoard(
   settings: Partial<XoxSettings> | null | undefined,
+  opts?: { tournamentDefault?: boolean },
 ): { boardSize: XoxBoardSize; winLength: number } {
   const raw = settings?.boardSize;
+  const fallback: XoxBoardSize = opts?.tournamentDefault ? 5 : 3;
   const boardSize: XoxBoardSize =
-    raw === 0 || raw === 5 || raw === 3 ? raw : 3;
+    raw === 0 || raw === 5 || raw === 3 ? raw : fallback;
   const maxWin = boardSize === 0 ? 5 : boardSize;
   const winLength =
     typeof settings?.winLength === "number" &&
@@ -60,6 +89,7 @@ export function defaultSettingsFor(gameType: GameId): RoomSettings {
       speedBonus: false,
       boardSize: 3,
       winLength: 3,
+      seriesLength: XOX_DEFAULT_SERIES,
     };
   }
   if (gameType === "synked") {
@@ -98,6 +128,8 @@ export type XoxMark = "X" | "O" | "";
 
 export type XoxMarks = Record<string, "X" | "O">;
 
+export type XoxScores = Record<string, number>;
+
 export type XoxGameRow = {
   room_id: string;
   board: string[];
@@ -109,8 +141,22 @@ export type XoxGameRow = {
   o_player: string | null;
   status: "playing" | "won" | "draw";
   winner_id: string | null;
+  series_length: XoxSeriesLength;
+  match_index: number;
+  scores: XoxScores;
+  move_count: number;
   updated_at: string;
 };
+
+export function normalizeXoxScores(raw: unknown): XoxScores {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  const out: XoxScores = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    const n = typeof v === "number" ? v : Number(v);
+    if (Number.isFinite(n)) out[k] = n;
+  }
+  return out;
+}
 
 export function markKey(row: number, col: number): string {
   return `${row},${col}`;

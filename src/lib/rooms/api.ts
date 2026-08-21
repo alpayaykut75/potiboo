@@ -13,7 +13,7 @@ import {
 import type { GameId } from "@/lib/games/catalog";
 import { isGameId } from "@/lib/games/catalog";
 import { gamePlayerLimits } from "@/lib/games/limits";
-import { emptyXoxBoard, resolveXoxBoard } from "@/lib/games/xox";
+import { emptyXoxBoard, resolveXoxBoard, resolveXoxSeriesLength } from "@/lib/games/xox";
 
 export async function createRoom(
   gameType: GameId = "isim_sehir",
@@ -276,7 +276,7 @@ export async function startGame(roomId: string): Promise<void> {
   if (room.game_type === "xox") {
     const n = sorted.length;
     if (n !== 2 && n !== 4 && n !== 8) {
-      throw new Error("XOX için 2, 4 veya 8 oyuncu gerekli.");
+      throw new Error("Toxxo için 2, 4 veya 8 oyuncu gerekli.");
     }
 
     const { error } = await supabase
@@ -287,9 +287,12 @@ export async function startGame(roomId: string): Promise<void> {
     if (error) throw new Error(error.message);
 
     if (n === 2) {
-      const xPlayer = sorted[0]!.profile_id;
-      const oPlayer = sorted[1]!.profile_id;
+      const a = sorted[0]!.profile_id;
+      const b = sorted[1]!.profile_id;
+      const xPlayer = Math.random() < 0.5 ? a : b;
+      const oPlayer = xPlayer === a ? b : a;
       const { boardSize, winLength } = resolveXoxBoard(room.settings);
+      const seriesLength = resolveXoxSeriesLength(room.settings.seriesLength);
 
       const { error: xoxErr } = await supabase.from("xox_games").upsert(
         {
@@ -303,6 +306,10 @@ export async function startGame(roomId: string): Promise<void> {
           o_player: oPlayer,
           status: "playing",
           winner_id: null,
+          series_length: seriesLength,
+          match_index: 1,
+          scores: { [xPlayer]: 0, [oPlayer]: 0 },
+          move_count: 0,
         },
         { onConflict: "room_id" },
       );

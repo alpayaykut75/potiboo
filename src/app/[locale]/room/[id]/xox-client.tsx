@@ -15,6 +15,7 @@ import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
 import { InstallHint } from "@/components/pwa/install-hint";
+import { GameRulesButton } from "@/components/game-rules-panel";
 import { XoxBracket } from "@/components/xox-bracket";
 import {
   fetchXoxGame,
@@ -24,8 +25,10 @@ import {
   xoxTournamentContinue,
 } from "@/lib/games/xox-api";
 import {
+  formatXoxScore,
   infiniteViewport,
   markKey,
+  XOX_INFINITE_MOVE_LIMIT,
   xoxBoardLabel,
   type XoxGameRow,
   type XoxMark,
@@ -49,7 +52,7 @@ export function XoxGameClient({
   initialPlayers: RoomPlayerWithProfile[];
 }) {
   const { profile } = useProfile();
-  const { href } = useLocale();
+  const { href, t } = useLocale();
   const router = useRouter();
   const [room, setRoom] = useState(initialRoom);
   const [players, setPlayers] = useState(initialPlayers);
@@ -122,7 +125,6 @@ export function XoxGameClient({
     };
   }, [roomId, refresh]);
 
-  // Turnuva kutlaması
   useEffect(() => {
     if (!tournament) return;
     if (tournament.phase === "intermission" && game?.winner_id) {
@@ -134,8 +136,8 @@ export function XoxGameClient({
         playSfx("countdownGo");
         playSfx("confetti");
       });
-      const t = window.setTimeout(() => setCelebrate(null), 2800);
-      return () => window.clearTimeout(t);
+      const tId = window.setTimeout(() => setCelebrate(null), 2800);
+      return () => window.clearTimeout(tId);
     }
     if (tournament.phase === "finished" && tournament.champion_id) {
       const key = `c:${tournament.champion_id}`;
@@ -169,6 +171,9 @@ export function XoxGameClient({
   const winLength =
     game?.win_length ??
     (boardSize === 0 ? 5 : boardSize === 5 ? 4 : 3);
+  const seriesLength = game?.series_length ?? 3;
+  const matchIndex = game?.match_index ?? 1;
+  const moveCount = game?.move_count ?? 0;
 
   const viewport = useMemo(() => {
     if (!isInfinite) return null;
@@ -182,6 +187,40 @@ export function XoxGameClient({
 
   const nameOf = (id: string | null | undefined) =>
     players.find((p) => p.profile_id === id)?.profiles?.display_name ?? "?";
+
+  const seriesLine = useMemo(() => {
+    if (!game?.x_player || !game.o_player) return null;
+    const a = game.x_player;
+    const b = game.o_player;
+    // Sabit isim sırası: join_order küçük olan solda
+    const pa = players.find((p) => p.profile_id === a);
+    const pb = players.find((p) => p.profile_id === b);
+    let left = a;
+    let right = b;
+    if (
+      pa &&
+      pb &&
+      typeof pa.join_order === "number" &&
+      typeof pb.join_order === "number" &&
+      pb.join_order < pa.join_order
+    ) {
+      left = b;
+      right = a;
+    }
+    const sL = formatXoxScore(game.scores[left] ?? 0);
+    const sR = formatXoxScore(game.scores[right] ?? 0);
+    const matchLabelText =
+      matchIndex > seriesLength
+        ? t("xox.extraMatch")
+        : t("xox.matchProgress", { n: matchIndex, total: seriesLength });
+    return `${matchLabelText} · ${nameOf(left)} ${sL} – ${sR} ${nameOf(right)}`;
+  }, [
+    game,
+    matchIndex,
+    seriesLength,
+    players,
+    t,
+  ]);
 
   function onCell(row: number, col: number, occupied: boolean) {
     if (!game || !isMyTurn || occupied) return;
@@ -244,12 +283,12 @@ export function XoxGameClient({
     else if (isMyTurn) statusText = "Sıra sende";
     else statusText = `Sıra: ${game.next_mark === "X" ? xName : oName}`;
   } else if (game?.status === "draw") {
-    statusText = "Berabere — devam";
+    statusText = "Berabere";
   } else if (game?.status === "won") {
     statusText =
       game.winner_id === profile.userId
-        ? "Kazandın!"
-        : `${nameOf(game.winner_id)} kazandı`;
+        ? "Seriyi kazandın!"
+        : `${nameOf(game.winner_id)} seriyi kazandı`;
   }
 
   const fixedCells: { row: number; col: number; mark: XoxMark }[] = [];
@@ -287,6 +326,8 @@ export function XoxGameClient({
       tourPhase === "finished" ||
       (tourPhase === "playing" && showBracket));
 
+  const seriesDone = game?.status === "won";
+
   return (
     <div className="relative mx-auto flex w-full max-w-lg flex-1 flex-col gap-5 px-5 py-6">
       {celebrate && <ConfettiBurst />}
@@ -298,27 +339,26 @@ export function XoxGameClient({
         >
           ← Çık
         </button>
-        <span className="text-sm font-semibold text-accent">
+        <span className="text-center text-sm font-semibold text-accent">
           {isTournament
             ? `Toxxo · Turnuva (${tournament.size})`
             : `Toxxo · ${xoxBoardLabel(boardSize)}`}
-          {!isTournament && (
-            <span className="ml-1 font-normal text-text-dim">
-              ({winLength} yan yana)
-            </span>
-          )}
+          <span className="ml-1 font-normal text-text-dim">
+            ({winLength} yan yana)
+          </span>
         </span>
-        {isTournament && tourPhase === "playing" ? (
-          <button
-            type="button"
-            className="rounded-xl border border-border px-2 py-1 text-xs font-semibold text-text-muted"
-            onClick={() => setShowBracket((v) => !v)}
-          >
-            {showBracket ? "Tahta" : "Ağaç"}
-          </button>
-        ) : (
-          <span className="w-12" />
-        )}
+        <div className="flex items-center gap-1.5">
+          <GameRulesButton gameId="xox" />
+          {isTournament && tourPhase === "playing" ? (
+            <button
+              type="button"
+              className="rounded-xl border border-border px-2 py-1 text-xs font-semibold text-text-muted"
+              onClick={() => setShowBracket((v) => !v)}
+            >
+              {showBracket ? "Tahta" : "Ağaç"}
+            </button>
+          ) : null}
+        </div>
       </header>
 
       {bracketScreen && tournament && (
@@ -368,6 +408,28 @@ export function XoxGameClient({
             <p className="text-center text-sm font-semibold text-text">
               {matchLabel(currentMatch.key)} · {nameOf(currentMatch.player_a)}{" "}
               vs {nameOf(currentMatch.player_b)}
+            </p>
+          )}
+
+          {seriesLine && (
+            <p className="text-center text-[15px] font-bold tabular-nums text-text">
+              {seriesLine}
+            </p>
+          )}
+
+          {isInfinite && game?.status === "playing" && (
+            <p
+              className={clsx(
+                "text-center text-sm font-semibold tabular-nums",
+                moveCount >= XOX_INFINITE_MOVE_LIMIT - 10
+                  ? "text-danger"
+                  : "text-text-muted",
+              )}
+            >
+              {t("xox.movesLeft", {
+                n: moveCount,
+                total: XOX_INFINITE_MOVE_LIMIT,
+              })}
             </p>
           )}
 
@@ -455,7 +517,7 @@ export function XoxGameClient({
             </div>
           </div>
 
-          {!isTournament && game && game.status !== "playing" && isHost && (
+          {!isTournament && seriesDone && isHost && (
             <button
               type="button"
               className="btn btn-primary w-full"
@@ -466,15 +528,15 @@ export function XoxGameClient({
             </button>
           )}
 
-          {!isTournament && game && game.status !== "playing" && !isHost && (
+          {!isTournament && seriesDone && !isHost && (
             <p className="text-center text-sm text-text-muted">
               Kurucu yeniden başlatabilir.
             </p>
           )}
 
-          {!isTournament && game && game.status !== "playing" && (
+          {!isTournament && seriesDone && (
             <InstallHint
-              completionId={`xox:${roomId}:${game.updated_at}`}
+              completionId={`xox:${roomId}:${game?.updated_at}`}
             />
           )}
         </>

@@ -104,8 +104,8 @@
     "cancel": "Batal",
     "settings": "Pengaturan",
     "settingsSummaryIsim": "Pengaturan · {duration} dtk · {rounds} ronde · {cats} kategori",
-    "settingsSummaryXox": "Pengaturan · {board}",
-    "settingsSummaryTournament": "Pengaturan · Turnamen · 3×3",
+    "settingsSummaryXox": "Pengaturan · {board} · {series} pertandingan",
+    "settingsSummaryTournament": "Pengaturan · Turnamen · {board} · {series} pertandingan",
     "settingsSummaryOnluk": "Pengaturan · {sec} dtk",
     "settingsSummaryInterval": "Pengaturan · {hands} tangan",
     "intervalHands": "Jumlah tangan",
@@ -119,18 +119,21 @@
     "speedBonusHint": "Poin ekstra untuk yang selesai duluan",
     "categories": "Kategori {n}/{max}",
     "board": "Papan",
-    "xoxGuestHint": "2 klasik · 4/8 turnamen",
+    "xoxGuestHint": "Turnamen",
     "synkedGuestHint": "2 klasik · 4 balapan (tim 1–2 / 3–4)",
     "onlukGuestHint": "2 pemain · tumpuk aturan, salah kalah",
     "intervalGuestHint": "2–8 pemain · tarik di celah, kumpulkan poin",
     "howTo": "Cara main",
     "synkedHowTo": "Di 2p, tulis benih lalu asosiasi sampai cocok. Di 4p, tim mengunci benih dengan STOP, lalu balapan",
-    "tournamentMode": "Turnamen · {n} pemain · 3×3",
-    "tournamentHint": "Dengan 4 atau 8 pemain opsi papan terkunci; pertandingan memakai bracket",
-    "xoxHostHint": "2 pemain: klasik · 4 atau 8: turnamen (3×3)",
+    "tournamentMode": "Turnamen · {n} pemain",
+    "tournamentHint": "Bracket 4 atau 8; papan dan seri berlaku",
+    "xoxHostHint": "2 klasik · 4 atau 8 turnamen",
     "lanHint": "Ponsel di Wi‑Fi yang sama: {url}",
     "localhostHint": "QR mengarah ke localhost — tidak terbuka di ponsel. Tambahkan NEXT_PUBLIC_LAN_HOST",
-    "qrAlt": "Kode QR gabung"
+    "qrAlt": "Kode QR gabung",
+    "xoxDrawHint": "Seri 3×3 sering imbang — bisa lebih panjang",
+    "series": "Seri",
+    "seriesOption": "{n} pertandingan"
   },
   "onluk": {
     "firstTo": "Pertama ke {n}",
@@ -311,5 +314,10 @@
         "Yang pertama bawa semua bidak pulang menang"
       ]
     }
+  },
+  "xox": {
+    "matchProgress": "Pertandingan {n}/{total}",
+    "extraMatch": "Tambahan",
+    "movesLeft": "Langkah {n}/{total}"
   }
 }

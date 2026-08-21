@@ -1,8 +1,14 @@
 "use client";
 
 import { createClient } from "@/lib/supabase/client";
-import type { XoxBoardSize, XoxGameRow } from "@/lib/games/xox";
-import { normalizeBoard, normalizeMarks } from "@/lib/games/xox";
+import type { XoxBoardSize, XoxGameRow, XoxSeriesLength } from "@/lib/games/xox";
+import {
+  normalizeBoard,
+  normalizeMarks,
+  normalizeXoxScores,
+  resolveXoxSeriesLength,
+  XOX_DEFAULT_SERIES,
+} from "@/lib/games/xox";
 import {
   parseXoxTournamentBracket,
   type XoxTournamentPhase,
@@ -21,6 +27,9 @@ function mapRow(data: Record<string, unknown>): XoxGameRow {
         : boardSize === 5
           ? 4
           : 3;
+  const seriesLength = resolveXoxSeriesLength(
+    data.series_length ?? XOX_DEFAULT_SERIES,
+  ) as XoxSeriesLength;
   return {
     room_id: String(data.room_id),
     board: normalizeBoard(data.board as string[], boardSize),
@@ -33,6 +42,16 @@ function mapRow(data: Record<string, unknown>): XoxGameRow {
     status:
       data.status === "won" || data.status === "draw" ? data.status : "playing",
     winner_id: (data.winner_id as string) ?? null,
+    series_length: seriesLength,
+    match_index:
+      typeof data.match_index === "number" && data.match_index > 0
+        ? data.match_index
+        : 1,
+    scores: normalizeXoxScores(data.scores),
+    move_count:
+      typeof data.move_count === "number" && data.move_count >= 0
+        ? data.move_count
+        : 0,
     updated_at: String(data.updated_at ?? ""),
   };
 }

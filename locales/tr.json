@@ -104,8 +104,8 @@
     "cancel": "Vazgeç",
     "settings": "Ayarlar",
     "settingsSummaryIsim": "Ayarlar · {duration} sn · {rounds} tur · {cats} kategori",
-    "settingsSummaryXox": "Ayarlar · {board}",
-    "settingsSummaryTournament": "Ayarlar · Turnuva · 3×3",
+    "settingsSummaryXox": "Ayarlar · {board} · {series} maç",
+    "settingsSummaryTournament": "Ayarlar · Turnuva · {board} · {series} maç",
     "settingsSummaryOnluk": "Ayarlar · {sec} sn",
     "settingsSummaryInterval": "Ayarlar · {hands} el",
     "intervalHands": "El sayısı",
@@ -119,18 +119,21 @@
     "speedBonusHint": "Turu ilk bitirene ek puan",
     "categories": "Kategoriler {n}/{max}",
     "board": "Tahta",
-    "xoxGuestHint": "2 klasik · 4/8 turnuva",
+    "xoxGuestHint": "Turnuva",
     "synkedGuestHint": "2 kişi klasik · 4 kişi yarış (1–2 / 3–4 takım)",
     "onlukGuestHint": "2 kişi · kural biriktir, yanılan kaybeder",
     "intervalGuestHint": "2–8 kişi · aralıkta çek, puan topla",
     "howTo": "Nasıl oynanır",
     "synkedHowTo": "2 kişide tohum yazıp çağrışımla aynı kelimeye ulaş. 4 kişide takımlar (1–2 vs 3–4) DUR ile tohum kilitler, sonra yarışır",
-    "tournamentMode": "Turnuva modu · {n} oyuncu · 3×3",
-    "tournamentHint": "4 veya 8 kişide tahta seçenekleri kapalı; maçlar eleme ağacıyla oynanır",
-    "xoxHostHint": "2 kişi: klasik · 4 veya 8 kişi: turnuva (3×3)",
+    "tournamentMode": "Turnuva modu · {n} oyuncu",
+    "tournamentHint": "4 veya 8 kişide eleme ağacı; tahta ve seri ayarları geçerli",
+    "xoxHostHint": "2 kişi: klasik · 4 veya 8 kişi: turnuva",
     "lanHint": "Telefon aynı Wi‑Fi'de olsun: {url}",
     "localhostHint": "Karekod localhost — telefonda açılmaz. NEXT_PUBLIC_LAN_HOST ekle",
-    "qrAlt": "Katılım karekodu"
+    "qrAlt": "Katılım karekodu",
+    "xoxDrawHint": "3×3'te beraberlik sık olur, seri uzayabilir",
+    "series": "Seri",
+    "seriesOption": "{n} maç"
   },
   "onluk": {
     "firstTo": "İlk {n} puan",
@@ -240,12 +243,12 @@
       ]
     },
     "xox": {
-      "blurb": "Üç taşı diz, turu kap",
+      "blurb": "Klasik XOX — yatay, dikey ya da çapraz dizen kazanır",
       "meta": "2–8 kişi",
       "howTo": [
-        "2 kişi klasik tahtada sırayla işaret koy",
-        "4 veya 8 kişide turnuva bracket'i kurulur",
-        "Yan yana üç (veya seçilen boyutta) taşı diz, turu kazan"
+        "Sırayla taş koyarsın, her maçta X sırası el değiştirir",
+        "Yatay, dikey ya da çapraz diz — 3×3'te üç, 5×5'te dört, sonsuzda beş taş",
+        "1, 3 veya 5 maçlık seri oynanır; 4 veya 8 kişide turnuva kurulur"
       ]
     },
     "synked": {
@@ -311,5 +314,10 @@
         "Tüm piyonlarını eve ilk getiren kazanır"
       ]
     }
+  },
+  "xox": {
+    "matchProgress": "Maç {n}/{total}",
+    "extraMatch": "Ek maç",
+    "movesLeft": "Hamle {n}/{total}"
   }
 }

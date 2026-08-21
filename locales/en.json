@@ -104,8 +104,8 @@
     "cancel": "Cancel",
     "settings": "Settings",
     "settingsSummaryIsim": "Settings · {duration}s · {rounds} rounds · {cats} categories",
-    "settingsSummaryXox": "Settings · {board}",
-    "settingsSummaryTournament": "Settings · Tournament · 3×3",
+    "settingsSummaryXox": "Settings · {board} · {series} match",
+    "settingsSummaryTournament": "Settings · Tournament · {board} · {series} match",
     "settingsSummaryOnluk": "Settings · {sec}s",
     "settingsSummaryInterval": "Settings · {hands} hands",
     "intervalHands": "Hands",
@@ -119,18 +119,21 @@
     "speedBonusHint": "Bonus points for finishing first",
     "categories": "Categories {n}/{max}",
     "board": "Board",
-    "xoxGuestHint": "2 classic · 4/8 tournament",
+    "xoxGuestHint": "Tournament",
     "synkedGuestHint": "2 classic · 4 race (1–2 / 3–4 teams)",
     "onlukGuestHint": "2 players · stack rules, miss and lose",
     "intervalGuestHint": "2–8 players · draw in the gap, stack points",
     "howTo": "How to play",
     "synkedHowTo": "In 2p, write a seed and associate until you match. In 4p, teams lock seeds with STOP, then race",
-    "tournamentMode": "Tournament · {n} players · 3×3",
-    "tournamentHint": "With 4 or 8 players board options are locked; matches use a bracket",
-    "xoxHostHint": "2 players: classic · 4 or 8: tournament (3×3)",
+    "tournamentMode": "Tournament · {n} players",
+    "tournamentHint": "Bracket for 4 or 8; board and series apply",
+    "xoxHostHint": "2 classic · 4 or 8 tournament",
     "lanHint": "Phone on the same Wi‑Fi: {url}",
     "localhostHint": "QR points to localhost — won't open on phone. Add NEXT_PUBLIC_LAN_HOST",
-    "qrAlt": "Join QR code"
+    "qrAlt": "Join QR code",
+    "xoxDrawHint": "Draws are common on 3×3 — series may run long",
+    "series": "Series",
+    "seriesOption": "{n} match"
   },
   "onluk": {
     "firstTo": "First to {n}",
@@ -311,5 +314,10 @@
         "First to bring all pieces home wins"
       ]
     }
+  },
+  "xox": {
+    "matchProgress": "Match {n}/{total}",
+    "extraMatch": "Extra match",
+    "movesLeft": "Moves {n}/{total}"
   }
 }

@@ -37,8 +37,11 @@ import { formatPinDisplay, normalizePin } from "@/lib/rooms/pin";
 import { playSfx, unlockSfx } from "@/lib/sfx";
 import {
   defaultWinLength,
+  resolveXoxBoard,
+  resolveXoxSeriesLength,
   xoxBoardLabel,
-  type XoxBoardSize,
+  XOX_SERIES_OPTIONS,
+  type XoxSeriesLength,
 } from "@/lib/games/xox";
 import {
   ONLUK_COUNT_OPTIONS,
@@ -191,12 +194,22 @@ export function LobbyClient({
         cats: settings.categories.length,
       });
     }
-    if (isXox && players.length < 4) {
-      return t("lobby.settingsSummaryXox", {
-        board: xoxBoardLabel((settings.boardSize ?? 3) as XoxBoardSize),
+    if (isXox) {
+      const tournament = players.length >= 4;
+      const { boardSize } = resolveXoxBoard(settings, {
+        tournamentDefault: tournament,
       });
+      const series = resolveXoxSeriesLength(settings.seriesLength);
+      return t(
+        tournament
+          ? "lobby.settingsSummaryTournament"
+          : "lobby.settingsSummaryXox",
+        {
+          board: xoxBoardLabel(boardSize),
+          series,
+        },
+      );
     }
-    if (isXox) return t("lobby.settingsSummaryTournament");
     if (isOnluk) {
       return t("lobby.settingsSummaryOnluk", {
         sec: resolveOnlukCountSec(settings.duration),
@@ -222,6 +235,20 @@ export function LobbyClient({
       }
     });
   }
+
+  // Turnuva: varsayılan tahta 5×5 (2→4 geçişinde bir kez)
+  const tourBoardApplied = useRef(false);
+  useEffect(() => {
+    if (!isHost || !isXox || tourBoardApplied.current) return;
+    if (players.length < 4) return;
+    if ((settings.boardSize ?? 3) !== 3) {
+      tourBoardApplied.current = true;
+      return;
+    }
+    tourBoardApplied.current = true;
+    patchSettings({ boardSize: 5, winLength: defaultWinLength(5) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isHost, isXox, players.length]);
 
   async function onShare() {
     setShareHint(null);
@@ -520,10 +547,16 @@ export function LobbyClient({
 
       {!isHost && isXox && (
         <section className="card px-4 py-3.5 text-[16px] font-semibold text-text">
-          {t("lobby.settings")} · {t("lobby.xoxGuestHint")}
-          {players.length <= 2
-            ? ` · ${xoxBoardLabel((settings.boardSize ?? 3) as XoxBoardSize)}`
-            : " · 3×3"}
+          {t("lobby.settings")} ·{" "}
+          {xoxBoardLabel(
+            resolveXoxBoard(settings, {
+              tournamentDefault: players.length >= 4,
+            }).boardSize,
+          )}{" "}
+          · {t("lobby.seriesOption", {
+            n: resolveXoxSeriesLength(settings.seriesLength),
+          })}
+          {players.length >= 4 ? ` · ${t("lobby.xoxGuestHint")}` : null}
         </section>
       )}
 
@@ -567,51 +600,89 @@ export function LobbyClient({
           </button>
 
           {settingsOpen && isXox && (
-            <div className="space-y-3 border-t border-border/60 px-4 py-4">
+            <div className="space-y-4 border-t border-border/60 px-4 py-4">
               {players.length >= 4 ? (
-                <>
-                  <p className="rounded-xl bg-accent/15 px-3 py-2.5 text-[16px] font-bold text-accent">
-                    {t("lobby.tournamentMode", { n: players.length })}
-                  </p>
-                  <p className="text-[14px] text-text-dim">
-                    {t("lobby.tournamentHint")}
-                  </p>
-                </>
+                <p className="rounded-xl bg-accent/15 px-3 py-2.5 text-[16px] font-bold text-accent">
+                  {t("lobby.tournamentMode", { n: players.length })}
+                </p>
               ) : (
-                <>
-                  <p className="text-[14px] text-text-muted">
-                    {t("lobby.xoxHostHint")}
-                  </p>
-                  <p className="text-[16px] font-semibold text-text-muted">
-                    {t("lobby.board")}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {([3, 5, 0] as const).map((size) => {
-                      const selected = (settings.boardSize ?? 3) === size;
-                      return (
-                        <button
-                          key={size}
-                          type="button"
-                          onClick={() =>
-                            patchSettings({
-                              boardSize: size,
-                              winLength: defaultWinLength(size),
-                            })
-                          }
-                          className={clsx(
-                            "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
-                            selected
-                              ? "bg-accent text-[#041018]"
-                              : "border border-border bg-bg-elevated text-text-muted",
-                          )}
-                        >
-                          {xoxBoardLabel(size)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </>
+                <p className="text-[14px] text-text-muted">
+                  {t("lobby.xoxHostHint")}
+                </p>
               )}
+
+              <div>
+                <p className="mb-2 text-[16px] font-semibold text-text-muted">
+                  {t("lobby.board")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {([3, 5, 0] as const).map((size) => {
+                    const tournament = players.length >= 4;
+                    const current = resolveXoxBoard(settings, {
+                      tournamentDefault: tournament,
+                    }).boardSize;
+                    const selected = current === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() =>
+                          patchSettings({
+                            boardSize: size,
+                            winLength: defaultWinLength(size),
+                          })
+                        }
+                        className={clsx(
+                          "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
+                          selected
+                            ? "bg-accent text-[#041018]"
+                            : "border border-border bg-bg-elevated text-text-muted",
+                        )}
+                      >
+                        {xoxBoardLabel(size)}
+                      </button>
+                    );
+                  })}
+                </div>
+                {players.length >= 4 &&
+                  resolveXoxBoard(settings, { tournamentDefault: true })
+                    .boardSize === 3 && (
+                    <p className="mt-2 text-[13px] text-text-dim">
+                      {t("lobby.xoxDrawHint")}
+                    </p>
+                  )}
+              </div>
+
+              <div>
+                <p className="mb-2 text-[16px] font-semibold text-text-muted">
+                  {t("lobby.series")}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {XOX_SERIES_OPTIONS.map((n) => {
+                    const selected =
+                      resolveXoxSeriesLength(settings.seriesLength) === n;
+                    return (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() =>
+                          patchSettings({
+                            seriesLength: n as XoxSeriesLength,
+                          })
+                        }
+                        className={clsx(
+                          "min-h-11 min-w-[4.5rem] flex-1 rounded-xl px-3 py-2.5 text-[17px] font-bold transition",
+                          selected
+                            ? "bg-accent text-[#041018]"
+                            : "border border-border bg-bg-elevated text-text-muted",
+                        )}
+                      >
+                        {t("lobby.seriesOption", { n })}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 

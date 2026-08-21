@@ -1,10 +1,12 @@
 import type { Locale } from "@/lib/i18n/config";
 import type { GameId } from "@/lib/games/catalog";
 import isimSehirTr from "../../../locales/rules/isim_sehir.tr.md";
+import xoxTr from "../../../locales/rules/xox.tr.md";
 
 /** Oyun id → locale → markdown (yalnızca dolu dosyalar) */
 const RULES_MD: Partial<Record<GameId, Partial<Record<Locale, string>>>> = {
   isim_sehir: { tr: isimSehirTr },
+  xox: { tr: xoxTr },
 };
 
 export type RulesSection = {

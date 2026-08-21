@@ -318,6 +318,18 @@
   "xox": {
     "matchProgress": "Match {n}/{total}",
     "extraMatch": "Extra match",
-    "movesLeft": "Moves {n}/{total}"
+    "movesLeft": "Moves {n}/{total}",
+    "leadTie": "Tied",
+    "leadAhead": "{name} leads",
+    "matchDraw": "Match {n} draw",
+    "matchWon": "{name} won match {n}",
+    "nextX": "Match {n}: ✕ is {name}",
+    "extraSeries": "Series tied — play until someone wins",
+    "continue": "Continue",
+    "seriesWon": "{name} won the series",
+    "playAgain": "Play again",
+    "backHome": "Back home",
+    "tourneyAdvanced": "{name} advances",
+    "waitBracket": "Waiting for other matches"
   }
 }

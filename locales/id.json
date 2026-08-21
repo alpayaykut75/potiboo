@@ -318,6 +318,18 @@
   "xox": {
     "matchProgress": "Pertandingan {n}/{total}",
     "extraMatch": "Tambahan",
-    "movesLeft": "Langkah {n}/{total}"
+    "movesLeft": "Langkah {n}/{total}",
+    "leadTie": "Imbang",
+    "leadAhead": "{name} unggul",
+    "matchDraw": "Pertandingan {n} imbang",
+    "matchWon": "{name} menang pertandingan {n}",
+    "nextX": "Pertandingan {n}: ✕ milik {name}",
+    "extraSeries": "Seri imbang — lanjut sampai ada pemenang",
+    "continue": "Lanjut",
+    "seriesWon": "{name} memenangkan seri",
+    "playAgain": "Main lagi",
+    "backHome": "Kembali",
+    "tourneyAdvanced": "{name} naik babak",
+    "waitBracket": "Menunggu pertandingan lain"
   }
 }

@@ -310,6 +310,7 @@ export async function startGame(roomId: string): Promise<void> {
           match_index: 1,
           scores: { [xPlayer]: 0, [oPlayer]: 0 },
           move_count: 0,
+          match_history: [],
         },
         { onConflict: "room_id" },
       );

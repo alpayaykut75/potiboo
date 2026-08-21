@@ -17,19 +17,26 @@ import { ConfettiBurst } from "@/components/confetti";
 import { InstallHint } from "@/components/pwa/install-hint";
 import { GameRulesButton } from "@/components/game-rules-panel";
 import { XoxBracket } from "@/components/xox-bracket";
+import { XoxMatchStrip } from "@/components/xox-match-strip";
 import {
   fetchXoxGame,
   fetchXoxTournament,
   xoxMakeMove,
   xoxRematch,
+  xoxSeriesContinue,
   xoxTournamentContinue,
 } from "@/lib/games/xox-api";
 import {
-  formatXoxScore,
+  formatXoxSeriesScoreLine,
   infiniteViewport,
   markKey,
+  XOX_BETWEEN_HOLD_MS,
   XOX_INFINITE_MOVE_LIMIT,
+  XOX_MARK_SYMBOL,
   xoxBoardLabel,
+  xoxMarkSymbol,
+  xoxPlayerColor,
+  xoxSeriesLeadText,
   type XoxGameRow,
   type XoxMark,
 } from "@/lib/games/xox";
@@ -62,6 +69,7 @@ export function XoxGameClient({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const [celebrate, setCelebrate] = useState<"match" | "champ" | null>(null);
+  const [countdownSec, setCountdownSec] = useState(4);
   const celebrateKey = useRef<string | null>(null);
 
   const refresh = useCallback(async () => {
@@ -155,6 +163,50 @@ export function XoxGameClient({
     game?.updated_at,
   ]);
 
+  const advanceBetween = useCallback(() => {
+    startTransition(async () => {
+      try {
+        const next = await xoxSeriesContinue(roomId);
+        setGame(next);
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Devam edilemedi");
+        void refresh();
+      }
+    });
+  }, [roomId, refresh]);
+
+  const continuingRef = useRef(false);
+  const requestContinue = useCallback(() => {
+    if (continuingRef.current) return;
+    continuingRef.current = true;
+    advanceBetween();
+  }, [advanceBetween]);
+
+  // Between: 4 sn geri sayım + otomatik devam
+  useEffect(() => {
+    if (game?.status !== "between") {
+      continuingRef.current = false;
+      return;
+    }
+    const total = Math.ceil(XOX_BETWEEN_HOLD_MS / 1000);
+    setCountdownSec(total);
+    const started = Date.now();
+    const tick = window.setInterval(() => {
+      const left = Math.max(
+        0,
+        total - Math.floor((Date.now() - started) / 1000),
+      );
+      setCountdownSec(left);
+    }, 200);
+    const auto = window.setTimeout(() => {
+      requestContinue();
+    }, XOX_BETWEEN_HOLD_MS);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(auto);
+    };
+  }, [game?.status, game?.match_index, game?.updated_at, requestContinue]);
+
   const isTournament = tournament != null;
   const tourPhase = tournament?.phase;
   const myMark =
@@ -175,6 +227,24 @@ export function XoxGameClient({
   const matchIndex = game?.match_index ?? 1;
   const moveCount = game?.move_count ?? 0;
 
+  const pairIds = useMemo(() => {
+    const a = game?.x_player;
+    const b = game?.o_player;
+    if (!a || !b) return { idA: "", idB: "" };
+    const pa = players.find((p) => p.profile_id === a);
+    const pb = players.find((p) => p.profile_id === b);
+    if (
+      pa &&
+      pb &&
+      typeof pa.join_order === "number" &&
+      typeof pb.join_order === "number" &&
+      pb.join_order < pa.join_order
+    ) {
+      return { idA: b, idB: a };
+    }
+    return { idA: a, idB: b };
+  }, [game?.x_player, game?.o_player, players]);
+
   const viewport = useMemo(() => {
     if (!isInfinite) return null;
     return infiniteViewport(game?.marks ?? {});
@@ -188,39 +258,27 @@ export function XoxGameClient({
   const nameOf = (id: string | null | undefined) =>
     players.find((p) => p.profile_id === id)?.profiles?.display_name ?? "?";
 
-  const seriesLine = useMemo(() => {
-    if (!game?.x_player || !game.o_player) return null;
-    const a = game.x_player;
-    const b = game.o_player;
-    // Sabit isim sırası: join_order küçük olan solda
-    const pa = players.find((p) => p.profile_id === a);
-    const pb = players.find((p) => p.profile_id === b);
-    let left = a;
-    let right = b;
-    if (
-      pa &&
-      pb &&
-      typeof pa.join_order === "number" &&
-      typeof pb.join_order === "number" &&
-      pb.join_order < pa.join_order
-    ) {
-      left = b;
-      right = a;
-    }
-    const sL = formatXoxScore(game.scores[left] ?? 0);
-    const sR = formatXoxScore(game.scores[right] ?? 0);
-    const matchLabelText =
-      matchIndex > seriesLength
-        ? t("xox.extraMatch")
-        : t("xox.matchProgress", { n: matchIndex, total: seriesLength });
-    return `${matchLabelText} · ${nameOf(left)} ${sL} – ${sR} ${nameOf(right)}`;
-  }, [
-    game,
-    matchIndex,
-    seriesLength,
-    players,
-    t,
-  ]);
+  const leadKey =
+    pairIds.idA && pairIds.idB && game
+      ? xoxSeriesLeadText(
+          game.scores,
+          pairIds.idA,
+          pairIds.idB,
+          nameOf(pairIds.idA),
+          nameOf(pairIds.idB),
+        )
+      : "tie";
+  const leadText =
+    leadKey === "tie"
+      ? t("xox.leadTie")
+      : leadKey === "a"
+        ? t("xox.leadAhead", { name: nameOf(pairIds.idA) })
+        : t("xox.leadAhead", { name: nameOf(pairIds.idB) });
+
+  const colorOf = (id: string | null | undefined) =>
+    id && pairIds.idA && pairIds.idB
+      ? xoxPlayerColor(id, pairIds.idA, pairIds.idB)
+      : "#3d9dc4";
 
   function onCell(row: number, col: number, occupied: boolean) {
     if (!game || !isMyTurn || occupied) return;
@@ -230,7 +288,7 @@ export function XoxGameClient({
       try {
         const next = await xoxMakeMove(roomId, row, col);
         setGame(next);
-        if (next.status === "won") {
+        if (next.status === "won" || next.status === "between") {
           void refresh();
         }
       } catch (e) {
@@ -266,15 +324,15 @@ export function XoxGameClient({
     });
   }
 
-  const xName = nameOf(game?.x_player) === "?" ? "X" : nameOf(game?.x_player);
-  const oName = nameOf(game?.o_player) === "?" ? "O" : nameOf(game?.o_player);
+  const xName = nameOf(game?.x_player) === "?" ? "✕" : nameOf(game?.x_player);
+  const oName = nameOf(game?.o_player) === "?" ? "◯" : nameOf(game?.o_player);
 
   let statusText = "Yükleniyor…";
   if (isTournament && tourPhase === "intro") {
     statusText = "Turnuva ağacı hazır";
   } else if (isTournament && tourPhase === "intermission") {
     statusText = game?.winner_id
-      ? `${nameOf(game.winner_id)} üst tura çıktı`
+      ? t("xox.tourneyAdvanced", { name: nameOf(game.winner_id) })
       : "Sonraki maça hazır";
   } else if (isTournament && tourPhase === "finished") {
     statusText = `${nameOf(tournament.champion_id)} şampiyon!`;
@@ -282,13 +340,10 @@ export function XoxGameClient({
     if (myMark == null) statusText = "İzliyorsun";
     else if (isMyTurn) statusText = "Sıra sende";
     else statusText = `Sıra: ${game.next_mark === "X" ? xName : oName}`;
-  } else if (game?.status === "draw") {
-    statusText = "Berabere";
+  } else if (game?.status === "between") {
+    statusText = "";
   } else if (game?.status === "won") {
-    statusText =
-      game.winner_id === profile.userId
-        ? "Seriyi kazandın!"
-        : `${nameOf(game.winner_id)} seriyi kazandı`;
+    statusText = "";
   }
 
   const fixedCells: { row: number; col: number; mark: XoxMark }[] = [];
@@ -327,6 +382,26 @@ export function XoxGameClient({
       (tourPhase === "playing" && showBracket));
 
   const seriesDone = game?.status === "won";
+  const showBetween = game?.status === "between";
+
+  const betweenResultText = (() => {
+    if (!game || !showBetween) return "";
+    const n = game.match_index;
+    if (game.winner_id == null) return t("xox.matchDraw", { n });
+    return t("xox.matchWon", { name: nameOf(game.winner_id), n });
+  })();
+
+  const nextXId = game?.o_player ?? null;
+  const nextMatchN = (game?.match_index ?? 1) + 1;
+  const isGoingExtra = nextMatchN > seriesLength;
+  const nextXLine = nextXId
+    ? t("xox.nextX", { n: nextMatchN, name: nameOf(nextXId) })
+    : "";
+
+  const matchProgressLabel =
+    matchIndex > seriesLength
+      ? t("xox.extraMatch")
+      : t("xox.matchProgress", { n: matchIndex, total: seriesLength });
 
   return (
     <div className="relative mx-auto flex w-full max-w-lg flex-1 flex-col gap-5 px-5 py-6">
@@ -411,10 +486,25 @@ export function XoxGameClient({
             </p>
           )}
 
-          {seriesLine && (
-            <p className="text-center text-[15px] font-bold tabular-nums text-text">
-              {seriesLine}
-            </p>
+          {game && pairIds.idA && (
+            <div className="flex flex-col items-center gap-2">
+              <p className="text-[15px] font-bold text-text">
+                {matchProgressLabel}
+              </p>
+              <XoxMatchStrip
+                seriesLength={seriesLength}
+                history={game.match_history}
+                currentIndex={matchIndex}
+                status={game.status}
+                idA={pairIds.idA}
+                idB={pairIds.idB}
+              />
+              {!seriesDone && !showBetween && (
+                <p className="text-[14px] font-semibold text-text-muted">
+                  {leadText}
+                </p>
+              )}
+            </div>
           )}
 
           {isInfinite && game?.status === "playing" && (
@@ -443,6 +533,7 @@ export function XoxGameClient({
               const p = players.find((pl) => pl.profile_id === id);
               const turn =
                 game?.status === "playing" && game.next_mark === mark;
+              const color = colorOf(id);
               return (
                 <div
                   key={mark}
@@ -459,23 +550,26 @@ export function XoxGameClient({
                     {p?.profiles?.display_name ?? mark}
                   </p>
                   <span
-                    className={clsx(
-                      "font-mono text-lg font-extrabold",
-                      mark === "X" ? "text-accent" : "text-[#5bb8a8]",
-                    )}
+                    className="text-2xl font-black leading-none"
+                    style={{ color }}
+                    aria-label={mark}
                   >
-                    {mark}
+                    {XOX_MARK_SYMBOL[mark]}
                   </span>
                 </div>
               );
             })}
           </div>
 
-          <p className="text-center text-lg font-bold text-text">{statusText}</p>
+          {statusText ? (
+            <p className="text-center text-lg font-bold text-text">
+              {statusText}
+            </p>
+          ) : null}
 
           <div
             className={clsx(
-              "mx-auto w-full overflow-x-auto",
+              "relative mx-auto w-full overflow-x-auto",
               isInfinite || boardSize === 5 ? "max-w-md" : "max-w-xs",
             )}
           >
@@ -488,57 +582,149 @@ export function XoxGameClient({
                 gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
               }}
             >
-              {cells.map(({ row, col, mark }) => (
-                <button
-                  key={`${row},${col}`}
-                  type="button"
-                  disabled={
-                    pending ||
-                    !isMyTurn ||
-                    Boolean(mark) ||
-                    game?.status !== "playing"
-                  }
-                  onClick={() => onCell(row, col, Boolean(mark))}
-                  className={clsx(
-                    "aspect-square border-2 border-border-strong bg-bg-card font-extrabold transition",
-                    isInfinite || boardSize === 5
-                      ? "rounded-lg text-base sm:rounded-xl sm:text-xl"
-                      : "rounded-2xl text-4xl",
-                    isMyTurn && !mark && game?.status === "playing"
-                      ? "hover:border-accent hover:bg-accent/10"
-                      : "opacity-90",
-                    mark === "X" && "text-accent",
-                    mark === "O" && "text-[#5bb8a8]",
-                  )}
-                >
-                  {mark || ""}
-                </button>
-              ))}
+              {cells.map(({ row, col, mark }) => {
+                const ownerId =
+                  mark === "X"
+                    ? game?.x_player
+                    : mark === "O"
+                      ? game?.o_player
+                      : null;
+                const cellColor = ownerId ? colorOf(ownerId) : undefined;
+                return (
+                  <button
+                    key={`${row},${col}`}
+                    type="button"
+                    disabled={
+                      pending ||
+                      !isMyTurn ||
+                      Boolean(mark) ||
+                      game?.status !== "playing"
+                    }
+                    onClick={() => onCell(row, col, Boolean(mark))}
+                    className={clsx(
+                      "aspect-square border-2 border-border-strong bg-bg-card font-extrabold transition",
+                      isInfinite || boardSize === 5
+                        ? "rounded-lg text-base sm:rounded-xl sm:text-xl"
+                        : "rounded-2xl text-3xl",
+                      isMyTurn && !mark && game?.status === "playing"
+                        ? "hover:border-accent hover:bg-accent/10"
+                        : "opacity-90",
+                    )}
+                    style={cellColor ? { color: cellColor } : undefined}
+                  >
+                    {xoxMarkSymbol(mark)}
+                  </button>
+                );
+              })}
             </div>
+
+            {showBetween && game && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-[#041018]/88 p-4 backdrop-blur-sm">
+                <div className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
+                  <p className="text-2xl font-extrabold text-text">
+                    {betweenResultText}
+                  </p>
+                  <XoxMatchStrip
+                    seriesLength={seriesLength}
+                    history={game.match_history}
+                    currentIndex={matchIndex}
+                    status="between"
+                    idA={pairIds.idA}
+                    idB={pairIds.idB}
+                  />
+                  <p className="text-[15px] font-semibold text-text-muted">
+                    {leadText}
+                  </p>
+                  {isGoingExtra ? (
+                    <p className="text-[15px] font-bold text-accent">
+                      {t("xox.extraSeries")}
+                    </p>
+                  ) : null}
+                  <p className="text-lg font-extrabold text-accent">
+                    {nextXLine}
+                  </p>
+                  <button
+                    type="button"
+                    className="btn btn-primary mt-1 w-full"
+                    disabled={pending}
+                    onClick={() => requestContinue()}
+                  >
+                    {t("xox.continue")} · {countdownSec}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {seriesDone && game && !isTournament && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-[#041018]/90 p-4 backdrop-blur-sm">
+                <div className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
+                  <p className="text-2xl font-extrabold text-text">
+                    {t("xox.seriesWon", { name: nameOf(game.winner_id) })}
+                  </p>
+                  <XoxMatchStrip
+                    seriesLength={seriesLength}
+                    history={game.match_history}
+                    currentIndex={matchIndex}
+                    status="won"
+                    idA={pairIds.idA}
+                    idB={pairIds.idB}
+                  />
+                  <p className="font-mono text-xl font-bold tabular-nums text-accent">
+                    {formatXoxSeriesScoreLine(
+                      game.scores,
+                      pairIds.idA,
+                      pairIds.idB,
+                    )}
+                  </p>
+                  {isHost ? (
+                    <button
+                      type="button"
+                      className="btn btn-primary w-full"
+                      disabled={pending}
+                      onClick={onRematch}
+                    >
+                      {t("xox.playAgain")}
+                    </button>
+                  ) : (
+                    <p className="text-sm text-text-muted">
+                      Kurucu yeniden başlatabilir.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    className="btn btn-secondary w-full"
+                    onClick={() => router.push(href("/"))}
+                  >
+                    {t("xox.backHome")}
+                  </button>
+                  <InstallHint
+                    completionId={`xox:${roomId}:${game.updated_at}`}
+                  />
+                </div>
+              </div>
+            )}
+
+            {seriesDone && game && isTournament && tourPhase === "playing" && (
+              <div className="absolute inset-0 z-20 flex items-center justify-center rounded-2xl bg-[#041018]/90 p-4 backdrop-blur-sm">
+                <div className="flex w-full max-w-sm flex-col items-center gap-3 text-center">
+                  <p className="text-2xl font-extrabold text-text">
+                    {t("xox.tourneyAdvanced", { name: nameOf(game.winner_id) })}
+                  </p>
+                  <XoxMatchStrip
+                    seriesLength={seriesLength}
+                    history={game.match_history}
+                    currentIndex={matchIndex}
+                    status="won"
+                    idA={pairIds.idA}
+                    idB={pairIds.idB}
+                  />
+                  <p className="text-sm text-text-muted">
+                    {t("xox.waitBracket")}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
-
-          {!isTournament && seriesDone && isHost && (
-            <button
-              type="button"
-              className="btn btn-primary w-full"
-              disabled={pending}
-              onClick={onRematch}
-            >
-              Yeniden oyna
-            </button>
-          )}
-
-          {!isTournament && seriesDone && !isHost && (
-            <p className="text-center text-sm text-text-muted">
-              Kurucu yeniden başlatabilir.
-            </p>
-          )}
-
-          {!isTournament && seriesDone && (
-            <InstallHint
-              completionId={`xox:${roomId}:${game?.updated_at}`}
-            />
-          )}
         </>
       )}
 

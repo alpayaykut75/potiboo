@@ -318,6 +318,18 @@
   "xox": {
     "matchProgress": "Maç {n}/{total}",
     "extraMatch": "Ek maç",
-    "movesLeft": "Hamle {n}/{total}"
+    "movesLeft": "Hamle {n}/{total}",
+    "leadTie": "Berabere gidiyor",
+    "leadAhead": "{name} önde",
+    "matchDraw": "{n}. maç berabere",
+    "matchWon": "{name} {n}. maçı kazandı",
+    "nextX": "{n}. maçta ✕ {name}'da",
+    "extraSeries": "Seri berabere — kazanan çıkana kadar devam",
+    "continue": "Devam",
+    "seriesWon": "{name} seriyi kazandı",
+    "playAgain": "Tekrar Oyna",
+    "backHome": "Odaya Dön",
+    "tourneyAdvanced": "{name} üst tura çıktı",
+    "waitBracket": "Diğer eşleşme bitene kadar bekle"
   }
 }

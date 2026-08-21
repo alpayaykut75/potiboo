@@ -5,6 +5,7 @@ import type { XoxBoardSize, XoxGameRow, XoxSeriesLength } from "@/lib/games/xox"
 import {
   normalizeBoard,
   normalizeMarks,
+  normalizeMatchHistory,
   normalizeXoxScores,
   resolveXoxSeriesLength,
   XOX_DEFAULT_SERIES,
@@ -40,7 +41,11 @@ function mapRow(data: Record<string, unknown>): XoxGameRow {
     x_player: (data.x_player as string) ?? null,
     o_player: (data.o_player as string) ?? null,
     status:
-      data.status === "won" || data.status === "draw" ? data.status : "playing",
+      data.status === "won" ||
+      data.status === "draw" ||
+      data.status === "between"
+        ? data.status
+        : "playing",
     winner_id: (data.winner_id as string) ?? null,
     series_length: seriesLength,
     match_index:
@@ -52,6 +57,7 @@ function mapRow(data: Record<string, unknown>): XoxGameRow {
       typeof data.move_count === "number" && data.move_count >= 0
         ? data.move_count
         : 0,
+    match_history: normalizeMatchHistory(data.match_history),
     updated_at: String(data.updated_at ?? ""),
   };
 }
@@ -134,6 +140,15 @@ export async function xoxMakeMove(
 export async function xoxRematch(roomId: string): Promise<XoxGameRow> {
   const supabase = createClient();
   const { data, error } = await supabase.rpc("xox_rematch", {
+    p_room_id: roomId,
+  });
+  if (error) throw new Error(error.message);
+  return mapRow(data as Record<string, unknown>);
+}
+
+export async function xoxSeriesContinue(roomId: string): Promise<XoxGameRow> {
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("xox_series_continue", {
     p_room_id: roomId,
   });
   if (error) throw new Error(error.message);

@@ -130,6 +130,14 @@ export type XoxMarks = Record<string, "X" | "O">;
 
 export type XoxScores = Record<string, number>;
 
+export type XoxMatchResult = {
+  winner_id: string | null;
+  x_player: string;
+  o_player: string;
+};
+
+export type XoxGameStatus = "playing" | "won" | "draw" | "between";
+
 export type XoxGameRow = {
   room_id: string;
   board: string[];
@@ -139,14 +147,26 @@ export type XoxGameRow = {
   next_mark: "X" | "O";
   x_player: string | null;
   o_player: string | null;
-  status: "playing" | "won" | "draw";
+  status: XoxGameStatus;
   winner_id: string | null;
   series_length: XoxSeriesLength;
   match_index: number;
   scores: XoxScores;
   move_count: number;
+  match_history: XoxMatchResult[];
   updated_at: string;
 };
+
+/** Geçiş ekranı süresi (ms) */
+export const XOX_BETWEEN_HOLD_MS = 4000;
+
+export const XOX_MARK_SYMBOL: Record<"X" | "O", string> = {
+  X: "✕",
+  O: "◯",
+};
+
+export const XOX_COLOR_A = "#3d9dc4";
+export const XOX_COLOR_B = "#5bb8a8";
 
 export function normalizeXoxScores(raw: unknown): XoxScores {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
@@ -156,6 +176,73 @@ export function normalizeXoxScores(raw: unknown): XoxScores {
     if (Number.isFinite(n)) out[k] = n;
   }
   return out;
+}
+
+export function normalizeMatchHistory(raw: unknown): XoxMatchResult[] {
+  if (!Array.isArray(raw)) return [];
+  const out: XoxMatchResult[] = [];
+  for (const item of raw) {
+    if (!item || typeof item !== "object") continue;
+    const row = item as Record<string, unknown>;
+    const x =
+      typeof row.x_player === "string"
+        ? row.x_player
+        : row.x_player != null
+          ? String(row.x_player)
+          : "";
+    const o =
+      typeof row.o_player === "string"
+        ? row.o_player
+        : row.o_player != null
+          ? String(row.o_player)
+          : "";
+    if (!x || !o) continue;
+    const w = row.winner_id;
+    out.push({
+      winner_id: w == null || w === "" ? null : String(w),
+      x_player: x,
+      o_player: o,
+    });
+  }
+  return out;
+}
+
+/** Oyuncuya sabit renk (sıra: idA / idB) */
+export function xoxPlayerColor(
+  playerId: string,
+  idA: string,
+  idB: string,
+): string {
+  if (playerId === idA) return XOX_COLOR_A;
+  if (playerId === idB) return XOX_COLOR_B;
+  return XOX_COLOR_A;
+}
+
+export function xoxMarkSymbol(mark: "X" | "O" | ""): string {
+  if (mark === "X" || mark === "O") return XOX_MARK_SYMBOL[mark];
+  return "";
+}
+
+/** Sözel seri durumu — ondalık yerine */
+export function xoxSeriesLeadText(
+  scores: XoxScores,
+  idA: string,
+  idB: string,
+  nameA: string,
+  nameB: string,
+): "tie" | "a" | "b" {
+  const sa = scores[idA] ?? 0;
+  const sb = scores[idB] ?? 0;
+  if (sa === sb) return "tie";
+  return sa > sb ? "a" : "b";
+}
+
+export function formatXoxSeriesScoreLine(
+  scores: XoxScores,
+  idA: string,
+  idB: string,
+): string {
+  return `${formatXoxScore(scores[idA] ?? 0)} – ${formatXoxScore(scores[idB] ?? 0)}`;
 }
 
 export function markKey(row: number, col: number): string {

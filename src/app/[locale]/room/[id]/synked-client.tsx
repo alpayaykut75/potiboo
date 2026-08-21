@@ -343,7 +343,7 @@ export function SynkedGameClient({
             ← Çık
           </button>
           <span className="text-base font-semibold text-[#c47bb8]">
-            Synked · Yarış
+            Simmo · Yarış
           </span>
         </header>
 
@@ -672,7 +672,7 @@ export function SynkedGameClient({
           ← Çık
         </button>
         <span className="text-sm font-semibold text-accent">
-          Synked{isTeams ? " · 2v2" : ""}
+          Simmo{isTeams ? " · 2v2" : ""}
         </span>
       </header>
 

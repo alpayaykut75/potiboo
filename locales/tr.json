@@ -51,7 +51,7 @@
   "home": {
     "titleBefore": "Bugün ne",
     "titleAccent": "oynuyoruz?",
-    "subtitle": "Oyunu aç, linki paylaş — arkadaşların tek dokunuşla içeride",
+    "subtitle": "Oyunu seç, arkadaşlarını çağır — saniyeler içinde oyundalar",
     "videoLabel": "Potiboo oyun önizlemesi"
   },
   "pin": {
@@ -70,9 +70,10 @@
     "joinTitle": "Oyuna katıl",
     "joinHint": "Arkadaşının paylaştığı PIN'i gir",
     "notFound": "Oyun bulunamadı",
-    "soonBody": "Bu oyun yakında. Şimdilik Stoppa ile devam edebilirsin",
+    "soonBody": "Bu oyun yakında. Şimdilik Listo ile devam edebilirsin",
     "backToGames": "Oyunlara dön",
-    "createFailed": "Oda oluşturulamadı"
+    "createFailed": "Oda oluşturulamadı",
+    "fullRules": "Tam kurallar"
   },
   "lobby": {
     "closeRoom": "Odayı Kapat",
@@ -230,12 +231,12 @@
   },
   "gameCopy": {
     "isim_sehir": {
-      "blurb": "Aynı anda yaz, ilk biten DUR desin",
+      "blurb": "Gelen harfle isim, şehir, hayvan doldur",
       "meta": "2–8 kişi",
       "howTo": [
-        "Harf gelince tüm kategorilere aynı anda yaz",
-        "İlk biten DUR desin, cevaplar açılsın",
-        "Aynı cevap 10, tek cevap 20 puan"
+        "Harf gelir, isim–şehir–hayvan gibi kategorileri doldurursun",
+        "Süre boyunca herkes yazar, kimse kesilmez",
+        "Kimsede olmayan cevap 20, ortak cevap 10 puan"
       ]
     },
     "xox": {

@@ -313,7 +313,7 @@ export function OnlukGameClient({
         >
           {t("common.home")}
         </button>
-        <p className="text-base font-semibold text-text">Onluk</p>
+        <p className="text-base font-semibold text-text">Dekko</p>
         <p className="text-base font-bold text-text tabular-nums">
           {game.score_a}:{game.score_b}
         </p>

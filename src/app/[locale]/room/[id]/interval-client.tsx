@@ -658,7 +658,7 @@ export function IntervalGameClient({
           {t("common.home")}
         </button>
         <p className="justify-self-center text-center text-base font-semibold text-text">
-          Interval
+          Middo
         </p>
         <p className="justify-self-end text-right text-base font-bold text-text tabular-nums">
           {preHand

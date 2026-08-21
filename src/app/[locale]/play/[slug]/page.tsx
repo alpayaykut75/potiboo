@@ -11,18 +11,22 @@ import { PinJoinForm } from "@/components/pin-join-form";
 import { createRoom } from "@/lib/rooms/api";
 import { BRAND } from "@/lib/constants";
 import { getGameBySlug } from "@/lib/games/catalog";
+import { hasGameRules } from "@/lib/games/rules";
 import { getGameCopy } from "@/lib/i18n/dictionaries";
+import { GameRulesPanel } from "@/components/game-rules-panel";
 
 function PlayContent() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
   useProfile();
-  const { t, href, dict } = useLocale();
+  const { t, href, dict, locale } = useLocale();
   const game = getGameBySlug(params.slug);
   const copy = game ? getGameCopy(dict, game.id) : undefined;
   const [error, setError] = useState<string | null>(null);
   const [howOpen, setHowOpen] = useState(true);
+  const [rulesOpen, setRulesOpen] = useState(false);
   const [pending, startTransition] = useTransition();
+  const showFullRules = game ? hasGameRules(game.id, locale) : false;
 
   useEffect(() => {
     if (!game) return;
@@ -141,6 +145,24 @@ function PlayContent() {
             </ol>
           )}
         </div>
+
+        {showFullRules ? (
+          <button
+            type="button"
+            className="self-center text-sm font-semibold text-accent underline-offset-2 hover:underline"
+            onClick={() => setRulesOpen(true)}
+          >
+            {t("play.fullRules")}
+          </button>
+        ) : null}
+
+        {game && (
+          <GameRulesPanel
+            gameId={game.id}
+            open={rulesOpen}
+            onClose={() => setRulesOpen(false)}
+          />
+        )}
 
         <div className="card flex w-full flex-col gap-3 border-accent/25 p-5">
           <h2 className="text-center text-lg font-bold text-text">

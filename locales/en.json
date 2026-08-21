@@ -70,9 +70,10 @@
     "joinTitle": "Join a game",
     "joinHint": "Enter the PIN your friend shared",
     "notFound": "Game not found",
-    "soonBody": "This game is coming soon. Try Stoppa for now",
+    "soonBody": "This game is coming soon. Try Listo for now",
     "backToGames": "Back to games",
-    "createFailed": "Couldn't create room"
+    "createFailed": "Couldn't create room",
+    "fullRules": "Full rules"
   },
   "lobby": {
     "closeRoom": "Close Room",

@@ -300,8 +300,8 @@ export function XoxGameClient({
         </button>
         <span className="text-sm font-semibold text-accent">
           {isTournament
-            ? `XOX · Turnuva (${tournament.size})`
-            : `XOX · ${xoxBoardLabel(boardSize)}`}
+            ? `Toxxo · Turnuva (${tournament.size})`
+            : `Toxxo · ${xoxBoardLabel(boardSize)}`}
           {!isTournament && (
             <span className="ml-1 font-normal text-text-dim">
               ({winLength} yan yana)

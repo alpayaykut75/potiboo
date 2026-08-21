@@ -10,6 +10,7 @@ import { useProfile } from "@/components/profile-gate";
 import { AvatarImage } from "@/components/avatar-image";
 import { ConfettiBurst } from "@/components/confetti";
 import { InstallHint } from "@/components/pwa/install-hint";
+import { GameRulesButton } from "@/components/game-rules-panel";
 import {
   advanceReveal,
   advanceToNextRound,
@@ -881,6 +882,7 @@ export function GameClient({
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/20 font-mono text-3xl font-extrabold text-accent ring-2 ring-accent/30">
             {round.letter}
           </div>
+          <GameRulesButton gameId="isim_sehir" />
           <div className="text-right">
             <p className="text-xs text-text-dim">Tur {round.round_number}</p>
             <p

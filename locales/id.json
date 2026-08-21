@@ -70,9 +70,10 @@
     "joinTitle": "Gabung game",
     "joinHint": "Masukkan PIN yang dibagikan temanmu",
     "notFound": "Game tidak ditemukan",
-    "soonBody": "Game ini segera hadir. Coba Stoppa dulu",
+    "soonBody": "Game ini segera hadir. Coba Listo dulu",
     "backToGames": "Kembali ke game",
-    "createFailed": "Gagal membuat ruangan"
+    "createFailed": "Gagal membuat ruangan",
+    "fullRules": "Aturan lengkap"
   },
   "lobby": {
     "closeRoom": "Tutup Ruangan",

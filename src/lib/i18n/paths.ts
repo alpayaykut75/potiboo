@@ -4,14 +4,14 @@ import {
   type Locale,
 } from "./config";
 
-/** `/play/stoppa` + `en` → `/en/play/stoppa` */
+/** `/play/listo` + `en` → `/en/play/listo` */
 export function withLocale(path: string, locale: Locale): string {
   const clean = path.startsWith("/") ? path : `/${path}`;
   if (clean === "/") return `/${locale}`;
   return `/${locale}${clean}`;
 }
 
-/** `/en/play/stoppa` → `{ locale: "en", pathname: "/play/stoppa" }` */
+/** `/en/play/listo` → `{ locale: "en", pathname: "/play/listo" }` */
 export function stripLocale(pathname: string): {
   locale: Locale | null;
   pathname: string;
